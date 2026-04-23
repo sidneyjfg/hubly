@@ -1,0 +1,51 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: clinity_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    container_name: clinity_evolution_api
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - ../infra/evolution/.env
+    volumes:
+      - evolution_instances:/evolution/instances
+
+  backend:
+    image: ${BACKEND_IMAGE}
+    container_name: clinity_backend
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      evolution-api:
+        condition: service_started
+    ports:
+      - "3333:3333"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - ../infra/backend/.env
+
+volumes:
+  redis_data:
+  evolution_instances:

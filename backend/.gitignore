@@ -1,0 +1,7 @@
+dist
+.env
+node_modules
+*.log
+.docs
+./.codex
+core

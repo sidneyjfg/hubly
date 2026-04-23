@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Tipo da próxima versão semântica
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Calculate next version
+        id: bump
+        run: |
+          CURRENT_VERSION=$(cat VERSION)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          case "${{ github.event.inputs.release_type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "$NEXT_VERSION" > VERSION
+          echo "version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update package versions
+        run: |
+          npm pkg set version="${{ steps.bump.outputs.version }}" --prefix backend
+          npm pkg set version="${{ steps.bump.outputs.version }}" --prefix frontend
+
+      - name: Commit version files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add VERSION backend/package.json frontend/package.json
+          git commit -m "chore: release v${{ steps.bump.outputs.version }}"
+          git tag "v${{ steps.bump.outputs.version }}"
+          git push
+          git push origin "v${{ steps.bump.outputs.version }}"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump.outputs.version }}
+          name: v${{ steps.bump.outputs.version }}
+          generate_release_notes: true
+
+  backend-image:
+    runs-on: ubuntu-latest
+    needs:
+      - release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/clinity-backend
+          tags: |
+            type=raw,value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Upload stack compose artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stack-compose-v${{ needs.release.outputs.version }}
+          path: |
+            deploy/docker-compose.stack.yml
+            deploy/stack.env.example
+            backend/.env.example

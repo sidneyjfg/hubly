@@ -1,0 +1,37 @@
+{
+  "name": "@clinity/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "check": "tsc -p tsconfig.build.json --noEmit",
+    "docs:export": "tsx src/scripts/export-api-docs.ts",
+    "db:migrate": "tsx src/database/migrations/run-migrations.ts",
+    "db:seed": "tsx src/database/seeds/run-seed.ts",
+    "test": "vitest run",
+    "test:e2e": "vitest run tests/e2e",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.6",
+    "fastify": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.22.1",
+    "redis": "^5.12.1",
+    "reflect-metadata": "^0.2.2",
+    "sql.js": "^1.14.1",
+    "typeorm": "^0.3.24",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
+  }
+}
