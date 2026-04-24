@@ -1,19 +1,31 @@
 name: Frontend Release
 
 on:
-  release:
+  workflow_run:
+    workflows:
+      - Release Version
     types:
-      - published
+      - completed
 
 permissions:
   packages: write
 
 jobs:
   frontend-image:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -28,8 +40,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/clinity-frontend
           tags: |
-            type=raw,value=${{ github.event.release.tag_name }}
-            type=raw,value=${{ github.event.release.name }}
+            type=raw,value=${{ steps.version.outputs.tag }}
+            type=raw,value=${{ steps.version.outputs.version }}
             type=raw,value=latest
 
       - name: Build and push frontend image
@@ -41,13 +53,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_APP_COMMIT_SHA=${{ github.sha }}
-            NEXT_PUBLIC_APP_LAYER_LABEL=${{ github.event.release.tag_name }}
+            NEXT_PUBLIC_APP_COMMIT_SHA=${{ github.event.workflow_run.head_sha }}
+            NEXT_PUBLIC_APP_LAYER_LABEL=${{ steps.version.outputs.tag }}
 
       - name: Upload stack compose artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stack-compose-${{ github.event.release.tag_name }}
+          name: stack-compose-${{ steps.version.outputs.tag }}
           path: |
             deploy/docker-compose.stack.yml
             deploy/stack.env.example
