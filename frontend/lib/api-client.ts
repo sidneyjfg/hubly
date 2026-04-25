@@ -5,7 +5,34 @@ import type { AuthSession } from "@/lib/types";
 import { useFeedbackStore } from "@/store/feedback-store";
 import { useAppStore } from "@/store/app-store";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3333").replace(/\/$/, "");
+const DEFAULT_API_PORT = "3333";
+const rawApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim() ?? "";
+
+function normalizeApiBaseUrl(value: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value).toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
+function resolveApiBaseUrl(): string {
+  const normalizedBaseUrl = normalizeApiBaseUrl(rawApiBaseUrl);
+
+  if (normalizedBaseUrl) {
+    return normalizedBaseUrl;
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:${DEFAULT_API_PORT}`;
+  }
+
+  return `http://localhost:${DEFAULT_API_PORT}`;
+}
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "PUT";
@@ -55,7 +82,7 @@ let refreshSessionPromise: Promise<AuthSession> | null = null;
 let hasShownSessionExpiredFeedback = false;
 
 function buildUrl(path: string, query?: Record<string, string | undefined>): string {
-  const url = new URL(path, API_BASE_URL);
+  const url = new URL(path, resolveApiBaseUrl());
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
@@ -223,4 +250,4 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return (await response.json()) as T;
 }
 
-export { API_BASE_URL };
+export { resolveApiBaseUrl };
