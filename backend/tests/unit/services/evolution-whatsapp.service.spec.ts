@@ -31,14 +31,14 @@ describe("EvolutionWhatsAppService", () => {
       text: async () =>
         JSON.stringify({
           instance: {
-            instanceName: "clinity-main",
+            instanceName: "hubly-main",
             state: "open",
           },
         }),
     });
 
     const service = new EvolutionWhatsAppService(fetchMock as never);
-    const result = await service.getStatus("clinity-main");
+    const result = await service.getStatus("hubly-main");
 
     expect(result.state).toBe("open");
   });
@@ -57,7 +57,7 @@ describe("EvolutionWhatsAppService", () => {
     });
 
     const service = new EvolutionWhatsAppService(fetchMock as never);
-    const result = await service.sendText("clinity-main", {
+    const result = await service.sendText("hubly-main", {
       number: "5511999999999",
       text: "Olá!",
     });
@@ -70,6 +70,6 @@ describe("EvolutionWhatsAppService", () => {
 
     const service = new EvolutionWhatsAppService(vi.fn() as never);
 
-    await expect(service.getStatus("clinity-main")).rejects.toBeInstanceOf(AppError);
+    await expect(service.getStatus("hubly-main")).rejects.toBeInstanceOf(AppError);
   });
 });

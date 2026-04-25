@@ -17,7 +17,7 @@ const buildSignOptions = (
 ): SignOptions => ({
   subject,
   expiresIn: expiresIn as NonNullable<SignOptions["expiresIn"]>,
-  issuer: "clinity-api",
+  issuer: "hubly-api",
 });
 
 export const createAccessToken = (claims: BaseClaims): string => {
@@ -48,7 +48,7 @@ export const createRefreshToken = (claims: BaseClaims): string => {
 
 export const verifyAccessToken = (token: string): AccessTokenClaims => {
   const payload = jwt.verify(token, env.JWT_ACCESS_SECRET, {
-    issuer: "clinity-api",
+    issuer: "hubly-api",
   }) as jwt.JwtPayload;
 
   return {
@@ -62,7 +62,7 @@ export const verifyAccessToken = (token: string): AccessTokenClaims => {
 
 export const verifyRefreshToken = (token: string): RefreshTokenClaims => {
   const payload = jwt.verify(token, env.JWT_REFRESH_SECRET, {
-    issuer: "clinity-api",
+    issuer: "hubly-api",
   }) as jwt.JwtPayload;
 
   return {

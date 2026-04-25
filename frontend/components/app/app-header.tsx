@@ -7,6 +7,7 @@ import { Menu, Search } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { AppVersion } from "@/components/app/app-version";
+import { BrandLogo } from "@/components/app/brand-logo";
 import { ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/store/app-store";
@@ -47,7 +48,7 @@ export function AppHeader() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-white">
             <Menu className="h-4 w-4" />
           </div>
-          <span className="text-lg font-semibold text-white">Clinity</span>
+          <BrandLogo compact size="sm" />
         </Link>
         <div className="relative hidden max-w-sm flex-1 md:block">
           <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />

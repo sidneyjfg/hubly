@@ -4,8 +4,8 @@ import { AppProviders } from "@/components/providers/app-providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Clinity",
-  description: "SaaS de agendamento inteligente para clínicas com foco em reduzir no-show."
+  title: "Hubly",
+  description: "Hub de agendamento inteligente para clinicas com foco em reduzir no-show e dar previsibilidade operacional."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

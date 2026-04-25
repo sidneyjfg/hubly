@@ -74,7 +74,7 @@ export const env: Env = {
   DB_TYPE: process.env.DB_TYPE === "sqljs" ? "sqljs" : "mysql",
   DB_HOST: process.env.DB_HOST ?? "127.0.0.1",
   DB_PORT: parsePort(process.env.DB_PORT ?? "3306"),
-  DB_NAME: process.env.DB_NAME ?? "clinity",
+  DB_NAME: process.env.DB_NAME ?? "hubly",
   DB_USERNAME: process.env.DB_USERNAME ?? "root",
   DB_PASSWORD: process.env.DB_PASSWORD ?? "",
   DB_LOGGING: parseBoolean(process.env.DB_LOGGING, false),
@@ -99,6 +99,6 @@ export const env: Env = {
   WHATSAPP_EVOLUTION_TIMEOUT_MS: parsePort(process.env.WHATSAPP_EVOLUTION_TIMEOUT_MS ?? "10000"),
   REDIS_ENABLED: parseBoolean(process.env.REDIS_ENABLED, false),
   REDIS_URL: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
-  REDIS_KEY_PREFIX: process.env.REDIS_KEY_PREFIX ?? "clinity",
+  REDIS_KEY_PREFIX: process.env.REDIS_KEY_PREFIX ?? "hubly",
   REDIS_CONNECT_TIMEOUT_MS: parsePort(process.env.REDIS_CONNECT_TIMEOUT_MS ?? "10000"),
 };

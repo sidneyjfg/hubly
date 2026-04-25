@@ -19,13 +19,13 @@ const exportApiDocs = async (): Promise<void> => {
   );
 
   await writeFile(
-    path.join(postmanDir, "clinity-local.collection.json"),
+    path.join(postmanDir, "hubly-local.collection.json"),
     JSON.stringify(buildPostmanCollection(), null, 2) + "\n",
     "utf-8",
   );
 
   await writeFile(
-    path.join(postmanDir, "clinity-local.environment.json"),
+    path.join(postmanDir, "hubly-local.environment.json"),
     JSON.stringify(buildPostmanEnvironment(), null, 2) + "\n",
     "utf-8",
   );

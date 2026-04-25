@@ -34,7 +34,7 @@ export const registerApiDocs = (app: FastifyInstance): void => {
     async (_request, reply) => {
       reply
         .header("content-type", "application/json; charset=utf-8")
-        .header("content-disposition", 'attachment; filename="clinity-local.collection.json"')
+        .header("content-disposition", 'attachment; filename="hubly-local.collection.json"')
         .send(buildPostmanCollection());
     },
   );
@@ -49,7 +49,7 @@ export const registerApiDocs = (app: FastifyInstance): void => {
     async (_request, reply) => {
       reply
         .header("content-type", "application/json; charset=utf-8")
-        .header("content-disposition", 'attachment; filename="clinity-local.environment.json"')
+        .header("content-disposition", 'attachment; filename="hubly-local.environment.json"')
         .send(buildPostmanEnvironment());
     },
   );

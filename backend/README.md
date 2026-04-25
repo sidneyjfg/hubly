@@ -1,6 +1,6 @@
-# Backend
+# Hubly Backend
 
-Estrutura inicial do backend em TypeScript para o projeto Clinity.
+Estrutura inicial do backend em TypeScript para o projeto Hubly.
 
 ## Diretrizes aplicadas
 
@@ -74,8 +74,8 @@ Com a API rodando localmente:
 Arquivos exportados no repositório:
 
 - [openapi/openapi.json](/home/sidney/automacoes/saas/clinity/backend/openapi/openapi.json)
-- [postman/clinity-local.collection.json](/home/sidney/automacoes/saas/clinity/backend/postman/clinity-local.collection.json)
-- [postman/clinity-local.environment.json](/home/sidney/automacoes/saas/clinity/backend/postman/clinity-local.environment.json)
+- [postman/hubly-local.collection.json](/home/sidney/automacoes/saas/clinity/backend/postman/hubly-local.collection.json)
+- [postman/hubly-local.environment.json](/home/sidney/automacoes/saas/clinity/backend/postman/hubly-local.environment.json)
 
 A collection já inclui script de teste nas rotas `Sign In` e `Refresh` para atualizar automaticamente `accessToken`, `refreshToken` e `clinicId` nas variáveis usadas pelas demais rotas.
 
@@ -178,7 +178,7 @@ Variáveis necessárias:
 9. Se quiser usar Postman, importe:
    `http://localhost:3333/docs/postman/collection.json`
    `http://localhost:3333/docs/postman/environment.json`
-10. No Postman, selecione o environment `Clinity Local`, rode `Sign In` e depois teste as demais rotas.
+10. No Postman, selecione o environment `Hubly Local`, rode `Sign In` e depois teste as demais rotas.
 
 ## Fluxo validado da Evolution API
 
@@ -223,7 +223,7 @@ curl -X POST "http://localhost:8080/message/sendText/clinic-cln_main_001" \
   }'
 ```
 
-5. Validar o mesmo envio pelo backend do Clinity:
+5. Validar o mesmo envio pelo backend da Hubly:
 
 ```bash
 curl -X POST "http://localhost:3333/v1/integrations/whatsapp/messages/send" \
@@ -232,14 +232,14 @@ curl -X POST "http://localhost:3333/v1/integrations/whatsapp/messages/send" \
   -H 'Content-Type: application/json' \
   -d '{
     "number": "5531995734976",
-    "text": "Teste de envio pelo Clinity"
+    "text": "Teste de envio pela Hubly"
   }'
 ```
 
 Resultado validado:
 
 - envio direto pela Evolution retornando `fromMe: true` e `status: PENDING`;
-- envio pelo backend do Clinity retornando o mesmo padrão com sucesso;
+- envio pelo backend da Hubly retornando o mesmo padrão com sucesso;
 - integração ponta a ponta validada para criação/conexão de instância, consulta de status e envio manual de texto.
 
 Fluxo recomendado para o frontend:
@@ -276,7 +276,7 @@ Todos os testes estão isolados do MySQL principal.
 - Testes unitários: usam mocks ou stubs, sem tocar em banco real.
 - Testes de integração: usam `sql.js` em memória via TypeORM.
 - Testes end-to-end: executam o fluxo completo da API em TypeScript, também com `sql.js` em memória e integrações externas simuladas.
-- Ambiente de teste: é forçado em [tests/setup/test-env.ts](/home/sidney/automacoes/clinity/backend/tests/setup/test-env.ts), então o `Vitest` não usa o banco configurado para desenvolvimento.
+- Ambiente de teste: é forçado em [tests/setup/test-env.ts](/home/sidney/automacoes/saas/clinity/backend/tests/setup/test-env.ts), então o `Vitest` não usa o banco configurado para desenvolvimento.
 
 Fluxo recomendado:
 

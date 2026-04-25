@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { api } from "@/lib/api";
+import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,10 +46,11 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <Card className="w-full max-w-md">
+        <BrandLogo className="mb-6" showSlogan size="sm" />
         <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso real</p>
         <h1 className="mt-4 text-3xl font-semibold text-white">Entrar no painel</h1>
         <p className="mt-3 text-slate-300">
-          Conectado ao backend do Clinity. Use as credenciais seed locais para acessar a clínica de teste.
+          Conectado ao backend da Hubly. Use as credenciais seed locais para acessar a clinica de teste.
         </p>
         <div className="mt-8 space-y-4">
           <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />

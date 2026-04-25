@@ -50,7 +50,7 @@ describe("Docs routes", () => {
     expect(response.statusCode).toBe(200);
 
     const body = response.json();
-    expect(body.info.name).toBe("Clinity Local API");
+    expect(body.info.name).toBe("Hubly Local API");
     expect(JSON.stringify(body)).toContain("pm.environment.set('accessToken', data.accessToken);");
   });
 });

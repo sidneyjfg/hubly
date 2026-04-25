@@ -2,7 +2,7 @@ export const buildOpenApiDocument = () => {
   return {
     openapi: "3.1.0",
     info: {
-      title: "Clinity API",
+      title: "Hubly API",
       version: "0.1.0",
       description: [
         "API do MVP de agendamento para clínicas.",

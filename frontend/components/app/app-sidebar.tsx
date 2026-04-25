@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -48,15 +49,7 @@ export function AppSidebar() {
     >
       <div className={cn("mb-8 flex gap-2", isExpanded ? "items-center justify-between" : "flex-col items-center")}>
         <Link className={cn("flex min-w-0 items-center gap-3", !isExpanded && "justify-center")} href="/">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-white">
-            C
-          </div>
-          {isExpanded ? (
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold text-white">Clinity</p>
-              <p className="truncate text-xs uppercase tracking-[0.18em] text-slate-400">Smart scheduling</p>
-            </div>
-          ) : null}
+          <BrandLogo compact={!isExpanded} size="sm" />
         </Link>
         <button
           aria-label={isExpanded ? "Recolher barra lateral" : "Expandir barra lateral"}

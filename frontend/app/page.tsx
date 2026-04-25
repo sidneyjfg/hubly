@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { DashboardMockup } from "@/components/app/dashboard-mockup";
+import { BrandLogo } from "@/components/app/brand-logo";
 import { SectionHeading } from "@/components/app/section-heading";
 import { AppVersion } from "@/components/app/app-version";
 import { ButtonLink } from "@/components/ui/button";
@@ -62,12 +63,12 @@ const benefits = [
 ];
 
 const comparisons = [
-  { feature: "Confirmação automatizada", clinity: true, common: false },
-  { feature: "Lembretes em múltiplos momentos", clinity: true, common: false },
-  { feature: "Status operacional por consulta", clinity: true, common: false },
-  { feature: "Indicadores de no-show", clinity: true, common: false },
-  { feature: "Integração com Google Calendar", clinity: true, common: false },
-  { feature: "Agenda isolada sem contexto", clinity: false, common: true }
+  { feature: "Confirmação automatizada", hubly: true, common: false },
+  { feature: "Lembretes em múltiplos momentos", hubly: true, common: false },
+  { feature: "Status operacional por consulta", hubly: true, common: false },
+  { feature: "Indicadores de no-show", hubly: true, common: false },
+  { feature: "Integração com Google Calendar", hubly: true, common: false },
+  { feature: "Agenda isolada sem contexto", hubly: false, common: true }
 ];
 
 const steps = [
@@ -78,7 +79,7 @@ const steps = [
 
 const faqs = [
   {
-    question: "A Clinity serve para qualquer tipo de clínica?",
+    question: "A Hubly serve para qualquer tipo de clinica?",
     answer: "Sim. A interface foi pensada para operações médicas, odontológicas, estética, psicologia e serviços com agenda."
   },
   {
@@ -97,15 +98,7 @@ export default function MarketingPage() {
       <section className="surface-grid border-b border-white/10">
         <div className="mx-auto max-w-7xl px-6 pb-24 pt-8 md:px-10">
           <header className="mb-20 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-white">
-                C
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-white">Clinity</p>
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Smart scheduling for clinics</p>
-              </div>
-            </div>
+            <BrandLogo showSlogan size="md" />
             <div className="flex items-center gap-3">
               <ButtonLink href="/login" variant="ghost">
                 Entrar
@@ -124,7 +117,7 @@ export default function MarketingPage() {
                 Menos faltas. Mais resultados.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
-                A Clinity centraliza agenda, pacientes e automações para reduzir no-show, recuperar horários ociosos e dar previsibilidade para a operação da clínica.
+                A Hubly conecta sua clinica aos melhores servicos para centralizar agenda, pacientes e automacoes sem perder clareza operacional.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                 <ButtonLink href="/login" size="lg">
@@ -184,7 +177,7 @@ export default function MarketingPage() {
           <SectionHeading
             description="Automação, follow-up e status operacional ficam visíveis para a equipe sem criar complexidade."
             eyebrow="Solução"
-            title="A Clinity transforma confirmação e reagendamento em fluxo, não improviso."
+            title="A Hubly transforma confirmacao e reagendamento em fluxo, nao improviso."
           />
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {solutionItems.map((item) => (
@@ -224,13 +217,13 @@ export default function MarketingPage() {
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10">
           <SectionHeading
             eyebrow="Comparação"
-            title="Clinity versus agenda comum"
+            title="Hubly versus agenda comum"
             description="A diferença não é estética. É operacional."
           />
           <div className="mt-10 overflow-hidden rounded-xl border border-white/10">
             <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr] bg-white/5 px-6 py-4 text-sm uppercase tracking-[0.18em] text-slate-400">
               <span>Capacidade</span>
-              <span>Clinity</span>
+              <span>Hubly</span>
               <span>Agenda comum</span>
             </div>
             {comparisons.map((item) => (
@@ -239,8 +232,8 @@ export default function MarketingPage() {
                 key={item.feature}
               >
                 <span>{item.feature}</span>
-                <span>{item.clinity ? "Sim" : "Não"}</span>
-                <span>{item.common ? "Sim" : "Não"}</span>
+                <span>{item.hubly ? "Sim" : "Nao"}</span>
+                <span>{item.common ? "Sim" : "Nao"}</span>
               </div>
             ))}
           </div>
@@ -341,7 +334,7 @@ export default function MarketingPage() {
                 Comece a reduzir faltas hoje.
               </h2>
               <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">
-                Interface premium, navegação completa e arquitetura frontend preparada para conectar ao backend sem retrabalho.
+                Interface premium, identidade alinhada com a nova marca e arquitetura frontend preparada para conectar ao backend sem retrabalho.
               </p>
             </div>
             <ButtonLink href="/login" size="lg">
@@ -354,8 +347,8 @@ export default function MarketingPage() {
       <footer className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 text-sm text-slate-400 md:flex-row md:items-center md:justify-between md:px-10">
           <div>
-            <p className="font-medium text-white">Clinity</p>
-            <p className="mt-2">Agendamento inteligente para clínicas com foco em redução de no-show.</p>
+            <p className="font-medium text-white">Hubly</p>
+            <p className="mt-2">Conecta voce aos melhores servicos para uma agenda mais previsivel e com menos no-show.</p>
           </div>
           <div className="flex flex-col items-start gap-4 md:items-end">
             <div className="flex flex-wrap gap-6">

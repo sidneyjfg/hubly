@@ -1,6 +1,6 @@
 import { scryptSync, timingSafeEqual } from "node:crypto";
 
-const PASSWORD_SALT = "clinity-local-salt";
+const PASSWORD_SALT = "hubly-local-salt";
 
 export const hashPassword = (password: string): string => {
   return scryptSync(password, PASSWORD_SALT, 64).toString("hex");

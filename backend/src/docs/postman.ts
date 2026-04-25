@@ -354,7 +354,7 @@ const buildRequest = (definition: RequestDefinition) => {
 
 export const buildPostmanCollection = () => ({
   info: {
-    name: "Clinity Local API",
+    name: "Hubly Local API",
     description:
       "Collection for local API testing. Run Sign In first to populate accessToken, refreshToken and clinicId automatically.",
     schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -384,7 +384,7 @@ export const buildPostmanCollection = () => ({
 });
 
 export const buildPostmanEnvironment = () => ({
-  name: "Clinity Local",
+  name: "Hubly Local",
   values: [
     {
       key: "baseUrl",

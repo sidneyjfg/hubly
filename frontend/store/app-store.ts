@@ -68,7 +68,7 @@ export const useAppStore = create<AppState>()(
         })
     }),
     {
-      name: "clinity-frontend-store",
+      name: "hubly-frontend-store",
       storage: createJSONStorage(() => {
         if (typeof window === "undefined") {
           return {

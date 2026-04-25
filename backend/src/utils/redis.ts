@@ -20,7 +20,7 @@ const parseInteger = (value: string | undefined, fallback: number): number => {
 export const readRedisConfig = () => ({
   enabled: parseBoolean(process.env.REDIS_ENABLED, false),
   url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
-  keyPrefix: process.env.REDIS_KEY_PREFIX ?? "clinity",
+  keyPrefix: process.env.REDIS_KEY_PREFIX ?? "hubly",
   connectTimeoutMs: parseInteger(process.env.REDIS_CONNECT_TIMEOUT_MS, 10_000),
 });
 

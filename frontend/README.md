@@ -1,6 +1,6 @@
-# Clinity Frontend
+# Hubly Frontend
 
-Frontend em Next.js para o SaaS Clinity, conectado ao backend real em `/backend`.
+Frontend em Next.js para o SaaS Hubly, conectado ao backend real em `/backend`.
 
 ## Stack
 
