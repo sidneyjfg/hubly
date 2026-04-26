@@ -13,6 +13,7 @@ import { ServiceOfferingsRepository } from "../repositories/service-offerings.re
 import type { Booking, BookingAvailabilityQuery } from "../types/booking";
 import type { PublicAvailableSlot, PublicBookingPage, PublicBookingRequestInput } from "../types/provider";
 import { AppError } from "../utils/app-error";
+import { hashPassword } from "../utils/password";
 import { buildAvailableSlots, isWithinProviderAvailability, resolveWeekday } from "../utils/provider-availability";
 import { EvolutionWhatsAppService } from "./evolution-whatsapp.service";
 import { NotificationsService } from "./notifications.service";
@@ -23,6 +24,7 @@ const publicBookingRequestSchema = z.object({
   fullName: z.string().min(3).max(120),
   email: z.string().email().nullable().optional(),
   phone: z.string().min(10).max(30),
+  password: z.string().min(8).max(120),
   providerId: z.string().min(3),
   offeringId: z.string().min(3).nullable().optional(),
   startsAt: z.string().datetime(),
@@ -83,6 +85,15 @@ export class PublicBookingsService {
       providers,
       serviceOfferings,
     };
+  }
+
+  public async listPublishedBookingPages(): Promise<{ items: PublicBookingPage[] }> {
+    const organizations = await this.organizationsRepository.findPublishedStorefronts({ page: 1, limit: 100 });
+    const items = await Promise.all(
+      organizations.items.map((organization) => this.getBookingPage(organization.bookingPageSlug)),
+    );
+
+    return { items };
   }
 
   public async getAvailableSlots(slug: string, query: BookingAvailabilityQuery): Promise<{ items: PublicAvailableSlot[] }> {
@@ -194,21 +205,31 @@ export class PublicBookingsService {
         throw new AppError("bookings.time_conflict", "Selected time is no longer available.", 409);
       }
 
-      const customer =
-        (await this.customersRepository.findByPhoneOrEmailInOrganization(
+      const customerPasswordHash = hashPassword(data.password);
+      const existingCustomer = await this.customersRepository.findByPhoneOrEmailInOrganization(
+        organization.id,
+        { email: data.email ?? null, phone: data.phone },
+        manager,
+      );
+      const customer = existingCustomer ?? await this.customersRepository.create(
+        organization.id,
+        {
+          fullName: data.fullName,
+          email: data.email ?? null,
+          phone: data.phone,
+          passwordHash: customerPasswordHash,
+        },
+        manager,
+      );
+
+      if (existingCustomer) {
+        await this.customersRepository.setPasswordHashIfMissing(
           organization.id,
-          { email: data.email ?? null, phone: data.phone },
+          existingCustomer.id,
+          customerPasswordHash,
           manager,
-        )) ??
-        (await this.customersRepository.create(
-          organization.id,
-          {
-            fullName: data.fullName,
-            email: data.email ?? null,
-            phone: data.phone,
-          },
-          manager,
-        ));
+        );
+      }
 
       const paymentBreakdown: PaymentBreakdown = this.paymentsService
         ? await this.paymentsService.buildBreakdown(

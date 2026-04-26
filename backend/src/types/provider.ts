@@ -84,6 +84,7 @@ export type PublicBookingRequestInput = {
   fullName: string;
   email?: string | null;
   phone: string;
+  password: string;
   providerId: string;
   offeringId?: string | null;
   startsAt: string;

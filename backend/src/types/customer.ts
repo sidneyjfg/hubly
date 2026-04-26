@@ -11,4 +11,5 @@ export type CustomerWriteInput = {
   fullName: string;
   email?: string | null;
   phone: string;
+  passwordHash?: string | null;
 };

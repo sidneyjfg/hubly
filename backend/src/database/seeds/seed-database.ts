@@ -25,7 +25,13 @@ export const seedDatabase = async (dataSource: DataSource): Promise<void> => {
     await manager.createQueryBuilder().delete().from(UserEntity).execute();
     await manager.createQueryBuilder().delete().from(OrganizationEntity).execute();
 
-    await manager.save(OrganizationEntity, [...seedData.organizations]);
+    await manager.save(
+      OrganizationEntity,
+      seedData.organizations.map((organization) => ({
+        ...organization,
+        galleryImageUrls: [...organization.galleryImageUrls],
+      })),
+    );
     await manager.save(UserEntity, [...seedData.users]);
     await manager.save(ProviderEntity, [...seedData.providers]);
     await manager.save(ProviderAvailabilityEntity, [...seedData.providerAvailabilities]);

@@ -25,6 +25,9 @@ export class CustomerEntity {
   @Column({ type: "varchar", length: 30 })
   public phone!: string;
 
+  @Column({ type: "varchar", length: 255, nullable: true })
+  public passwordHash!: string | null;
+
   @Column({ type: "boolean", default: true })
   public isActive!: boolean;
 

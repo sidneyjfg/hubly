@@ -60,6 +60,7 @@ export class CustomersRepository {
       fullName: input.fullName,
       email: input.email ?? null,
       phone: input.phone,
+      passwordHash: input.passwordHash ?? null,
     });
 
     return this.mapCustomer(customer);
@@ -83,6 +84,28 @@ export class CustomersRepository {
       .getOne();
 
     return customer ? this.mapCustomer(customer) : null;
+  }
+
+  public async setPasswordHashIfMissing(
+    organizationId: string,
+    id: string,
+    passwordHash: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repository = this.getRepository(manager);
+    const customer = await repository.findOne({
+      where: {
+        id,
+        organizationId,
+      },
+    });
+
+    if (!customer || customer.passwordHash) {
+      return;
+    }
+
+    customer.passwordHash = passwordHash;
+    await repository.save(customer);
   }
 
   public async updateInOrganization(organizationId: string, id: string, input: CustomerWriteInput): Promise<Customer | null> {

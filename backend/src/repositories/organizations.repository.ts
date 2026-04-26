@@ -56,6 +56,21 @@ export class OrganizationsRepository {
     return buildPaginatedResult(organizations.map((organization) => this.mapOrganization(organization)), total, pagination);
   }
 
+  public async findPublishedStorefronts(pagination: Pagination): Promise<PaginatedResult<Organization>> {
+    const [organizations, total] = await this.getRepository().findAndCount({
+      where: {
+        isStorefrontPublished: true,
+      },
+      order: {
+        tradeName: "ASC",
+      },
+      skip: getPaginationOffset(pagination),
+      take: pagination.limit,
+    });
+
+    return buildPaginatedResult(organizations.map((organization) => this.mapOrganization(organization)), total, pagination);
+  }
+
   public async findByIdInOrganization(organizationId: string, id: string, manager?: EntityManager): Promise<Organization | null> {
     const organization = await this.getRepository(manager).findOne({
       where: {

@@ -10,6 +10,10 @@ export class PublicBookingsController {
     reply.status(200).send(await this.publicBookingsService.getBookingPage(params.slug ?? ""));
   };
 
+  public listBookingPages = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.publicBookingsService.listPublishedBookingPages());
+  };
+
   public getAvailability = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const params = request.params as { slug?: string };
     const query = request.query as { providerId?: string; date?: string; offeringId?: string | null };
@@ -27,6 +31,7 @@ export class PublicBookingsController {
       fullName?: string;
       email?: string | null;
       phone?: string;
+      password?: string;
       providerId?: string;
       offeringId?: string | null;
       startsAt?: string;
@@ -39,6 +44,7 @@ export class PublicBookingsController {
       fullName: body.fullName ?? "",
       email: body.email ?? null,
       phone: body.phone ?? "",
+      password: body.password ?? "",
       providerId: body.providerId ?? "",
       offeringId: body.offeringId ?? null,
       startsAt: body.startsAt ?? "",

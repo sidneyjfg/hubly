@@ -359,14 +359,27 @@ const publicBookingAvailabilityResponseSchema = {
   },
 } as const;
 
+const publicBookingListResponseSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["items"],
+  properties: {
+    items: {
+      type: "array",
+      items: publicBookingPageSchema,
+    },
+  },
+} as const;
+
 const publicBookingCreateSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["fullName", "phone", "providerId", "startsAt", "endsAt"],
+  required: ["fullName", "phone", "password", "providerId", "startsAt", "endsAt"],
   properties: {
     fullName: { type: "string", minLength: 3, maxLength: 120 },
     email: { type: ["string", "null"], format: "email" },
     phone: { type: "string", minLength: 10, maxLength: 30 },
+    password: { type: "string", minLength: 8, maxLength: 120 },
     providerId: { type: "string" },
     offeringId: { type: ["string", "null"] },
     startsAt: { type: "string", format: "date-time" },
@@ -1340,6 +1353,15 @@ export const publicBookingPageRouteSchema = {
   response: {
     200: publicBookingPageSchema,
     404: errorResponseSchema,
+    500: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const publicBookingListRouteSchema = {
+  tags: ["Public bookings"],
+  summary: "List public booking pages",
+  response: {
+    200: publicBookingListResponseSchema,
     500: errorResponseSchema,
   },
 } satisfies FastifySchema;

@@ -43,6 +43,23 @@ describe("Public bookings routes", () => {
     );
   });
 
+  it("lists published establishments for the customer marketplace", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/public/organizations",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          bookingPageSlug: "organizationa-exemplo",
+          isStorefrontPublished: true,
+        }),
+      ]),
+    );
+  });
+
   it("returns only available provider slots inside working hours and outside lunch", async () => {
     const response = await app.inject({
       method: "GET",
@@ -78,6 +95,7 @@ describe("Public bookings routes", () => {
         fullName: "Roberta Lima",
         email: "roberta@customer.test",
         phone: "+5511955555555",
+        password: "password123",
         providerId: "pro_001",
         startsAt: "2026-04-21T14:00:00.000Z",
         endsAt: "2026-04-21T14:30:00.000Z",
@@ -105,6 +123,7 @@ describe("Public bookings routes", () => {
         fullName: "Roberta Lima",
         email: "roberta@customer.test",
         phone: "+5511955555555",
+        password: "password123",
         providerId: "pro_001",
         startsAt: "2026-04-21T12:30:00.000Z",
         endsAt: "2026-04-21T13:00:00.000Z",

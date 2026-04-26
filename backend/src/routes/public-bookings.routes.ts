@@ -5,6 +5,7 @@ import { PublicBookingsController } from "../controllers/public-bookings.control
 import {
   publicBookingAvailabilityRouteSchema,
   publicBookingCreateRouteSchema,
+  publicBookingListRouteSchema,
   publicBookingPageRouteSchema,
 } from "../docs/route-schemas";
 import { AuditRepository } from "../repositories/audit.repository";
@@ -57,6 +58,7 @@ export const publicBookingsRoutes = async (
     ),
   );
 
+  app.get("/public/organizations", { schema: publicBookingListRouteSchema }, controller.listBookingPages);
   app.get("/public/organizations/:slug", { schema: publicBookingPageRouteSchema }, controller.getBookingPage);
   app.get("/public/organizations/:slug/availability", { schema: publicBookingAvailabilityRouteSchema }, controller.getAvailability);
   app.post("/public/organizations/:slug/bookings", { schema: publicBookingCreateRouteSchema }, controller.createBooking);
