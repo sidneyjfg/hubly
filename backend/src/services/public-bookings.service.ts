@@ -7,6 +7,7 @@ import { CustomersRepository } from "../repositories/customers.repository";
 import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
 import { OrganizationNotificationSettingsRepository } from "../repositories/organization-notification-settings.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
+import { OrganizationPaymentSettingsRepository } from "../repositories/organization-payment-settings.repository";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
 import { ServiceOfferingsRepository } from "../repositories/service-offerings.repository";
@@ -50,6 +51,7 @@ export class PublicBookingsService {
     private readonly bookingsRepository: BookingsRepository,
     private readonly notificationsService: NotificationsService,
     private readonly auditRepository: AuditRepository,
+    private readonly organizationPaymentSettingsRepository: OrganizationPaymentSettingsRepository,
     private readonly paymentsService?: PaymentsService,
   ) {}
 
@@ -59,10 +61,60 @@ export class PublicBookingsService {
       throw new AppError("public_booking.organization_not_found", "Organization not found.", 404);
     }
 
+    const page = await this.buildReadyBookingPage(organization);
+    if (!page) {
+      throw new AppError("public_booking.organization_not_ready", "Organization is not ready for public bookings.", 404);
+    }
+
+    return page;
+  }
+
+  public async listPublishedBookingPages(): Promise<{ items: PublicBookingPage[] }> {
+    const organizations = await this.organizationsRepository.findPublishedStorefronts({ page: 1, limit: 100 });
+    const pages = await Promise.all(
+      organizations.items.map((organization) => this.buildReadyBookingPage(organization)),
+    );
+
+    return { items: pages.filter((page): page is PublicBookingPage => page !== null) };
+  }
+
+  private async buildReadyBookingPage(organization: {
+    id: string;
+    bookingPageSlug: string;
+    tradeName: string;
+    timezone: string;
+    publicDescription?: string | null;
+    publicPhone?: string | null;
+    publicEmail?: string | null;
+    addressLine?: string | null;
+    addressNumber?: string | null;
+    district?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    coverImageUrl?: string | null;
+    logoImageUrl?: string | null;
+    galleryImageUrls: string[];
+    isStorefrontPublished: boolean;
+  }): Promise<PublicBookingPage | null> {
+    if (!organization.isStorefrontPublished || !this.hasMinimumPublicProfile(organization)) {
+      return null;
+    }
+
     const [providers, serviceOfferings] = await Promise.all([
       this.providersRepository.findActiveByOrganization(organization.id),
       this.serviceOfferingsRepository.findActiveByOrganization(organization.id),
     ]);
+
+    const readyProviderIds = await this.findReadyProviderIds(organization.id, providers, serviceOfferings);
+    if (readyProviderIds.size === 0) {
+      return null;
+    }
+
+    const readyProviders = providers.filter((provider) => readyProviderIds.has(provider.id));
+    const readyServiceOfferings = serviceOfferings.filter(
+      (service) => readyProviderIds.has(service.providerId) && (service.priceCents ?? 0) > 0,
+    );
 
     return {
       organizationId: organization.id,
@@ -82,18 +134,59 @@ export class PublicBookingsService {
       logoImageUrl: organization.logoImageUrl ?? null,
       galleryImageUrls: organization.galleryImageUrls,
       isStorefrontPublished: organization.isStorefrontPublished,
-      providers,
-      serviceOfferings,
+      providers: readyProviders,
+      serviceOfferings: readyServiceOfferings,
     };
   }
 
-  public async listPublishedBookingPages(): Promise<{ items: PublicBookingPage[] }> {
-    const organizations = await this.organizationsRepository.findPublishedStorefronts({ page: 1, limit: 100 });
-    const items = await Promise.all(
-      organizations.items.map((organization) => this.getBookingPage(organization.bookingPageSlug)),
+  private hasMinimumPublicProfile(organization: {
+    tradeName: string;
+    publicDescription?: string | null;
+    publicPhone?: string | null;
+    publicEmail?: string | null;
+    addressLine?: string | null;
+    city?: string | null;
+    state?: string | null;
+    coverImageUrl?: string | null;
+  }): boolean {
+    return Boolean(
+      organization.tradeName.trim()
+        && organization.publicDescription?.trim()
+        && (organization.publicPhone?.trim() || organization.publicEmail?.trim())
+        && organization.addressLine?.trim()
+        && organization.city?.trim()
+        && organization.state?.trim()
+        && organization.coverImageUrl?.trim(),
     );
+  }
 
-    return { items };
+  private async findReadyProviderIds(
+    organizationId: string,
+    providers: Array<{ id: string }>,
+    serviceOfferings: Array<{ providerId: string; priceCents?: number | null }>,
+  ): Promise<Set<string>> {
+    const readyProviderIds = new Set<string>();
+
+    await Promise.all(providers.map(async (provider) => {
+      const hasPricedService = serviceOfferings.some(
+        (service) => service.providerId === provider.id && (service.priceCents ?? 0) > 0,
+      );
+      if (!hasPricedService) {
+        return;
+      }
+
+      const [paymentSettings, availability] = await Promise.all([
+        this.organizationPaymentSettingsRepository.findByOrganization(organizationId),
+        this.providerAvailabilitiesRepository.findByProviderInOrganization(organizationId, provider.id),
+      ]);
+
+      const hasActiveAvailability = availability.some((item) => item.isActive);
+      if (paymentSettings?.mercadoPagoConnected && paymentSettings.mercadoPagoAccessToken && hasActiveAvailability) {
+        readyProviderIds.add(provider.id);
+      }
+    }));
+
+    return readyProviderIds;
   }
 
   public async getAvailableSlots(slug: string, query: BookingAvailabilityQuery): Promise<{ items: PublicAvailableSlot[] }> {

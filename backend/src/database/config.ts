@@ -11,6 +11,7 @@ import { AddPublicBookingAndProviderAvailability1713566000000 } from "./migratio
 import { AddMarketplacePayments1713567000000 } from "./migrations/1713567000000-add-marketplace-payments";
 import { AddOrganizationStorefront1713568000000 } from "./migrations/1713568000000-add-organization-storefront";
 import { AddCustomerPasswordHash1713569000000 } from "./migrations/1713569000000-add-customer-password-hash";
+import { AddOrganizationPaymentSettings1713570000000 } from "./migrations/1713570000000-add-organization-payment-settings";
 import { databaseEntities } from "./entities";
 
 export type DatabaseDriver = "mysql" | "sqljs";
@@ -45,6 +46,7 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
         AddMarketplacePayments1713567000000,
         AddOrganizationStorefront1713568000000,
         AddCustomerPasswordHash1713569000000,
+        AddOrganizationPaymentSettings1713570000000,
       ],
     };
   }
@@ -71,6 +73,7 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
       AddMarketplacePayments1713567000000,
       AddOrganizationStorefront1713568000000,
       AddCustomerPasswordHash1713569000000,
+      AddOrganizationPaymentSettings1713570000000,
     ],
   };
 };

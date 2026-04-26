@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { AuditRepository } from "../repositories/audit.repository";
 import { BookingsRepository } from "../repositories/bookings.repository";
+import { OrganizationPaymentSettingsRepository } from "../repositories/organization-payment-settings.repository";
 import { PaymentTransactionsRepository } from "../repositories/payment-transactions.repository";
 import { ProviderPaymentSettingsRepository } from "../repositories/provider-payment-settings.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
@@ -56,6 +57,7 @@ const mapMercadoPagoStatus = (status: string | undefined): BookingPaymentStatus 
 export class PaymentsService {
   public constructor(
     private readonly dataSource: DataSource,
+    private readonly organizationPaymentSettingsRepository: OrganizationPaymentSettingsRepository,
     private readonly providerPaymentSettingsRepository: ProviderPaymentSettingsRepository,
     private readonly providersRepository: ProvidersRepository,
     private readonly serviceOfferingsRepository: ServiceOfferingsRepository,
@@ -66,6 +68,28 @@ export class PaymentsService {
     private readonly paymentCalculatorService: PaymentCalculatorService,
     private readonly mercadoPagoService: MercadoPagoService,
   ) {}
+
+  public async getOrganizationSettings(user: AuthenticatedRequestUser) {
+    return this.organizationPaymentSettingsRepository.getOrCreateDefault(user.organizationId);
+  }
+
+  public async updateOrganizationSettings(user: AuthenticatedRequestUser, input: unknown) {
+    const data = paymentSettingsSchema.parse(input);
+    const updateInput = {
+      ...(data.commissionRateBps === undefined ? {} : { commissionRateBps: data.commissionRateBps }),
+      ...(data.onlineDiscountBps === undefined ? {} : { onlineDiscountBps: data.onlineDiscountBps }),
+      ...(data.absorbsProcessingFee === undefined ? {} : { absorbsProcessingFee: data.absorbsProcessingFee }),
+    };
+
+    return this.organizationPaymentSettingsRepository.updateInOrganization(user.organizationId, updateInput);
+  }
+
+  public async createOrganizationMercadoPagoConnectUrl(user: AuthenticatedRequestUser): Promise<MercadoPagoOAuthConnectUrl> {
+    return {
+      providerId: "organization",
+      authorizationUrl: this.mercadoPagoService.buildOAuthAuthorizationUrl(user.organizationId),
+    };
+  }
 
   public async getProviderSettings(user: AuthenticatedRequestUser, providerId: string) {
     await this.ensureProvider(user.organizationId, providerId);
@@ -103,14 +127,12 @@ export class PaymentsService {
 
   public async handleMercadoPagoOAuthCallback(input: unknown) {
     const data = oauthCallbackSchema.parse(input);
-    const { organizationId, providerId } = splitState(data.state);
-    await this.ensureProvider(organizationId, providerId);
+    const stateData = data.state.includes(":") ? splitState(data.state) : { organizationId: data.state, providerId: null };
     const token = await this.mercadoPagoService.exchangeOAuthCode(data.code);
     const expiresAt = new Date(Date.now() + token.expires_in * 1000);
 
-    const settings = await this.providerPaymentSettingsRepository.saveMercadoPagoConnection(
-      organizationId,
-      providerId,
+    const settings = await this.organizationPaymentSettingsRepository.saveMercadoPagoConnection(
+      stateData.organizationId,
       {
         mercadoPagoUserId: String(token.user_id),
         mercadoPagoAccessToken: token.access_token,
@@ -120,11 +142,11 @@ export class PaymentsService {
     );
 
     await this.auditRepository.create({
-      organizationId,
+      organizationId: stateData.organizationId,
       actorId: null,
-      action: "provider_payment.mercado_pago_connected",
-      targetType: "provider",
-      targetId: providerId,
+      action: "organization_payment.mercado_pago_connected",
+      targetType: "organization",
+      targetId: stateData.organizationId,
     });
 
     return settings;
@@ -138,7 +160,7 @@ export class PaymentsService {
     manager?: EntityManager,
   ): Promise<PaymentBreakdown> {
     const amountCents = await this.resolveOfferingPrice(organizationId, providerId, offeringId, manager);
-    const settings = await this.providerPaymentSettingsRepository.getOrCreateDefault(organizationId, providerId, manager);
+    const settings = await this.organizationPaymentSettingsRepository.getOrCreateDefault(organizationId, manager);
 
     return this.paymentCalculatorService.calculate(paymentType, amountCents, settings);
   }
@@ -149,14 +171,13 @@ export class PaymentsService {
     serviceName?: string | null;
     manager: EntityManager;
   }): Promise<Booking> {
-    const settings = await this.providerPaymentSettingsRepository.getOrCreateDefault(
+    const settings = await this.organizationPaymentSettingsRepository.getOrCreateDefault(
       input.booking.organizationId,
-      input.booking.providerId,
       input.manager,
     );
 
     if (!settings.mercadoPagoConnected || !settings.mercadoPagoAccessToken) {
-      throw new AppError("payments.provider_not_connected", "Provider must connect Mercado Pago before online payments.", 409);
+      throw new AppError("payments.organization_not_connected", "Organization must connect Mercado Pago before online payments.", 409);
     }
 
     const transaction = await this.paymentTransactionsRepository.create(
@@ -230,14 +251,13 @@ export class PaymentsService {
         throw new AppError("payments.transaction_not_found", "Payment transaction not found.", 404);
       }
 
-      const settings = await this.providerPaymentSettingsRepository.getOrCreateDefault(
+      const settings = await this.organizationPaymentSettingsRepository.getOrCreateDefault(
         transaction.organizationId,
-        transaction.providerId,
         manager,
       );
 
       if (!settings.mercadoPagoAccessToken) {
-        throw new AppError("payments.provider_not_connected", "Provider Mercado Pago connection not found.", 409);
+        throw new AppError("payments.organization_not_connected", "Organization Mercado Pago connection not found.", 409);
       }
 
       const paymentId = input.paymentId;

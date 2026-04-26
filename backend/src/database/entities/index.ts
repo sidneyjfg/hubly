@@ -5,6 +5,7 @@ import { AuthSessionEntity } from "./auth-session.entity";
 import { OrganizationEntity } from "./organization.entity";
 import { OrganizationIntegrationEntity } from "./organization-integration.entity";
 import { OrganizationNotificationSettingEntity } from "./organization-notification-setting.entity";
+import { OrganizationPaymentSettingsEntity } from "./organization-payment-settings.entity";
 import { CustomerEntity } from "./customer.entity";
 import { ProviderAvailabilityEntity } from "./provider-availability.entity";
 import { ProviderPaymentSettingsEntity } from "./provider-payment-settings.entity";
@@ -28,6 +29,7 @@ export const databaseEntities = [
   AuthSessionEntity,
   OrganizationIntegrationEntity,
   OrganizationNotificationSettingEntity,
+  OrganizationPaymentSettingsEntity,
 ] as const;
 
 export {
@@ -38,6 +40,7 @@ export {
   OrganizationEntity,
   OrganizationIntegrationEntity,
   OrganizationNotificationSettingEntity,
+  OrganizationPaymentSettingsEntity,
   CustomerEntity,
   ProviderAvailabilityEntity,
   ProviderPaymentSettingsEntity,

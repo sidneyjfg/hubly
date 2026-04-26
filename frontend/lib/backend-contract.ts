@@ -5,9 +5,13 @@ import type {
   MeResponse,
   Customer,
   Provider,
+  ProviderAvailability,
   ServiceOffering,
   UserProfile,
   UserRole,
+  MercadoPagoConnectUrl,
+  OrganizationPaymentSettings,
+  ProviderPaymentSettings,
   WhatsAppConnectionStatus,
   WhatsAppDisconnectResult,
   WhatsAppReminderSettings,
@@ -25,13 +29,18 @@ export const apiRoutes = {
   },
   organizations: {
     update: (id: string) => `/v1/organizations/${id}`,
-    storefront: "/v1/organizations/storefront"
+    storefront: "/v1/organizations/storefront",
+    paymentSettings: "/v1/organization/payment-settings",
+    mercadoPagoConnect: "/v1/organization/mercado-pago/connect"
   },
   providers: {
     list: "/v1/providers",
     create: "/v1/providers",
     update: (id: string) => `/v1/providers/${id}`,
-    status: (id: string) => `/v1/providers/${id}/status`
+    status: (id: string) => `/v1/providers/${id}/status`,
+    availability: (id: string) => `/v1/providers/${id}/availability`,
+    paymentSettings: (id: string) => `/v1/providers/${id}/payment-settings`,
+    mercadoPagoConnect: (id: string) => `/v1/providers/${id}/mercado-pago/connect`
   },
   serviceOfferings: {
     list: "/v1/service-offerings",
@@ -102,6 +111,19 @@ export type ProviderWriteDTO = {
   specialty: string;
   isActive?: boolean;
 };
+
+export type ProviderAvailabilityDTO = ProviderAvailability;
+
+export type ProviderPaymentSettingsDTO = ProviderPaymentSettings;
+export type OrganizationPaymentSettingsDTO = OrganizationPaymentSettings;
+
+export type ProviderPaymentSettingsUpdateDTO = {
+  commissionRateBps?: number;
+  onlineDiscountBps?: number;
+  absorbsProcessingFee?: boolean;
+};
+
+export type MercadoPagoConnectUrlDTO = MercadoPagoConnectUrl;
 
 export type ServiceOfferingDTO = ServiceOffering;
 

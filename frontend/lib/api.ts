@@ -8,9 +8,14 @@ import {
   type OrganizationDTO,
   type IntegrationSummaryDTO,
   type MeResponseDTO,
+  type MercadoPagoConnectUrlDTO,
   type NoShowOverviewDTO,
   type CustomerDTO,
   type CustomerWriteDTO,
+  type OrganizationPaymentSettingsDTO,
+  type ProviderPaymentSettingsDTO,
+  type ProviderPaymentSettingsUpdateDTO,
+  type ProviderAvailabilityDTO,
   type ServiceOfferingDTO,
   type ServiceOfferingWriteDTO,
   type ProviderWriteDTO,
@@ -136,6 +141,27 @@ export const api = {
     });
   },
 
+  getOrganizationPaymentSettings() {
+    return apiRequest<OrganizationPaymentSettingsDTO>(apiRoutes.organizations.paymentSettings, {
+      auth: true
+    });
+  },
+
+  updateOrganizationPaymentSettings(input: ProviderPaymentSettingsUpdateDTO) {
+    return apiRequest<OrganizationPaymentSettingsDTO>(apiRoutes.organizations.paymentSettings, {
+      method: "PATCH",
+      auth: true,
+      body: input
+    });
+  },
+
+  createOrganizationMercadoPagoConnectUrl() {
+    return apiRequest<MercadoPagoConnectUrlDTO>(apiRoutes.organizations.mercadoPagoConnect, {
+      method: "POST",
+      auth: true
+    });
+  },
+
   getCustomers(query: PaginationQuery = {}) {
     return apiRequest<PaginatedResponse<CustomerDTO>>(apiRoutes.customers.list, {
       auth: true,
@@ -201,6 +227,33 @@ export const api = {
       method: "PATCH",
       auth: true,
       body: { isActive }
+    });
+  },
+
+  getProviderPaymentSettings(providerId: string) {
+    return apiRequest<ProviderPaymentSettingsDTO>(apiRoutes.providers.paymentSettings(providerId), {
+      auth: true
+    });
+  },
+
+  updateProviderPaymentSettings(providerId: string, input: ProviderPaymentSettingsUpdateDTO) {
+    return apiRequest<ProviderPaymentSettingsDTO>(apiRoutes.providers.paymentSettings(providerId), {
+      method: "PATCH",
+      auth: true,
+      body: input
+    });
+  },
+
+  createMercadoPagoConnectUrl(providerId: string) {
+    return apiRequest<MercadoPagoConnectUrlDTO>(apiRoutes.providers.mercadoPagoConnect(providerId), {
+      method: "POST",
+      auth: true
+    });
+  },
+
+  getProviderAvailability(providerId: string) {
+    return apiRequest<ProviderAvailabilityDTO[]>(apiRoutes.providers.availability(providerId), {
+      auth: true
     });
   },
 

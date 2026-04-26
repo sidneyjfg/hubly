@@ -6,6 +6,18 @@ import { getAuthUser } from "../utils/request-auth";
 export class PaymentsController {
   public constructor(private readonly paymentsService: PaymentsService) {}
 
+  public getOrganizationSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.paymentsService.getOrganizationSettings(getAuthUser(request)));
+  };
+
+  public updateOrganizationSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.paymentsService.updateOrganizationSettings(getAuthUser(request), request.body));
+  };
+
+  public createOrganizationMercadoPagoConnectUrl = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.paymentsService.createOrganizationMercadoPagoConnectUrl(getAuthUser(request)));
+  };
+
   public getProviderSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const params = request.params as { providerId?: string };
     reply.status(200).send(await this.paymentsService.getProviderSettings(getAuthUser(request), params.providerId ?? ""));

@@ -9,6 +9,7 @@ import { CustomersRepository } from "../repositories/customers.repository";
 import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
 import { OrganizationNotificationSettingsRepository } from "../repositories/organization-notification-settings.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
+import { OrganizationPaymentSettingsRepository } from "../repositories/organization-payment-settings.repository";
 import { PaymentTransactionsRepository } from "../repositories/payment-transactions.repository";
 import { ProviderPaymentSettingsRepository } from "../repositories/provider-payment-settings.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
@@ -42,6 +43,7 @@ export const buildPaymentsService = (dataSource: DataSource): PaymentsService =>
 
   return new PaymentsService(
     dataSource,
+    new OrganizationPaymentSettingsRepository(dataSource),
     new ProviderPaymentSettingsRepository(dataSource),
     new ProvidersRepository(dataSource),
     new ServiceOfferingsRepository(dataSource),
@@ -59,6 +61,30 @@ export const paymentsRoutes = async (
   options: PaymentsRouteOptions,
 ): Promise<void> => {
   const controller = new PaymentsController(buildPaymentsService(options.dataSource));
+
+  app.get(
+    "/organization/payment-settings",
+    {
+      preHandler: allowRoles(["administrator"]),
+    },
+    controller.getOrganizationSettings,
+  );
+
+  app.patch(
+    "/organization/payment-settings",
+    {
+      preHandler: [allowRoles(["administrator"]), criticalRouteRateLimitMiddleware("payments:settings")],
+    },
+    controller.updateOrganizationSettings,
+  );
+
+  app.post(
+    "/organization/mercado-pago/connect",
+    {
+      preHandler: [allowRoles(["administrator"]), criticalRouteRateLimitMiddleware("payments:connect")],
+    },
+    controller.createOrganizationMercadoPagoConnectUrl,
+  );
 
   app.get(
     "/providers/:providerId/payment-settings",

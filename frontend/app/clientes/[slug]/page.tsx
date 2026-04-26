@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { use, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, CheckCircle2, Clock, Lock, MapPin, ShieldCheck, Stethoscope } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, Clock, CreditCard, Lock, MapPin, ShieldCheck, Stethoscope } from "lucide-react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [paymentType, setPaymentType] = useState<"online" | "presential">("presential");
 
   const organizationQuery = useQuery({
     queryKey: ["public-organization", slug],
@@ -57,6 +58,8 @@ export default function CustomerBookingPage({ params }: PageProps) {
     () => services.find((service) => service.id === selectedOfferingId) ?? null,
     [selectedOfferingId, services]
   );
+  const selectedServicePriceCents = selectedService?.priceCents ?? null;
+  const hasOnlinePrice = typeof selectedServicePriceCents === "number" && selectedServicePriceCents > 0;
 
   const bookingMutation = useMutation({
     mutationFn: () => {
@@ -74,12 +77,36 @@ export default function CustomerBookingPage({ params }: PageProps) {
         startsAt: selectedSlot.startsAt,
         endsAt: selectedSlot.endsAt,
         notes: null,
-        paymentType: "presential"
+        paymentType
       });
+    },
+    onSuccess: (booking) => {
+      if (booking.paymentType === "online" && booking.paymentCheckoutUrl) {
+        window.location.href = booking.paymentCheckoutUrl;
+      }
     }
   });
 
-  const canSubmit = Boolean(fullName && email && phone && password.length >= 8 && selectedSlot && selectedProviderId);
+  const canSubmit = Boolean(
+    fullName
+      && email
+      && phone
+      && password.length >= 8
+      && selectedSlot
+      && selectedProviderId
+      && (paymentType === "presential" || hasOnlinePrice)
+  );
+
+  function formatCurrency(cents?: number | null): string {
+    if (typeof cents !== "number") {
+      return "Valor a confirmar";
+    }
+
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    }).format(cents / 100);
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -240,6 +267,44 @@ export default function CustomerBookingPage({ params }: PageProps) {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{selectedService?.name ?? "Serviço"}</p>
+                    <p className="mt-1 text-sm text-slate-400">{formatCurrency(selectedServicePriceCents)}</p>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <button
+                    className={`rounded-lg border p-4 text-left transition ${
+                      paymentType === "presential" ? "border-sky-300 bg-sky-400/15" : "border-white/10 bg-white/5 hover:bg-white/10"
+                    }`}
+                    onClick={() => setPaymentType("presential")}
+                    type="button"
+                  >
+                    <p className="text-sm font-semibold text-white">Pagar no local</p>
+                    <p className="mt-1 text-xs text-slate-400">A clínica confirma o pagamento presencialmente.</p>
+                  </button>
+                  <button
+                    className={`rounded-lg border p-4 text-left transition ${
+                      paymentType === "online" ? "border-sky-300 bg-sky-400/15" : "border-white/10 bg-white/5 hover:bg-white/10"
+                    } ${hasOnlinePrice ? "" : "opacity-50"}`}
+                    disabled={!hasOnlinePrice}
+                    onClick={() => setPaymentType("online")}
+                    type="button"
+                  >
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-white">
+                      <CreditCard className="h-4 w-4 text-sky-300" />
+                      Pagar online
+                    </span>
+                    <p className="mt-1 text-xs text-slate-400">Abre o checkout do Mercado Pago após confirmar.</p>
+                  </button>
+                </div>
+                {!hasOnlinePrice ? (
+                  <p className="mt-3 text-xs text-amber-200">Pagamento online exige que o serviço tenha preço cadastrado.</p>
+                ) : null}
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-sky-300" />
                   <p className="text-sm font-semibold text-white">Cadastro final do cliente</p>
@@ -253,7 +318,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
               </div>
 
               <Button className="w-full" disabled={!canSubmit || bookingMutation.isPending} onClick={() => bookingMutation.mutate()}>
-                Confirmar agendamento
+                {paymentType === "online" ? "Confirmar e ir para pagamento" : "Confirmar agendamento"}
               </Button>
               {bookingMutation.error ? <p className="text-sm text-rose-300">{bookingMutation.error.message}</p> : null}
             </div>

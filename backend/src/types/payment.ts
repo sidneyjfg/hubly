@@ -15,6 +15,8 @@ export type ProviderPaymentSettings = {
   mercadoPagoTokenExpiresAt?: string | null;
 };
 
+export type OrganizationPaymentSettings = Omit<ProviderPaymentSettings, "providerId">;
+
 export type PaymentBreakdown = {
   paymentType: PaymentType;
   originalAmountCents: number;

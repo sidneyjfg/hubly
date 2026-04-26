@@ -90,6 +90,18 @@ export type Provider = {
   isActive: boolean;
 };
 
+export type ProviderAvailability = {
+  id: string;
+  organizationId: string;
+  providerId: string;
+  weekday: number;
+  workStart: string;
+  workEnd: string;
+  lunchStart?: string | null;
+  lunchEnd?: string | null;
+  isActive: boolean;
+};
+
 export type ServiceOffering = {
   id: string;
   organizationId: string;
@@ -114,6 +126,35 @@ export type Booking = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
+  paymentType?: "online" | "presential";
+  originalAmountCents?: number;
+  discountedAmountCents?: number;
+  onlineDiscountCents?: number;
+  platformCommissionRateBps?: number;
+  platformCommissionCents?: number;
+  providerNetAmountCents?: number;
+  paymentStatus?: "not_required" | "pending" | "approved" | "rejected" | "cancelled" | "pending_local";
+  paymentCheckoutUrl?: string | null;
+};
+
+export type ProviderPaymentSettings = {
+  providerId: string;
+  organizationId: string;
+  commissionRateBps: number;
+  onlineDiscountBps: number;
+  absorbsProcessingFee: boolean;
+  mercadoPagoConnected: boolean;
+  mercadoPagoUserId?: string | null;
+  mercadoPagoAccessToken?: string | null;
+  mercadoPagoRefreshToken?: string | null;
+  mercadoPagoTokenExpiresAt?: string | null;
+};
+
+export type OrganizationPaymentSettings = Omit<ProviderPaymentSettings, "providerId">;
+
+export type MercadoPagoConnectUrl = {
+  providerId: string;
+  authorizationUrl: string;
 };
 
 export type AutomationSettings = {
