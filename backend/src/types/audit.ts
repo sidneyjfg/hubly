@@ -1,6 +1,6 @@
 export type AuditEvent = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   actorId: string;
   action: string;
   targetType: string;

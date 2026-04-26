@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import type { AppointmentStatus, PatientStatus } from "@/lib/types";
+import type { BookingStatus, CustomerStatus } from "@/lib/types";
 
-type BadgeVariant = AppointmentStatus | PatientStatus;
+type BadgeVariant = BookingStatus | CustomerStatus;
 
 const badgeStyles: Record<BadgeVariant, string> = {
   active: "bg-emerald-500/15 text-emerald-300",

@@ -1,0 +1,15 @@
+<svg width="164" height="128" viewBox="0 0 164 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hublyIconGradient" x1="18" y1="14" x2="146" y2="114" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C3FFF"/>
+      <stop offset="1" stop-color="#3A8CFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="18" y="14" width="34" height="100" rx="17" fill="url(#hublyIconGradient)"/>
+  <rect x="112" y="14" width="34" height="100" rx="17" fill="url(#hublyIconGradient)"/>
+  <path d="M52 39C67.5 39 77.75 44 82 50C86.25 44 96.5 39 112 39V50C101.333 50 92.1667 55.3333 82 65C71.8333 55.3333 62.6667 50 52 50V39Z" fill="url(#hublyIconGradient)"/>
+  <path d="M52 89C67.5 89 77.75 84 82 78C86.25 84 96.5 89 112 89V78C101.333 78 92.1667 72.6667 82 63C71.8333 72.6667 62.6667 78 52 78V89Z" fill="url(#hublyIconGradient)"/>
+  <path d="M82 44C63.8454 44 49.6487 56.7831 42.5 64C49.6487 71.2169 63.8454 84 82 84C100.155 84 114.351 71.2169 121.5 64C114.351 56.7831 100.155 44 82 44Z" fill="white"/>
+  <circle cx="82" cy="64" r="13" fill="url(#hublyIconGradient)"/>
+  <circle cx="82" cy="64" r="5.5" fill="white"/>
+</svg>

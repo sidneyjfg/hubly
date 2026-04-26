@@ -18,28 +18,28 @@ const protectedHeadersSchema = {
       description: "Bearer access token returned by /v1/auth/sign-in.",
       examples: ["Bearer {{accessToken}}"],
     },
-    "x-clinic-id": {
+    "x-organization-id": {
       type: "string",
-      description: "Optional tenant header. When provided it must match the clinicId from the token.",
-      examples: ["{{clinicId}}"],
+      description: "Optional tenant header. When provided it must match the organizationId from the token.",
+      examples: ["{{organizationId}}"],
     },
   },
 } as const;
 
 const roleSchema = {
   type: "string",
-  enum: ["administrator", "reception", "professional"],
+  enum: ["administrator", "reception", "provider"],
 } as const;
 
 const authSessionSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["accessToken", "refreshToken", "sessionId", "clinicId", "actorId", "role"],
+  required: ["accessToken", "refreshToken", "sessionId", "organizationId", "actorId", "role"],
   properties: {
     accessToken: { type: "string" },
     refreshToken: { type: "string" },
     sessionId: { type: "string" },
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
     actorId: { type: "string" },
     role: roleSchema,
   },
@@ -48,10 +48,10 @@ const authSessionSchema = {
 const userSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["id", "clinicId", "fullName", "email", "phone", "role", "isActive", "createdAt"],
+  required: ["id", "organizationId", "fullName", "email", "phone", "role", "isActive", "createdAt"],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
     fullName: { type: "string" },
     email: { type: "string", format: "email" },
     phone: { type: "string" },
@@ -61,14 +61,15 @@ const userSchema = {
   },
 } as const;
 
-const clinicSchema = {
+const organizationSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["id", "legalName", "tradeName", "timezone"],
+  required: ["id", "legalName", "tradeName", "bookingPageSlug", "timezone"],
   properties: {
     id: { type: "string" },
     legalName: { type: "string" },
     tradeName: { type: "string" },
+    bookingPageSlug: { type: "string" },
     timezone: { type: "string" },
   },
 } as const;
@@ -76,46 +77,47 @@ const clinicSchema = {
 const meResponseSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["user", "clinic"],
+  required: ["user", "organization"],
   properties: {
     user: userSchema,
-    clinic: clinicSchema,
+    organization: organizationSchema,
   },
 } as const;
 
-const clinicWriteSchema = {
+const organizationWriteSchema = {
   type: "object",
   additionalProperties: false,
   required: ["legalName", "tradeName", "timezone"],
   properties: {
     legalName: { type: "string" },
     tradeName: { type: "string" },
+    bookingPageSlug: { type: "string" },
     timezone: { type: "string" },
   },
 } as const;
 
-const professionalSchema = {
+const providerSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["id", "clinicId", "fullName", "specialty", "isActive"],
+  required: ["id", "organizationId", "fullName", "specialty", "isActive"],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
     fullName: { type: "string" },
     specialty: { type: "string" },
     isActive: { type: "boolean" },
   },
 } as const;
 
-const professionalServiceSchema = {
+const providerServiceSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["id", "clinicId", "professionalId", "name", "durationMinutes", "isActive"],
+  required: ["id", "organizationId", "providerId", "name", "durationMinutes", "isActive"],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
-    professionalId: { type: "string" },
-    professionalName: { type: "string" },
+    organizationId: { type: "string" },
+    providerId: { type: "string" },
+    providerName: { type: "string" },
     name: { type: "string" },
     durationMinutes: { type: "integer" },
     priceCents: { type: ["integer", "null"] },
@@ -123,12 +125,12 @@ const professionalServiceSchema = {
   },
 } as const;
 
-const professionalServiceWriteSchema = {
+const providerServiceWriteSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["professionalId", "name", "durationMinutes"],
+  required: ["providerId", "name", "durationMinutes"],
   properties: {
-    professionalId: { type: "string" },
+    providerId: { type: "string" },
     name: { type: "string" },
     durationMinutes: { type: "integer", minimum: 5, maximum: 720 },
     priceCents: { type: ["integer", "null"], minimum: 0 },
@@ -136,7 +138,7 @@ const professionalServiceWriteSchema = {
   },
 } as const;
 
-const professionalWriteSchema = {
+const providerWriteSchema = {
   type: "object",
   additionalProperties: false,
   required: ["fullName", "specialty"],
@@ -147,13 +149,44 @@ const professionalWriteSchema = {
   },
 } as const;
 
-const patientSchema = {
+const providerAvailabilitySchema = {
   type: "object",
   additionalProperties: false,
-  required: ["id", "clinicId", "fullName", "phone", "isActive"],
+  required: ["id", "organizationId", "providerId", "weekday", "workStart", "workEnd", "isActive"],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
+    providerId: { type: "string" },
+    weekday: { type: "integer", minimum: 0, maximum: 6 },
+    workStart: { type: "string", pattern: "^\\d{2}:\\d{2}$" },
+    workEnd: { type: "string", pattern: "^\\d{2}:\\d{2}$" },
+    lunchStart: { type: ["string", "null"], pattern: "^\\d{2}:\\d{2}$" },
+    lunchEnd: { type: ["string", "null"], pattern: "^\\d{2}:\\d{2}$" },
+    isActive: { type: "boolean" },
+  },
+} as const;
+
+const providerAvailabilityWriteSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["weekday", "workStart", "workEnd"],
+  properties: {
+    weekday: { type: "integer", minimum: 0, maximum: 6 },
+    workStart: { type: "string", pattern: "^\\d{2}:\\d{2}$" },
+    workEnd: { type: "string", pattern: "^\\d{2}:\\d{2}$" },
+    lunchStart: { type: ["string", "null"], pattern: "^\\d{2}:\\d{2}$" },
+    lunchEnd: { type: ["string", "null"], pattern: "^\\d{2}:\\d{2}$" },
+    isActive: { type: "boolean" },
+  },
+} as const;
+
+const customerSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["id", "organizationId", "fullName", "phone", "isActive"],
+  properties: {
+    id: { type: "string" },
+    organizationId: { type: "string" },
     fullName: { type: "string" },
     email: { type: ["string", "null"] },
     phone: { type: "string" },
@@ -161,7 +194,7 @@ const patientSchema = {
   },
 } as const;
 
-const patientWriteSchema = {
+const customerWriteSchema = {
   type: "object",
   additionalProperties: false,
   required: ["fullName", "phone"],
@@ -172,26 +205,26 @@ const patientWriteSchema = {
   },
 } as const;
 
-const appointmentSchema = {
+const bookingSchema = {
   type: "object",
   additionalProperties: false,
   required: [
     "id",
-    "clinicId",
-    "patientId",
-    "professionalId",
+    "organizationId",
+    "customerId",
+    "providerId",
     "status",
     "startsAt",
     "endsAt",
   ],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
-    patientId: { type: "string" },
-    professionalId: { type: "string" },
-    serviceId: { type: ["string", "null"] },
-    patientName: { type: "string" },
-    professionalName: { type: "string" },
+    organizationId: { type: "string" },
+    customerId: { type: "string" },
+    providerId: { type: "string" },
+    offeringId: { type: ["string", "null"] },
+    customerName: { type: "string" },
+    providerName: { type: "string" },
     serviceName: { type: ["string", "null"] },
     status: {
       type: "string",
@@ -203,21 +236,21 @@ const appointmentSchema = {
   },
 } as const;
 
-const appointmentWriteSchema = {
+const bookingWriteSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["patientId", "professionalId", "startsAt", "endsAt"],
+  required: ["customerId", "providerId", "startsAt", "endsAt"],
   properties: {
-    patientId: { type: "string" },
-    professionalId: { type: "string" },
-    serviceId: { type: ["string", "null"] },
+    customerId: { type: "string" },
+    providerId: { type: "string" },
+    offeringId: { type: ["string", "null"] },
     startsAt: { type: "string", format: "date-time" },
     endsAt: { type: "string", format: "date-time" },
     notes: { type: ["string", "null"] },
   },
 } as const;
 
-const appointmentActionSchema = {
+const bookingActionSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -225,7 +258,7 @@ const appointmentActionSchema = {
   },
 } as const;
 
-const appointmentScheduleSchema = {
+const bookingScheduleSchema = {
   type: "object",
   additionalProperties: false,
   required: ["referenceDate", "startDate", "endDate", "items", "page", "limit", "total", "totalPages"],
@@ -235,7 +268,7 @@ const appointmentScheduleSchema = {
     endDate: { type: "string", format: "date-time" },
     items: {
       type: "array",
-      items: appointmentSchema,
+      items: bookingSchema,
     },
     limit: { type: "integer" },
     page: { type: "integer" },
@@ -244,25 +277,95 @@ const appointmentScheduleSchema = {
   },
 } as const;
 
+const publicAvailableSlotSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["startsAt", "endsAt", "label"],
+  properties: {
+    startsAt: { type: "string", format: "date-time" },
+    endsAt: { type: "string", format: "date-time" },
+    label: { type: "string" },
+  },
+} as const;
+
+const publicBookingPageSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["organizationId", "bookingPageSlug", "tradeName", "timezone", "providers", "serviceOfferings"],
+  properties: {
+    organizationId: { type: "string" },
+    bookingPageSlug: { type: "string" },
+    tradeName: { type: "string" },
+    timezone: { type: "string" },
+    providers: {
+      type: "array",
+      items: providerSchema,
+    },
+    serviceOfferings: {
+      type: "array",
+      items: providerServiceSchema,
+    },
+  },
+} as const;
+
+const publicBookingAvailabilityResponseSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["items"],
+  properties: {
+    items: {
+      type: "array",
+      items: publicAvailableSlotSchema,
+    },
+  },
+} as const;
+
+const publicBookingCreateSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["fullName", "phone", "providerId", "startsAt", "endsAt"],
+  properties: {
+    fullName: { type: "string", minLength: 3, maxLength: 120 },
+    email: { type: ["string", "null"], format: "email" },
+    phone: { type: "string", minLength: 10, maxLength: 30 },
+    providerId: { type: "string" },
+    offeringId: { type: ["string", "null"] },
+    startsAt: { type: "string", format: "date-time" },
+    endsAt: { type: "string", format: "date-time" },
+    notes: { type: ["string", "null"], maxLength: 255 },
+  },
+} as const;
+
+const publicBookingAvailabilityQuerySchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["providerId", "date"],
+  properties: {
+    providerId: { type: "string" },
+    date: { type: "string", format: "date" },
+    offeringId: { type: ["string", "null"] },
+  },
+} as const;
+
 const noShowOverviewSchema = {
   type: "object",
   additionalProperties: false,
   required: [
-    "clinicId",
+    "organizationId",
     "periodStart",
     "periodEnd",
-    "totalAppointments",
-    "attendedAppointments",
-    "missedAppointments",
+    "totalBookings",
+    "attendedBookings",
+    "missedBookings",
     "noShowRate",
   ],
   properties: {
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
     periodStart: { type: "string", format: "date-time" },
     periodEnd: { type: "string", format: "date-time" },
-    totalAppointments: { type: "number" },
-    attendedAppointments: { type: "number" },
-    missedAppointments: { type: "number" },
+    totalBookings: { type: "number" },
+    attendedBookings: { type: "number" },
+    missedBookings: { type: "number" },
     noShowRate: { type: "number" },
   },
 } as const;
@@ -270,10 +373,10 @@ const noShowOverviewSchema = {
 const auditEventSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["id", "clinicId", "actorId", "action", "targetType", "targetId", "occurredAt"],
+  required: ["id", "organizationId", "actorId", "action", "targetType", "targetId", "occurredAt"],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
     actorId: { type: "string" },
     action: { type: "string" },
     targetType: { type: "string" },
@@ -385,9 +488,9 @@ const whatsappReminderRuleSchema = {
 const whatsappReminderSettingsSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["clinicId", "channel", "isEnabled", "reminders"],
+  required: ["organizationId", "channel", "isEnabled", "reminders"],
   properties: {
-    clinicId: { type: "string" },
+    organizationId: { type: "string" },
     channel: { type: "string", const: "whatsapp" },
     isEnabled: { type: "boolean" },
     reminders: {
@@ -411,24 +514,24 @@ const whatsappReminderSettingsWriteSchema = {
   },
 } as const;
 
-const appointmentNotificationSchema = {
+const bookingNotificationSchema = {
   type: "object",
   additionalProperties: false,
   required: [
     "id",
-    "clinicId",
-    "appointmentId",
+    "organizationId",
+    "bookingId",
     "channel",
     "status",
     "scheduledFor",
     "hoursBefore",
-    "patientPhone",
+    "customerPhone",
     "message",
   ],
   properties: {
     id: { type: "string" },
-    clinicId: { type: "string" },
-    appointmentId: { type: "string" },
+    organizationId: { type: "string" },
+    bookingId: { type: "string" },
     channel: { type: "string", const: "whatsapp" },
     status: { type: "string", enum: ["pending", "processing", "sent", "cancelled", "failed"] },
     scheduledFor: { type: "string", format: "date-time" },
@@ -436,7 +539,7 @@ const appointmentNotificationSchema = {
     cancelledAt: { type: ["string", "null"], format: "date-time" },
     failedAt: { type: ["string", "null"], format: "date-time" },
     hoursBefore: { type: "integer" },
-    patientPhone: { type: "string" },
+    customerPhone: { type: "string" },
     message: { type: "string" },
     externalMessageId: { type: ["string", "null"] },
     lastError: { type: ["string", "null"] },
@@ -461,7 +564,7 @@ const processDueNotificationsResponseSchema = {
     failedCount: { type: "integer" },
     items: {
       type: "array",
-      items: appointmentNotificationSchema,
+      items: bookingNotificationSchema,
     },
   },
 } as const;
@@ -487,7 +590,7 @@ const paginationQuerySchema = {
   },
 } as const;
 
-const appointmentListQuerySchema = {
+const bookingListQuerySchema = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -499,13 +602,13 @@ const appointmentListQuerySchema = {
   },
 } as const;
 
-const professionalServiceListQuerySchema = {
+const providerServiceListQuerySchema = {
   type: "object",
   additionalProperties: false,
   properties: {
     limit: { type: "integer", minimum: 1, maximum: 100 },
     page: { type: "integer", minimum: 1 },
-    professionalId: { type: "string" },
+    providerId: { type: "string" },
   },
 } as const;
 
@@ -563,7 +666,7 @@ export const signInRouteSchema = {
       email: {
         type: "string",
         format: "email",
-        examples: ["admin@clinic.test"],
+        examples: ["admin@organization.test"],
       },
       password: {
         type: "string",
@@ -604,17 +707,17 @@ export const refreshRouteSchema = {
 export const authSignUpRouteSchema = {
   tags: ["Auth"],
   summary: "Sign up",
-  description: "Creates a clinic tenant and the initial administrator account.",
+  description: "Creates a organization tenant and the initial administrator account.",
   body: {
     type: "object",
     additionalProperties: false,
-    required: ["fullName", "email", "phone", "password", "clinic"],
+    required: ["fullName", "email", "phone", "password", "organization"],
     properties: {
       fullName: { type: "string", minLength: 3, maxLength: 120 },
       email: { type: "string", format: "email" },
       phone: { type: "string", minLength: 10, maxLength: 30 },
       password: { type: "string", minLength: 8, maxLength: 120 },
-      clinic: clinicWriteSchema,
+      organization: organizationWriteSchema,
     },
   },
   response: {
@@ -628,7 +731,7 @@ export const authMeRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Auth"],
   summary: "Current account",
-  description: "Returns the authenticated account and clinic context.",
+  description: "Returns the authenticated account and organization context.",
   response: {
     ...protectedRouteSchemaBase.response,
     200: meResponseSchema,
@@ -696,7 +799,7 @@ export const forgotPasswordRouteSchema = {
       email: {
         type: "string",
         format: "email",
-        examples: ["admin@clinic.test"],
+        examples: ["admin@organization.test"],
       },
     },
   },
@@ -714,80 +817,80 @@ export const forgotPasswordRouteSchema = {
   },
 } satisfies FastifySchema;
 
-export const clinicsListRouteSchema = {
+export const organizationsListRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Clinics"],
-  summary: "List clinics",
-  description: "Lists clinics available to administrator and reception users.",
+  tags: ["Organizations"],
+  summary: "List organizations",
+  description: "Lists organizations available to administrator and reception users.",
   querystring: paginationQuerySchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: buildPaginatedListResponseSchema(clinicSchema),
+    200: buildPaginatedListResponseSchema(organizationSchema),
   },
 } satisfies FastifySchema;
 
-export const clinicsCreateRouteSchema = {
+export const organizationsCreateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Clinics"],
-  summary: "Create clinic",
-  body: clinicWriteSchema,
+  tags: ["Organizations"],
+  summary: "Create organization",
+  body: organizationWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    201: clinicSchema,
+    201: organizationSchema,
   },
 } satisfies FastifySchema;
 
-export const clinicsUpdateRouteSchema = {
+export const organizationsUpdateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Clinics"],
-  summary: "Update clinic",
-  body: clinicWriteSchema,
+  tags: ["Organizations"],
+  summary: "Update organization",
+  body: organizationWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: clinicSchema,
+    200: organizationSchema,
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const professionalsListRouteSchema = {
+export const providersListRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professionals"],
-  summary: "List professionals",
-  description: "Lists professionals for the authenticated tenant.",
+  tags: ["Providers"],
+  summary: "List providers",
+  description: "Lists providers for the authenticated tenant.",
   querystring: paginationQuerySchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: buildPaginatedListResponseSchema(professionalSchema),
+    200: buildPaginatedListResponseSchema(providerSchema),
   },
 } satisfies FastifySchema;
 
-export const professionalsCreateRouteSchema = {
+export const providersCreateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professionals"],
-  summary: "Create professional",
-  body: professionalWriteSchema,
+  tags: ["Providers"],
+  summary: "Create provider",
+  body: providerWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    201: professionalSchema,
+    201: providerSchema,
   },
 } satisfies FastifySchema;
 
-export const professionalsUpdateRouteSchema = {
+export const providersUpdateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professionals"],
-  summary: "Update professional",
-  body: professionalWriteSchema,
+  tags: ["Providers"],
+  summary: "Update provider",
+  body: providerWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: professionalSchema,
+    200: providerSchema,
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const professionalsStatusRouteSchema = {
+export const providersStatusRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professionals"],
-  summary: "Update professional status",
+  tags: ["Providers"],
+  summary: "Update provider status",
   body: {
     type: "object",
     additionalProperties: false,
@@ -798,51 +901,83 @@ export const professionalsStatusRouteSchema = {
   },
   response: {
     ...protectedRouteSchemaBase.response,
-    200: professionalSchema,
+    200: providerSchema,
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const professionalServicesListRouteSchema = {
+export const providerAvailabilityListRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professional services"],
-  summary: "List professional services",
-  description: "Lists appointment services offered by professionals in the authenticated tenant.",
-  querystring: professionalServiceListQuerySchema,
+  tags: ["Providers"],
+  summary: "List provider availability",
   response: {
     ...protectedRouteSchemaBase.response,
-    200: buildPaginatedListResponseSchema(professionalServiceSchema),
-  },
-} satisfies FastifySchema;
-
-export const professionalServicesCreateRouteSchema = {
-  ...protectedRouteSchemaBase,
-  tags: ["Professional services"],
-  summary: "Create professional service",
-  body: professionalServiceWriteSchema,
-  response: {
-    ...protectedRouteSchemaBase.response,
-    201: professionalServiceSchema,
+    200: {
+      type: "array",
+      items: providerAvailabilitySchema,
+    },
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const professionalServicesUpdateRouteSchema = {
+export const providerAvailabilityReplaceRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professional services"],
-  summary: "Update professional service",
-  body: professionalServiceWriteSchema,
+  tags: ["Providers"],
+  summary: "Replace provider availability",
+  body: {
+    type: "array",
+    items: providerAvailabilityWriteSchema,
+  },
   response: {
     ...protectedRouteSchemaBase.response,
-    200: professionalServiceSchema,
+    200: {
+      type: "array",
+      items: providerAvailabilitySchema,
+    },
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const professionalServicesStatusRouteSchema = {
+export const providerServicesListRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Professional services"],
-  summary: "Update professional service status",
+  tags: ["Provider services"],
+  summary: "List service offerings",
+  description: "Lists booking services offered by providers in the authenticated tenant.",
+  querystring: providerServiceListQuerySchema,
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: buildPaginatedListResponseSchema(providerServiceSchema),
+  },
+} satisfies FastifySchema;
+
+export const providerServicesCreateRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Provider services"],
+  summary: "Create provider service",
+  body: providerServiceWriteSchema,
+  response: {
+    ...protectedRouteSchemaBase.response,
+    201: providerServiceSchema,
+    404: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const providerServicesUpdateRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Provider services"],
+  summary: "Update provider service",
+  body: providerServiceWriteSchema,
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: providerServiceSchema,
+    404: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const providerServicesStatusRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Provider services"],
+  summary: "Update provider service status",
   body: {
     type: "object",
     additionalProperties: false,
@@ -853,50 +988,50 @@ export const professionalServicesStatusRouteSchema = {
   },
   response: {
     ...protectedRouteSchemaBase.response,
-    200: professionalServiceSchema,
+    200: providerServiceSchema,
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const patientsListRouteSchema = {
+export const customersListRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Patients"],
-  summary: "List patients",
-  description: "Lists patients for the authenticated tenant.",
+  tags: ["Customers"],
+  summary: "List customers",
+  description: "Lists customers for the authenticated tenant.",
   querystring: paginationQuerySchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: buildPaginatedListResponseSchema(patientSchema),
+    200: buildPaginatedListResponseSchema(customerSchema),
   },
 } satisfies FastifySchema;
 
-export const patientsCreateRouteSchema = {
+export const customersCreateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Patients"],
-  summary: "Create patient",
-  body: patientWriteSchema,
+  tags: ["Customers"],
+  summary: "Create customer",
+  body: customerWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    201: patientSchema,
+    201: customerSchema,
   },
 } satisfies FastifySchema;
 
-export const patientsUpdateRouteSchema = {
+export const customersUpdateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Patients"],
-  summary: "Update patient",
-  body: patientWriteSchema,
+  tags: ["Customers"],
+  summary: "Update customer",
+  body: customerWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: patientSchema,
+    200: customerSchema,
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const patientsStatusRouteSchema = {
+export const customersStatusRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Patients"],
-  summary: "Update patient status",
+  tags: ["Customers"],
+  summary: "Update customer status",
   body: {
     type: "object",
     additionalProperties: false,
@@ -907,81 +1042,81 @@ export const patientsStatusRouteSchema = {
   },
   response: {
     ...protectedRouteSchemaBase.response,
-    200: patientSchema,
+    200: customerSchema,
     404: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const appointmentsListRouteSchema = {
+export const bookingsListRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Appointments"],
-  summary: "List appointments",
-  description: "Lists appointments with patient and professional names.",
-  querystring: appointmentListQuerySchema,
+  tags: ["Bookings"],
+  summary: "List bookings",
+  description: "Lists bookings with customer and provider names.",
+  querystring: bookingListQuerySchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: buildPaginatedListResponseSchema(appointmentSchema),
+    200: buildPaginatedListResponseSchema(bookingSchema),
   },
 } satisfies FastifySchema;
 
-export const appointmentsCreateRouteSchema = {
+export const bookingsCreateRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Appointments"],
-  summary: "Create appointment",
-  body: appointmentWriteSchema,
+  tags: ["Bookings"],
+  summary: "Create booking",
+  body: bookingWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    201: appointmentSchema,
-    404: errorResponseSchema,
-    409: errorResponseSchema,
-  },
-} satisfies FastifySchema;
-
-export const appointmentsRescheduleRouteSchema = {
-  ...protectedRouteSchemaBase,
-  tags: ["Appointments"],
-  summary: "Reschedule appointment",
-  body: appointmentWriteSchema,
-  response: {
-    ...protectedRouteSchemaBase.response,
-    200: appointmentSchema,
+    201: bookingSchema,
     404: errorResponseSchema,
     409: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const appointmentActionRouteSchema = {
+export const bookingsRescheduleRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Appointments"],
-  summary: "Update appointment status",
-  body: appointmentActionSchema,
+  tags: ["Bookings"],
+  summary: "Reschedule booking",
+  body: bookingWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: appointmentSchema,
+    200: bookingSchema,
     404: errorResponseSchema,
     409: errorResponseSchema,
   },
 } satisfies FastifySchema;
 
-export const appointmentsDailyScheduleRouteSchema = {
+export const bookingActionRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Appointments"],
+  tags: ["Bookings"],
+  summary: "Update booking status",
+  body: bookingActionSchema,
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: bookingSchema,
+    404: errorResponseSchema,
+    409: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const bookingsDailyScheduleRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Bookings"],
   summary: "Daily schedule",
-  querystring: appointmentListQuerySchema,
+  querystring: bookingListQuerySchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: appointmentScheduleSchema,
+    200: bookingScheduleSchema,
   },
 } satisfies FastifySchema;
 
-export const appointmentsWeeklyScheduleRouteSchema = {
+export const bookingsWeeklyScheduleRouteSchema = {
   ...protectedRouteSchemaBase,
-  tags: ["Appointments"],
+  tags: ["Bookings"],
   summary: "Weekly schedule",
-  querystring: appointmentListQuerySchema,
+  querystring: bookingListQuerySchema,
   response: {
     ...protectedRouteSchemaBase.response,
-    200: appointmentScheduleSchema,
+    200: bookingScheduleSchema,
   },
 } satisfies FastifySchema;
 
@@ -1000,7 +1135,7 @@ export const notificationsWhatsAppSettingsGetRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Notifications"],
   summary: "Get WhatsApp reminder settings",
-  description: "Returns the WhatsApp reminder configuration for the current clinic.",
+  description: "Returns the WhatsApp reminder configuration for the current organization.",
   response: {
     ...protectedRouteSchemaBase.response,
     200: whatsappReminderSettingsSchema,
@@ -1011,7 +1146,7 @@ export const notificationsWhatsAppSettingsUpdateRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Notifications"],
   summary: "Update WhatsApp reminder settings",
-  description: "Configures how many WhatsApp reminders should be scheduled before each appointment.",
+  description: "Configures how many WhatsApp reminders should be scheduled before each booking.",
   body: whatsappReminderSettingsWriteSchema,
   response: {
     ...protectedRouteSchemaBase.response,
@@ -1089,7 +1224,7 @@ export const whatsappSessionStartRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Integrations"],
   summary: "Start WhatsApp session",
-  description: "Creates or reuses the clinic instance and requests a connection code for the informed phone number.",
+  description: "Creates or reuses the organization instance and requests a connection code for the informed phone number.",
   body: whatsappSessionRequestSchema,
   response: {
     ...protectedRouteSchemaBase.response,
@@ -1103,7 +1238,7 @@ export const whatsappRegenerateCodeRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Integrations"],
   summary: "Regenerate WhatsApp code",
-  description: "Restarts the clinic instance and requests a fresh connection code for the informed phone number.",
+  description: "Restarts the organization instance and requests a fresh connection code for the informed phone number.",
   body: whatsappSessionRequestSchema,
   response: {
     ...protectedRouteSchemaBase.response,
@@ -1156,5 +1291,39 @@ export const auditEventsRouteSchema = {
   response: {
     ...protectedRouteSchemaBase.response,
     200: buildPaginatedListResponseSchema(auditEventSchema),
+  },
+} satisfies FastifySchema;
+
+export const publicBookingPageRouteSchema = {
+  tags: ["Public bookings"],
+  summary: "Get public booking page",
+  response: {
+    200: publicBookingPageSchema,
+    404: errorResponseSchema,
+    500: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const publicBookingAvailabilityRouteSchema = {
+  tags: ["Public bookings"],
+  summary: "List public availability slots",
+  querystring: publicBookingAvailabilityQuerySchema,
+  response: {
+    200: publicBookingAvailabilityResponseSchema,
+    404: errorResponseSchema,
+    500: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const publicBookingCreateRouteSchema = {
+  tags: ["Public bookings"],
+  summary: "Create public booking",
+  body: publicBookingCreateSchema,
+  response: {
+    201: bookingSchema,
+    400: errorResponseSchema,
+    404: errorResponseSchema,
+    409: errorResponseSchema,
+    500: errorResponseSchema,
   },
 } satisfies FastifySchema;

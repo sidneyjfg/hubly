@@ -5,12 +5,13 @@ import { z } from "zod";
 import { AuthRepository } from "../repositories/auth.repository";
 import { AuthSessionsRepository } from "../repositories/auth-sessions.repository";
 import { AuditRepository } from "../repositories/audit.repository";
-import { ClinicsRepository } from "../repositories/clinics.repository";
+import { OrganizationsRepository } from "../repositories/organizations.repository";
 import type { AuthSession, MeResponse, SignUpInput } from "../types/auth";
 import { AppError } from "../utils/app-error";
 import { hashPassword, hashTokenValue, verifyPassword, verifyTokenValue } from "../utils/password";
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from "../utils/tokens";
 import type { UserAccountWriteInput } from "../types/user";
+import { slugify } from "../utils/slug";
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -35,11 +36,12 @@ const signUpSchema = z.object({
   email: z.string().email(),
   phone: z.string().min(10).max(30),
   password: z.string().min(8).max(120),
-  clinic: z.object({
-    legalName: z.string().min(3).max(160),
-    tradeName: z.string().min(3).max(160),
-    timezone: z.string().min(3).max(60),
-  }),
+      organization: z.object({
+        legalName: z.string().min(3).max(160),
+        tradeName: z.string().min(3).max(160),
+        bookingPageSlug: z.string().min(3).max(160).optional(),
+        timezone: z.string().min(3).max(60),
+      }),
 });
 
 const accountUpdateSchema = z.object({
@@ -66,7 +68,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly authRepository: AuthRepository,
     private readonly authSessionsRepository: AuthSessionsRepository,
-    private readonly clinicsRepository: ClinicsRepository,
+    private readonly organizationsRepository: OrganizationsRepository,
     private readonly auditRepository: AuditRepository,
   ) {}
 
@@ -81,7 +83,7 @@ export class AuthService {
     const sessionId = randomUUID();
     const refreshToken = createRefreshToken({
       sub: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       role: user.role,
       sessionId,
     });
@@ -96,13 +98,13 @@ export class AuthService {
     return {
       accessToken: createAccessToken({
         sub: user.id,
-        clinicId: user.clinicId,
+        organizationId: user.organizationId,
         role: user.role,
         sessionId,
       }),
       refreshToken,
       sessionId,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       actorId: user.id,
       role: user.role,
     };
@@ -131,7 +133,7 @@ export class AuthService {
     const newSessionId = randomUUID();
     const refreshToken = createRefreshToken({
       sub: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       role: user.role,
       sessionId: newSessionId,
     });
@@ -146,13 +148,13 @@ export class AuthService {
     return {
       accessToken: createAccessToken({
         sub: user.id,
-        clinicId: user.clinicId,
+        organizationId: user.organizationId,
         role: user.role,
         sessionId: newSessionId,
       }),
       refreshToken,
       sessionId: newSessionId,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       actorId: user.id,
       role: user.role,
     };
@@ -170,10 +172,16 @@ export class AuthService {
     const data = signUpSchema.parse(input);
 
     const result = await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
-      const clinic = await this.clinicsRepository.create(data.clinic, manager);
+      const organization = await this.organizationsRepository.create(
+        {
+          ...data.organization,
+          bookingPageSlug: slugify(data.organization.bookingPageSlug ?? data.organization.tradeName),
+        },
+        manager,
+      );
       const user = await this.authRepository.create(
         {
-          clinicId: clinic.id,
+          organizationId: organization.id,
           fullName: data.fullName,
           email: data.email,
           phone: data.phone,
@@ -186,7 +194,7 @@ export class AuthService {
 
       await this.auditRepository.create(
         {
-          clinicId: clinic.id,
+          organizationId: organization.id,
           actorId: user.id,
           action: "auth.sign_up",
           targetType: "user",
@@ -196,57 +204,57 @@ export class AuthService {
       );
 
       return {
-        clinicId: clinic.id,
+        organizationId: organization.id,
         userId: user.id,
         role: user.role,
       };
     });
 
     return this.createSession({
-      clinicId: result.clinicId,
+      organizationId: result.organizationId,
       userId: result.userId,
       role: result.role,
     });
   }
 
-  public async me(userId: string, clinicId: string): Promise<MeResponse> {
-    const [user, clinic] = await Promise.all([
-      this.authRepository.findProfileByIdInClinic(clinicId, userId),
-      this.clinicsRepository.findByIdInClinic(clinicId, clinicId),
+  public async me(userId: string, organizationId: string): Promise<MeResponse> {
+    const [user, organization] = await Promise.all([
+      this.authRepository.findProfileByIdInOrganization(organizationId, userId),
+      this.organizationsRepository.findByIdInOrganization(organizationId, organizationId),
     ]);
 
-    if (!user || !clinic) {
+    if (!user || !organization) {
       throw new AppError("auth.unauthorized", "Unauthorized request.", 401);
     }
 
     return {
       user,
-      clinic,
+      organization,
     };
   }
 
-  public async updateAccount(userId: string, clinicId: string, input: UserAccountWriteInput): Promise<MeResponse> {
+  public async updateAccount(userId: string, organizationId: string, input: UserAccountWriteInput): Promise<MeResponse> {
     const data = accountUpdateSchema.parse(input);
     const currentUser = await this.authRepository.findById(userId);
 
-    if (!currentUser || currentUser.clinicId !== clinicId) {
+    if (!currentUser || currentUser.organizationId !== organizationId) {
       throw new AppError("auth.unauthorized", "Unauthorized request.", 401);
     }
 
-    const duplicateUser = await this.authRepository.findByClinicAndEmail(clinicId, data.email, userId);
+    const duplicateUser = await this.authRepository.findByOrganizationAndEmail(organizationId, data.email, userId);
     if (duplicateUser) {
-      throw new AppError("auth.email_already_in_use", "E-mail already in use for this clinic.", 409);
+      throw new AppError("auth.email_already_in_use", "E-mail already in use for this organization.", 409);
     }
 
-    const user = await this.authRepository.updateAccountInClinic(clinicId, userId, data);
-    const clinic = await this.clinicsRepository.findByIdInClinic(clinicId, clinicId);
+    const user = await this.authRepository.updateAccountInOrganization(organizationId, userId, data);
+    const organization = await this.organizationsRepository.findByIdInOrganization(organizationId, organizationId);
 
-    if (!user || !clinic) {
+    if (!user || !organization) {
       throw new AppError("auth.unauthorized", "Unauthorized request.", 401);
     }
 
     await this.auditRepository.create({
-      clinicId,
+      organizationId,
       actorId: userId,
       action: "auth.account.updated",
       targetType: "user",
@@ -255,27 +263,27 @@ export class AuthService {
 
     return {
       user,
-      clinic,
+      organization,
     };
   }
 
   public async updatePassword(
     userId: string,
-    clinicId: string,
+    organizationId: string,
     sessionId: string,
     input: { currentPassword: string; newPassword: string },
   ): Promise<{ message: string }> {
     const data = passwordUpdateSchema.parse(input);
     const user = await this.authRepository.findById(userId);
 
-    if (!user || user.clinicId !== clinicId || !verifyPassword(data.currentPassword, user.passwordHash)) {
+    if (!user || user.organizationId !== organizationId || !verifyPassword(data.currentPassword, user.passwordHash)) {
       throw new AppError("auth.invalid_credentials", "Invalid current password.", 401);
     }
 
-    await this.authRepository.updatePasswordInClinic(clinicId, userId, hashPassword(data.newPassword));
+    await this.authRepository.updatePasswordInOrganization(organizationId, userId, hashPassword(data.newPassword));
     await this.authSessionsRepository.revoke(sessionId);
     await this.auditRepository.create({
-      clinicId,
+      organizationId,
       actorId: userId,
       action: "auth.password.updated",
       targetType: "user",
@@ -288,14 +296,14 @@ export class AuthService {
   }
 
   private async createSession(input: {
-    clinicId: string;
+    organizationId: string;
     userId: string;
     role: AuthSession["role"];
   }): Promise<AuthSession> {
     const sessionId = randomUUID();
     const refreshToken = createRefreshToken({
       sub: input.userId,
-      clinicId: input.clinicId,
+      organizationId: input.organizationId,
       role: input.role,
       sessionId,
     });
@@ -310,13 +318,13 @@ export class AuthService {
     return {
       accessToken: createAccessToken({
         sub: input.userId,
-        clinicId: input.clinicId,
+        organizationId: input.organizationId,
         role: input.role,
         sessionId,
       }),
       refreshToken,
       sessionId,
-      clinicId: input.clinicId,
+      organizationId: input.organizationId,
       actorId: input.userId,
       role: input.role,
     };

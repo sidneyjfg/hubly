@@ -6,7 +6,7 @@ import { env } from "./env";
 
 type BaseClaims = {
   sub: string;
-  clinicId: string;
+  organizationId: string;
   role: AccessTokenClaims["role"];
   sessionId: string;
 };
@@ -23,7 +23,7 @@ const buildSignOptions = (
 export const createAccessToken = (claims: BaseClaims): string => {
   return jwt.sign(
     {
-      clinicId: claims.clinicId,
+      organizationId: claims.organizationId,
       role: claims.role,
       tokenType: "access",
       sessionId: claims.sessionId,
@@ -36,7 +36,7 @@ export const createAccessToken = (claims: BaseClaims): string => {
 export const createRefreshToken = (claims: BaseClaims): string => {
   return jwt.sign(
     {
-      clinicId: claims.clinicId,
+      organizationId: claims.organizationId,
       role: claims.role,
       tokenType: "refresh",
       sessionId: claims.sessionId,
@@ -53,7 +53,7 @@ export const verifyAccessToken = (token: string): AccessTokenClaims => {
 
   return {
     sub: String(payload.sub),
-    clinicId: String(payload.clinicId),
+    organizationId: String(payload.organizationId),
     role: payload.role as AccessTokenClaims["role"],
     tokenType: "access",
     sessionId: String(payload.sessionId),
@@ -67,7 +67,7 @@ export const verifyRefreshToken = (token: string): RefreshTokenClaims => {
 
   return {
     sub: String(payload.sub),
-    clinicId: String(payload.clinicId),
+    organizationId: String(payload.organizationId),
     role: payload.role as RefreshTokenClaims["role"],
     tokenType: "refresh",
     sessionId: String(payload.sessionId),

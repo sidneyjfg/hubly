@@ -31,7 +31,7 @@ export default function SignUpPage() {
         email,
         phone,
         password,
-        clinic: {
+        organization: {
           legalName,
           tradeName,
           timezone
@@ -46,7 +46,7 @@ export default function SignUpPage() {
       setCurrentUser({
         id: session.actorId,
         actorId: session.actorId,
-        clinicId: session.clinicId,
+        organizationId: session.organizationId,
         email,
         fullName,
         phone,

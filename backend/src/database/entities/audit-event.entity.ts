@@ -1,20 +1,20 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 
-import { ClinicEntity } from "./clinic.entity";
+import { OrganizationEntity } from "./organization.entity";
 import { UserEntity } from "./user.entity";
 
 @Entity({ name: "audit_events" })
-@Index("idx_audit_events_clinic_occurred_at", ["clinicId", "occurredAt"])
+@Index("idx_audit_events_organization_occurred_at", ["organizationId", "occurredAt"])
 export class AuditEventEntity {
   @PrimaryColumn({ type: "varchar", length: 36 })
   public id!: string;
 
   @Column({ type: "varchar", length: 36 })
-  public clinicId!: string;
+  public organizationId!: string;
 
-  @ManyToOne(() => ClinicEntity, (clinic) => clinic.auditEvents, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "clinicId" })
-  public clinic!: ClinicEntity;
+  @ManyToOne(() => OrganizationEntity, (organization) => organization.auditEvents, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "organizationId" })
+  public organization!: OrganizationEntity;
 
   @Column({ type: "varchar", length: 36, nullable: true })
   public actorId!: string | null;

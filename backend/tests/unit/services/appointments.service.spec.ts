@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { AppointmentsService } from "../../../src/services/appointments.service";
-import type { NoShowOverview } from "../../../src/types/appointment";
+import { BookingsService } from "../../../src/services/bookings.service";
+import type { NoShowOverview } from "../../../src/types/booking";
 import { AppError } from "../../../src/utils/app-error";
 
 const authUser = {
   id: "usr_admin_001",
-  clinicId: "cln_main_001",
+  organizationId: "cln_main_001",
   role: "administrator" as const,
   sessionId: "sess_001",
 };
@@ -20,9 +20,25 @@ const transactionDataSource = {
   },
 };
 
-describe("AppointmentsService", () => {
-  it("returns appointments from repository", async () => {
-    const service = new AppointmentsService(
+const availabilityRepository = {
+  async findByProviderAndWeekdayInOrganization() {
+    return {
+      id: "avl_001",
+      organizationId: "cln_main_001",
+      providerId: "pro_001",
+      weekday: 2,
+      workStart: "08:00",
+      workEnd: "18:00",
+      lunchStart: "12:30",
+      lunchEnd: "13:00",
+      isActive: true,
+    };
+  },
+};
+
+describe("BookingsService", () => {
+  it("returns bookings from repository", async () => {
+    const service = new BookingsService(
       transactionDataSource as never,
       {
         async findAll() {
@@ -30,11 +46,11 @@ describe("AppointmentsService", () => {
             items: [
               {
                 id: "apt_001",
-                clinicId: "cln_main_001",
-                patientId: "pat_001",
-                professionalId: "pro_001",
-                patientName: "Carlos Pereira",
-                professionalName: "Dra. Ana Souza",
+                organizationId: "cln_main_001",
+                customerId: "pat_001",
+                providerId: "pro_001",
+                customerName: "Carlos Pereira",
+                providerName: "Dra. Ana Souza",
                 status: "scheduled",
                 startsAt: "2026-04-20T12:00:00.000Z",
                 endsAt: "2026-04-20T12:30:00.000Z",
@@ -52,26 +68,27 @@ describe("AppointmentsService", () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
 
     const result = await service.list(authUser);
 
     expect(result.items).toHaveLength(1);
-    expect(result.items[0]?.patientName).toBe("Carlos Pereira");
+    expect(result.items[0]?.customerName).toBe("Carlos Pereira");
   });
 
-  it("creates an appointment and records audit when there is no conflict", async () => {
+  it("creates an booking and records audit when there is no conflict", async () => {
     const handledEvents: string[] = [];
-    const service = new AppointmentsService(
+    const service = new BookingsService(
       transactionDataSource as never,
       {
         async hasConflict() {
           return false;
         },
         async create(input: {
-          clinicId: string;
-          patientId: string;
-          professionalId: string;
+          organizationId: string;
+          customerId: string;
+          providerId: string;
           createdByUserId: string;
           status: "scheduled";
           startsAt: Date;
@@ -80,12 +97,12 @@ describe("AppointmentsService", () => {
         }) {
           return {
             id: "apt_new_001",
-            clinicId: input.clinicId,
-            patientId: input.patientId,
-            professionalId: input.professionalId,
+            organizationId: input.organizationId,
+            customerId: input.customerId,
+            providerId: input.providerId,
             createdByUserId: input.createdByUserId,
-            patientName: "Carlos Pereira",
-            professionalName: "Dra. Ana Souza",
+            customerName: "Carlos Pereira",
+            providerName: "Dra. Ana Souza",
             status: input.status,
             startsAt: input.startsAt.toISOString(),
             endsAt: input.endsAt.toISOString(),
@@ -94,31 +111,32 @@ describe("AppointmentsService", () => {
         },
       } as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "pat_001",
-            clinicId: "cln_main_001",
+            organizationId: "cln_main_001",
             fullName: "Carlos Pereira",
             phone: "+5511999999999",
           };
         },
       } as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "pro_001",
-            clinicId: "cln_main_001",
+            organizationId: "cln_main_001",
             fullName: "Dra. Ana Souza",
-            specialty: "Clinica Geral",
+            specialty: "Organizationa Geral",
             isActive: true,
           };
         },
       } as never,
+      availabilityRepository as never,
       {
         async create() {},
       } as never,
       {
-        async handleAppointmentEvent(
+        async handleBookingEvent(
           _user: unknown,
           event: { type: string },
         ) {
@@ -128,8 +146,8 @@ describe("AppointmentsService", () => {
     );
 
     const result = await service.create(authUser, {
-      patientId: "pat_001",
-      professionalId: "pro_001",
+      customerId: "pat_001",
+      providerId: "pro_001",
       startsAt: "2026-04-21T12:00:00.000Z",
       endsAt: "2026-04-21T12:30:00.000Z",
       notes: "Primeira consulta",
@@ -137,11 +155,11 @@ describe("AppointmentsService", () => {
 
     expect(result.id).toBe("apt_new_001");
     expect(result.status).toBe("scheduled");
-    expect(handledEvents).toEqual(["appointment.created"]);
+    expect(handledEvents).toEqual(["booking.created"]);
   });
 
-  it("rejects appointment creation when the professional has a conflicting slot", async () => {
-    const service = new AppointmentsService(
+  it("rejects booking creation when the provider has a conflicting slot", async () => {
+    const service = new BookingsService(
       transactionDataSource as never,
       {
         async hasConflict() {
@@ -149,42 +167,43 @@ describe("AppointmentsService", () => {
         },
       } as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "pat_001",
-            clinicId: "cln_main_001",
+            organizationId: "cln_main_001",
             fullName: "Carlos Pereira",
             phone: "+5511999999999",
           };
         },
       } as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "pro_001",
-            clinicId: "cln_main_001",
+            organizationId: "cln_main_001",
             fullName: "Dra. Ana Souza",
-            specialty: "Clinica Geral",
+            specialty: "Organizationa Geral",
             isActive: true,
           };
         },
       } as never,
+      availabilityRepository as never,
       {} as never,
       {} as never,
     );
 
     await expect(
       service.create(authUser, {
-        patientId: "pat_001",
-        professionalId: "pro_001",
+        customerId: "pat_001",
+        providerId: "pro_001",
         startsAt: "2026-04-21T12:00:00.000Z",
         endsAt: "2026-04-21T12:30:00.000Z",
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it("rejects appointment creation when the professional is inactive", async () => {
-    const service = new AppointmentsService(
+  it("rejects booking creation when the provider is inactive", async () => {
+    const service = new BookingsService(
       transactionDataSource as never,
       {
         async hasConflict() {
@@ -192,50 +211,51 @@ describe("AppointmentsService", () => {
         },
       } as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "pat_001",
-            clinicId: "cln_main_001",
+            organizationId: "cln_main_001",
             fullName: "Carlos Pereira",
             phone: "+5511999999999",
           };
         },
       } as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "pro_001",
-            clinicId: "cln_main_001",
+            organizationId: "cln_main_001",
             fullName: "Dra. Ana Souza",
-            specialty: "Clinica Geral",
+            specialty: "Organizationa Geral",
             isActive: false,
           };
         },
       } as never,
+      availabilityRepository as never,
       {} as never,
       {} as never,
     );
 
     await expect(
       service.create(authUser, {
-        patientId: "pat_001",
-        professionalId: "pro_001",
+        customerId: "pat_001",
+        providerId: "pro_001",
         startsAt: "2026-04-21T12:00:00.000Z",
         endsAt: "2026-04-21T12:30:00.000Z",
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it("cancels appointments only from allowed statuses", async () => {
-    const service = new AppointmentsService(
+  it("cancels bookings only from allowed statuses", async () => {
+    const service = new BookingsService(
       transactionDataSource as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "apt_001",
-            clinicId: "cln_main_001",
-            patientId: "pat_001",
-            professionalId: "pro_001",
+            organizationId: "cln_main_001",
+            customerId: "pat_001",
+            providerId: "pro_001",
             status: "cancelled",
             startsAt: "2026-04-21T12:00:00.000Z",
             endsAt: "2026-04-21T12:30:00.000Z",
@@ -243,6 +263,7 @@ describe("AppointmentsService", () => {
           };
         },
       } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,
@@ -256,33 +277,33 @@ describe("AppointmentsService", () => {
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it("marks appointment as attended", async () => {
+  it("marks booking as attended", async () => {
     const handledEvents: string[] = [];
-    const service = new AppointmentsService(
+    const service = new BookingsService(
       transactionDataSource as never,
       {
-        async findByIdInClinic() {
+        async findByIdInOrganization() {
           return {
             id: "apt_001",
-            clinicId: "cln_main_001",
-            patientId: "pat_001",
-            professionalId: "pro_001",
+            organizationId: "cln_main_001",
+            customerId: "pat_001",
+            providerId: "pro_001",
             status: "scheduled",
             startsAt: "2026-04-21T12:00:00.000Z",
             endsAt: "2026-04-21T12:30:00.000Z",
             notes: null,
           };
         },
-        async updateInClinic(
-          _clinicId: string,
+        async updateInOrganization(
+          _organizationId: string,
           id: string,
           input: { status?: "attended" | "missed" | "scheduled"; notes?: string | null },
         ) {
           return {
             id,
-            clinicId: "cln_main_001",
-            patientId: "pat_001",
-            professionalId: "pro_001",
+            organizationId: "cln_main_001",
+            customerId: "pat_001",
+            providerId: "pro_001",
             status: input.status ?? "scheduled",
             startsAt: "2026-04-21T12:00:00.000Z",
             endsAt: "2026-04-21T12:30:00.000Z",
@@ -292,11 +313,12 @@ describe("AppointmentsService", () => {
       } as never,
       {} as never,
       {} as never,
+      {} as never,
       {
         async create() {},
       } as never,
       {
-        async handleAppointmentEvent(
+        async handleBookingEvent(
           _user: unknown,
           event: { type: string },
         ) {
@@ -310,14 +332,14 @@ describe("AppointmentsService", () => {
     });
 
     expect(result.status).toBe("attended");
-    expect(handledEvents).toEqual(["appointment.attended"]);
+    expect(handledEvents).toEqual(["booking.attended"]);
   });
 
   it("returns the daily schedule for the selected date", async () => {
-    const service = new AppointmentsService(
+    const service = new BookingsService(
       transactionDataSource as never,
       {
-        async findAll(_clinicId: string, filters: { from?: Date; to?: Date }) {
+        async findAll(_organizationId: string, filters: { from?: Date; to?: Date }) {
           expect(filters.from?.toISOString()).toBe("2026-04-20T00:00:00.000Z");
           expect(filters.to?.toISOString()).toBe("2026-04-21T00:00:00.000Z");
 
@@ -325,9 +347,9 @@ describe("AppointmentsService", () => {
             items: [
               {
                 id: "apt_001",
-                clinicId: "cln_main_001",
-                patientId: "pat_001",
-                professionalId: "pro_001",
+                organizationId: "cln_main_001",
+                customerId: "pat_001",
+                providerId: "pro_001",
                 status: "scheduled",
                 startsAt: "2026-04-20T09:00:00.000Z",
                 endsAt: "2026-04-20T09:30:00.000Z",
@@ -345,6 +367,7 @@ describe("AppointmentsService", () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
 
     const result = await service.getDailySchedule(authUser, "2026-04-20");
@@ -354,29 +377,30 @@ describe("AppointmentsService", () => {
   });
 
   it("returns no-show overview for the selected period", async () => {
-    const service = new AppointmentsService(
+    const service = new BookingsService(
       transactionDataSource as never,
       {
         async buildNoShowOverview(
-          clinicId: string,
+          organizationId: string,
           periodStart: Date,
           periodEnd: Date,
         ): Promise<NoShowOverview> {
-          expect(clinicId).toBe("cln_main_001");
+          expect(organizationId).toBe("cln_main_001");
           expect(periodStart.toISOString()).toBe("2026-04-18T00:00:00.000Z");
           expect(periodEnd.toISOString()).toBe("2026-04-21T00:00:00.000Z");
 
           return {
-            clinicId,
+            organizationId,
             periodStart: periodStart.toISOString(),
             periodEnd: periodEnd.toISOString(),
-            totalAppointments: 4,
-            attendedAppointments: 3,
-            missedAppointments: 1,
+            totalBookings: 4,
+            attendedBookings: 3,
+            missedBookings: 1,
             noShowRate: 0.25,
           };
         },
       } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,
@@ -389,6 +413,6 @@ describe("AppointmentsService", () => {
     });
 
     expect(result.noShowRate).toBe(0.25);
-    expect(result.missedAppointments).toBe(1);
+    expect(result.missedBookings).toBe(1);
   });
 });

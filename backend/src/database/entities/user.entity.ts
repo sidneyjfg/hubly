@@ -1,22 +1,22 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, Unique } from "typeorm";
 
 import { AuditEventEntity } from "./audit-event.entity";
-import { ClinicEntity } from "./clinic.entity";
-import { AppointmentEntity } from "./appointment.entity";
+import { OrganizationEntity } from "./organization.entity";
+import { BookingEntity } from "./booking.entity";
 import { AuthSessionEntity } from "./auth-session.entity";
 
 @Entity({ name: "users" })
-@Unique("uq_users_clinic_email", ["clinicId", "email"])
+@Unique("uq_users_organization_email", ["organizationId", "email"])
 export class UserEntity {
   @PrimaryColumn({ type: "varchar", length: 36 })
   public id!: string;
 
   @Column({ type: "varchar", length: 36 })
-  public clinicId!: string;
+  public organizationId!: string;
 
-  @ManyToOne(() => ClinicEntity, (clinic) => clinic.users, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "clinicId" })
-  public clinic!: ClinicEntity;
+  @ManyToOne(() => OrganizationEntity, (organization) => organization.users, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "organizationId" })
+  public organization!: OrganizationEntity;
 
   @Column({ type: "varchar", length: 120 })
   public fullName!: string;
@@ -42,8 +42,8 @@ export class UserEntity {
   @OneToMany(() => AuditEventEntity, (auditEvent) => auditEvent.actor)
   public auditEvents!: AuditEventEntity[];
 
-  @OneToMany(() => AppointmentEntity, (appointment) => appointment.createdBy)
-  public createdAppointments!: AppointmentEntity[];
+  @OneToMany(() => BookingEntity, (booking) => booking.createdBy)
+  public createdBookings!: BookingEntity[];
 
   @OneToMany(() => AuthSessionEntity, (session) => session.user)
   public sessions!: AuthSessionEntity[];

@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hublyAppGradient" x1="32" y1="24" x2="224" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C3FFF"/>
+      <stop offset="1" stop-color="#3A8CFF"/>
+    </linearGradient>
+    <filter id="hublyShadow" x="12" y="12" width="232" height="232" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0B0F23" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <g filter="url(#hublyShadow)">
+    <rect x="24" y="24" width="208" height="208" rx="52" fill="url(#hublyAppGradient)"/>
+  </g>
+  <rect x="66" y="56" width="28" height="144" rx="14" fill="white"/>
+  <rect x="162" y="56" width="28" height="144" rx="14" fill="white"/>
+  <path d="M94 94C111.5 94 123 99.75 128 106C133 99.75 144.5 94 162 94V108C150 108 139.667 114.167 128 125C116.333 114.167 106 108 94 108V94Z" fill="white"/>
+  <path d="M94 162C111.5 162 123 156.25 128 150C133 156.25 144.5 162 162 162V148C150 148 139.667 141.833 128 131C116.333 141.833 106 148 94 148V162Z" fill="white"/>
+  <path d="M128 98C107.492 98 91.45 112.257 83.5 120.5C91.45 128.743 107.492 143 128 143C148.508 143 164.55 128.743 172.5 120.5C164.55 112.257 148.508 98 128 98Z" fill="url(#hublyAppGradient)"/>
+  <circle cx="128" cy="120.5" r="14.5" fill="white"/>
+</svg>

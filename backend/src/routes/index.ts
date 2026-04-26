@@ -4,26 +4,28 @@ import type { AppDependencies } from "../app";
 import { authMiddleware } from "../middlewares/auth";
 import { registerErrorHandler } from "../middlewares/error-handler";
 import { tenantMiddleware } from "../middlewares/tenant";
-import { appointmentsRoutes } from "./appointments.routes";
+import { bookingsRoutes } from "./bookings.routes";
 import { auditRoutes } from "./audit.routes";
 import { authRoutes } from "./auth.routes";
-import { clinicsRoutes } from "./clinics.routes";
+import { organizationsRoutes } from "./organizations.routes";
 import { healthRoutes } from "./health.routes";
 import { integrationsRoutes } from "./integrations.routes";
 import { notificationsRoutes } from "./notifications.routes";
-import { patientsRoutes } from "./patients.routes";
-import { professionalServicesRoutes } from "./professional-services.routes";
-import { professionalsRoutes } from "./professionals.routes";
+import { publicBookingsRoutes } from "./public-bookings.routes";
+import { customersRoutes } from "./customers.routes";
+import { providerServicesRoutes } from "./service-offerings.routes";
+import { providersRoutes } from "./providers.routes";
 import { reportsRoutes } from "./reports.routes";
 
 const routeRegistry = [
   healthRoutes,
+  publicBookingsRoutes,
   authRoutes,
-  clinicsRoutes,
-  professionalsRoutes,
-  professionalServicesRoutes,
-  patientsRoutes,
-  appointmentsRoutes,
+  organizationsRoutes,
+  providersRoutes,
+  providerServicesRoutes,
+  customersRoutes,
+  bookingsRoutes,
   notificationsRoutes,
   integrationsRoutes,
   reportsRoutes,

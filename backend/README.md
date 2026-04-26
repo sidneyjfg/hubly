@@ -54,13 +54,13 @@ O repositório agora usa workflows em `.github/workflows` para:
 
 Arquivos principais:
 
-- [VERSION](/home/sidney/automacoes/saas/clinity/VERSION)
-- [.github/workflows/backend-ci.yml](/home/sidney/automacoes/saas/clinity/.github/workflows/backend-ci.yml)
-- [.github/workflows/frontend-ci.yml](/home/sidney/automacoes/saas/clinity/.github/workflows/frontend-ci.yml)
-- [.github/workflows/release-version.yml](/home/sidney/automacoes/saas/clinity/.github/workflows/release-version.yml)
-- [.github/workflows/backend-release.yml](/home/sidney/automacoes/saas/clinity/.github/workflows/backend-release.yml)
-- [.github/workflows/frontend-release.yml](/home/sidney/automacoes/saas/clinity/.github/workflows/frontend-release.yml)
-- [deploy/docker-compose.stack.yml](/home/sidney/automacoes/saas/clinity/deploy/docker-compose.stack.yml)
+- [VERSION](/home/sidney/automacoes/saas/hubly/VERSION)
+- [.github/workflows/backend-ci.yml](/home/sidney/automacoes/saas/hubly/.github/workflows/backend-ci.yml)
+- [.github/workflows/frontend-ci.yml](/home/sidney/automacoes/saas/hubly/.github/workflows/frontend-ci.yml)
+- [.github/workflows/release-version.yml](/home/sidney/automacoes/saas/hubly/.github/workflows/release-version.yml)
+- [.github/workflows/backend-release.yml](/home/sidney/automacoes/saas/hubly/.github/workflows/backend-release.yml)
+- [.github/workflows/frontend-release.yml](/home/sidney/automacoes/saas/hubly/.github/workflows/frontend-release.yml)
+- [deploy/docker-compose.stack.yml](/home/sidney/automacoes/saas/hubly/deploy/docker-compose.stack.yml)
 
 ## Documentação Swagger e Postman
 
@@ -73,9 +73,9 @@ Com a API rodando localmente:
 
 Arquivos exportados no repositório:
 
-- [openapi/openapi.json](/home/sidney/automacoes/saas/clinity/backend/openapi/openapi.json)
-- [postman/hubly-local.collection.json](/home/sidney/automacoes/saas/clinity/backend/postman/hubly-local.collection.json)
-- [postman/hubly-local.environment.json](/home/sidney/automacoes/saas/clinity/backend/postman/hubly-local.environment.json)
+- [openapi/openapi.json](/home/sidney/automacoes/saas/hubly/backend/openapi/openapi.json)
+- [postman/hubly-local.collection.json](/home/sidney/automacoes/saas/hubly/backend/postman/hubly-local.collection.json)
+- [postman/hubly-local.environment.json](/home/sidney/automacoes/saas/hubly/backend/postman/hubly-local.environment.json)
 
 A collection já inclui script de teste nas rotas `Sign In` e `Refresh` para atualizar automaticamente `accessToken`, `refreshToken` e `clinicId` nas variáveis usadas pelas demais rotas.
 
@@ -130,7 +130,7 @@ O backend agora lê automaticamente o arquivo `.env`.
 
 Arquivo de exemplo:
 
-- [backend/.env.example](/home/sidney/automacoes/saas/clinity/backend/.env.example)
+- [backend/.env.example](/home/sidney/automacoes/saas/hubly/backend/.env.example)
 
 Variáveis necessárias:
 
@@ -167,8 +167,8 @@ Variáveis necessárias:
 
 ## Passo a passo local
 
-1. Entre em [backend](/home/sidney/automacoes/saas/clinity/backend).
-2. Crie o arquivo `.env` a partir de [backend/.env.example](/home/sidney/automacoes/saas/clinity/backend/.env.example).
+1. Entre em [backend](/home/sidney/automacoes/saas/hubly/backend).
+2. Crie o arquivo `.env` a partir de [backend/.env.example](/home/sidney/automacoes/saas/hubly/backend/.env.example).
 3. Ajuste no `.env` os dados do seu MySQL local e troque os segredos JWT.
 4. Instale as dependências com `npm install`, se ainda não tiver feito isso.
 5. Execute `npm run db:migrate` para criar a estrutura do banco.
@@ -276,7 +276,7 @@ Todos os testes estão isolados do MySQL principal.
 - Testes unitários: usam mocks ou stubs, sem tocar em banco real.
 - Testes de integração: usam `sql.js` em memória via TypeORM.
 - Testes end-to-end: executam o fluxo completo da API em TypeScript, também com `sql.js` em memória e integrações externas simuladas.
-- Ambiente de teste: é forçado em [tests/setup/test-env.ts](/home/sidney/automacoes/saas/clinity/backend/tests/setup/test-env.ts), então o `Vitest` não usa o banco configurado para desenvolvimento.
+- Ambiente de teste: é forçado em [tests/setup/test-env.ts](/home/sidney/automacoes/saas/hubly/backend/tests/setup/test-env.ts), então o `Vitest` não usa o banco configurado para desenvolvimento.
 
 Fluxo recomendado:
 
@@ -310,7 +310,7 @@ npm run dev
 
 - [x] Backend em TypeScript iniciado com `Fastify` + `TypeORM` + `MySQL`.
 - [x] Estrutura modular básica com `controllers`, `services`, `repositories`, `routes`, `middlewares`, `utils` e `types`.
-- [x] Registro central de rotas em [src/routes/index.ts](/home/sidney/automacoes/saas/clinity/backend/src/routes/index.ts).
+- [x] Registro central de rotas em [src/routes/index.ts](/home/sidney/automacoes/saas/hubly/backend/src/routes/index.ts).
 - [x] `DataSource` configurável para MySQL no ambiente principal.
 - [x] Banco de testes com `sql.js` em memória para integração.
 - [x] Entidades iniciais para clínicas, usuários, profissionais, pacientes, agendamentos, auditoria e sessões de autenticação.
@@ -333,7 +333,7 @@ npm run dev
 - [x] Script na collection para preencher `accessToken`, `refreshToken` e `clinicId` após `Sign In` e `Refresh`.
 - [x] Export versionado dos artefatos OpenAPI e Postman.
 - [x] Leitura automática de `.env`.
-- [x] Arquivo [backend/.env.example](/home/sidney/automacoes/saas/clinity/backend/.env.example) com todas as variáveis atuais.
+- [x] Arquivo [backend/.env.example](/home/sidney/automacoes/saas/hubly/backend/.env.example) com todas as variáveis atuais.
 - [x] Testes unitários e de integração cobrindo partes principais do fluxo atual.
 - [x] Cadastro de clínicas com listagem por tenant, criação e edição via API.
 - [x] Cadastro de profissionais com listagem por tenant, criação, edição e inativação via API.

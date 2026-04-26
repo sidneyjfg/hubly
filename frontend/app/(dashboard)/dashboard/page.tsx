@@ -21,11 +21,11 @@ export default function DashboardPage() {
   const { data } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [dailySchedule, professionals, noShowOverview, recentAppointments] = await Promise.all([
+      const [dailySchedule, providers, noShowOverview, recentBookings] = await Promise.all([
         api.getDailySchedule(todayDate, { limit: 100, page: 1 }),
-        api.getProfessionals({ limit: 100, page: 1 }),
+        api.getProviders({ limit: 100, page: 1 }),
         api.getNoShowOverview(getPeriodRange(30)),
-        api.getAppointments({ ...weekRange, limit: 100, page: 1 })
+        api.getBookings({ ...weekRange, limit: 100, page: 1 })
       ]);
 
       const activeCount = dailySchedule.items.filter((item) =>
@@ -34,19 +34,19 @@ export default function DashboardPage() {
       const attendedCount = dailySchedule.items.filter((item) => item.status === "attended").length;
 
       return {
-        todaysAppointments: dailySchedule.items,
+        todaysBookings: dailySchedule.items,
         summary: {
-          todaysAppointments: dailySchedule.items.length,
+          todaysBookings: dailySchedule.items.length,
           noShowRate: noShowOverview.noShowRate,
           estimatedRevenue: (attendedCount * 220) + (activeCount * 160),
           occupancyRate:
-            professionals.items.length === 0
+            providers.items.length === 0
               ? 0
-              : Math.round((dailySchedule.items.length / (professionals.items.length * 8)) * 100)
+              : Math.round((dailySchedule.items.length / (providers.items.length * 8)) * 100)
         },
-        professionalsCount: professionals.items.length,
-        insights: buildDashboardInsights(dailySchedule.items, recentAppointments.items, professionals.items),
-        revenueSeries: buildRevenueSeries(recentAppointments.items)
+        providersCount: providers.items.length,
+        insights: buildDashboardInsights(dailySchedule.items, recentBookings.items, providers.items),
+        revenueSeries: buildRevenueSeries(recentBookings.items)
       };
     }
   });
@@ -61,9 +61,9 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
           <p className="text-sm text-slate-400">Consultas do dia</p>
-          <p className="mt-4 text-4xl font-semibold text-white">{data?.summary.todaysAppointments ?? 0}</p>
+          <p className="mt-4 text-4xl font-semibold text-white">{data?.summary.todaysBookings ?? 0}</p>
           <p className="mt-2 text-sm text-slate-400">
-            Agenda distribuída entre {data?.professionalsCount ?? 0} profissionais
+            Agenda distribuída entre {data?.providersCount ?? 0} profissionais
           </p>
         </Card>
         <Card>
@@ -110,21 +110,21 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="space-y-4">
-          {data?.todaysAppointments.map((appointment) => (
+          {data?.todaysBookings.map((booking) => (
             <div
               className="flex flex-col gap-4 rounded-xl border border-white/10 bg-white/5 p-5 lg:flex-row lg:items-center lg:justify-between"
-              key={appointment.id}
+              key={booking.id}
             >
               <div className="flex items-center gap-4">
                 <div className="rounded-lg bg-white/8 px-4 py-3 text-sm font-semibold text-white">
-                  {formatTimeLabel(appointment.startsAt)}
+                  {formatTimeLabel(booking.startsAt)}
                 </div>
                 <div>
-                  <p className="text-lg font-medium text-white">{appointment.patientName}</p>
-                  <p className="text-sm text-slate-400">{appointment.professionalName}</p>
+                  <p className="text-lg font-medium text-white">{booking.customerName}</p>
+                  <p className="text-sm text-slate-400">{booking.providerName}</p>
                 </div>
               </div>
-              <StatusBadge status={appointment.status} />
+              <StatusBadge status={booking.status} />
             </div>
           ))}
         </div>

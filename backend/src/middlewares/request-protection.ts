@@ -33,5 +33,5 @@ export const criticalRouteRateLimitMiddleware =
   (action: string) =>
   async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
     const authUser = getAuthUser(request);
-    await requestProtection.enforceCriticalRouteLimit(`${action}:${authUser.id}:${authUser.clinicId}`);
+    await requestProtection.enforceCriticalRouteLimit(`${action}:${authUser.id}:${authUser.organizationId}`);
   };

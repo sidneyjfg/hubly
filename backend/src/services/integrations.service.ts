@@ -1,7 +1,7 @@
 import type { DataSource } from "typeorm";
 
 import { AuditRepository } from "../repositories/audit.repository";
-import { ClinicIntegrationsRepository } from "../repositories/clinic-integrations.repository";
+import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
 import type { AuthenticatedRequestUser } from "../types/auth";
 import type {
   IntegrationSummary,
@@ -30,20 +30,20 @@ function isWhatsAppConnected(state: string | null | undefined): boolean {
 export class IntegrationsService {
   public constructor(
     private readonly dataSource: DataSource,
-    private readonly clinicIntegrationsRepository: ClinicIntegrationsRepository,
+    private readonly organizationIntegrationsRepository: OrganizationIntegrationsRepository,
     private readonly auditRepository: AuditRepository,
     private readonly evolutionWhatsAppService: EvolutionWhatsAppService,
   ) {}
 
   public async list(user: AuthenticatedRequestUser): Promise<{ items: IntegrationSummary[] }> {
-    const integration = await this.clinicIntegrationsRepository.findByClinicAndChannel(user.clinicId, "whatsapp");
+    const integration = await this.organizationIntegrationsRepository.findByOrganizationAndChannel(user.organizationId, "whatsapp");
     return this.evolutionWhatsAppService.list(integration?.status ?? null, integration?.phoneNumber ?? null);
   }
 
   public async getWhatsAppStatus(user: AuthenticatedRequestUser): Promise<WhatsAppConnectionStatus> {
     const integration = await this.ensureWhatsAppIntegration(user);
     const status = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
-    await this.clinicIntegrationsRepository.updateStatus(integration.id, status.state);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, status.state);
     return {
       ...status,
       phoneNumber: integration.phoneNumber,
@@ -56,7 +56,7 @@ export class IntegrationsService {
   }
 
   public async disconnectWhatsApp(user: AuthenticatedRequestUser): Promise<WhatsAppDisconnectResult> {
-    const integration = await this.clinicIntegrationsRepository.findByClinicAndChannel(user.clinicId, "whatsapp");
+    const integration = await this.organizationIntegrationsRepository.findByOrganizationAndChannel(user.organizationId, "whatsapp");
 
     if (!integration) {
       return {
@@ -65,9 +65,9 @@ export class IntegrationsService {
     }
 
     const result = await this.evolutionWhatsAppService.logoutInstance(integration.instanceName);
-    await this.clinicIntegrationsRepository.updateStatus(integration.id, result.state);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, result.state);
     await this.auditRepository.create({
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       actorId: user.id,
       action: "integration.whatsapp.disconnected",
       targetType: "integration",
@@ -85,7 +85,7 @@ export class IntegrationsService {
     const integration = await this.ensureWhatsAppIntegration(user);
     const currentStatus = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
 
-    await this.clinicIntegrationsRepository.updateStatus(integration.id, currentStatus.state);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, currentStatus.state);
 
     if (isWhatsAppConnected(currentStatus.state)) {
       throw new AppError(
@@ -98,10 +98,10 @@ export class IntegrationsService {
     const connectResult = await this.evolutionWhatsAppService.connect(integration.instanceName, data.phoneNumber);
     const status = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
 
-    await this.clinicIntegrationsRepository.updateStatus(integration.id, status.state);
-    await this.clinicIntegrationsRepository.updatePhoneNumber(integration.id, data.phoneNumber);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, status.state);
+    await this.organizationIntegrationsRepository.updatePhoneNumber(integration.id, data.phoneNumber);
     await this.auditRepository.create({
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       actorId: user.id,
       action: "integration.whatsapp.code_requested",
       targetType: "integration",
@@ -125,7 +125,7 @@ export class IntegrationsService {
     const integration = await this.ensureWhatsAppIntegration(user);
     const currentStatus = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
 
-    await this.clinicIntegrationsRepository.updateStatus(integration.id, currentStatus.state);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, currentStatus.state);
 
     if (isWhatsAppConnected(currentStatus.state)) {
       throw new AppError(
@@ -140,10 +140,10 @@ export class IntegrationsService {
     const connectResult = await this.evolutionWhatsAppService.connect(integration.instanceName, data.phoneNumber);
     const status = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
 
-    await this.clinicIntegrationsRepository.updateStatus(integration.id, status.state);
-    await this.clinicIntegrationsRepository.updatePhoneNumber(integration.id, data.phoneNumber);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, status.state);
+    await this.organizationIntegrationsRepository.updatePhoneNumber(integration.id, data.phoneNumber);
     await this.auditRepository.create({
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       actorId: user.id,
       action: "integration.whatsapp.code_regenerated",
       targetType: "integration",
@@ -168,16 +168,16 @@ export class IntegrationsService {
   }
 
   private async ensureWhatsAppIntegration(user: AuthenticatedRequestUser) {
-    const existingIntegration = await this.clinicIntegrationsRepository.findByClinicAndChannel(user.clinicId, "whatsapp");
+    const existingIntegration = await this.organizationIntegrationsRepository.findByOrganizationAndChannel(user.organizationId, "whatsapp");
     if (existingIntegration) {
       return existingIntegration;
     }
 
-    const instanceName = this.buildInstanceName(user.clinicId);
+    const instanceName = this.buildInstanceName(user.organizationId);
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
-      const currentIntegration = await this.clinicIntegrationsRepository.findByClinicAndChannel(
-        user.clinicId,
+      const currentIntegration = await this.organizationIntegrationsRepository.findByOrganizationAndChannel(
+        user.organizationId,
         "whatsapp",
         manager,
       );
@@ -187,9 +187,9 @@ export class IntegrationsService {
       }
 
       const createdInstance = await this.evolutionWhatsAppService.createInstance(instanceName);
-      const integration = await this.clinicIntegrationsRepository.create(
+      const integration = await this.organizationIntegrationsRepository.create(
         {
-          clinicId: user.clinicId,
+          organizationId: user.organizationId,
           channel: "whatsapp",
           provider: "evolution",
           instanceName: createdInstance.instance?.instanceName ?? instanceName,
@@ -200,7 +200,7 @@ export class IntegrationsService {
 
       await this.auditRepository.create(
         {
-          clinicId: user.clinicId,
+          organizationId: user.organizationId,
           actorId: user.id,
           action: "integration.whatsapp.instance_created",
           targetType: "integration",
@@ -213,7 +213,7 @@ export class IntegrationsService {
     });
   }
 
-  private buildInstanceName(clinicId: string): string {
-    return `clinic-${clinicId}`;
+  private buildInstanceName(organizationId: string): string {
+    return `organization-${organizationId}`;
   }
 }

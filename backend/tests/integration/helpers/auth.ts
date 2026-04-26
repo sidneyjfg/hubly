@@ -5,7 +5,7 @@ export const signInAsAdmin = async (app: FastifyInstance) => {
     method: "POST",
     url: "/v1/auth/sign-in",
     payload: {
-      email: "admin@clinic.test",
+      email: "admin@organization.test",
       password: "password123",
     },
   });
@@ -14,6 +14,6 @@ export const signInAsAdmin = async (app: FastifyInstance) => {
 
   return {
     authorization: `Bearer ${body.accessToken as string}`,
-    "x-clinic-id": body.clinicId as string,
+    "x-organization-id": body.organizationId as string,
   };
 };

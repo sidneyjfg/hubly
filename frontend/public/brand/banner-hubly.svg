@@ -1,0 +1,141 @@
+<svg width="1536" height="450" viewBox="0 0 1536 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bannerBg" x1="72" y1="32" x2="1428" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#071020"/>
+      <stop offset="1" stop-color="#10183B"/>
+    </linearGradient>
+    <radialGradient id="bannerGlowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1100 90) rotate(129.883) scale(368.377 522.87)">
+      <stop stop-color="#6F3FF5" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#6F3FF5" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bannerGlowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1280 290) rotate(180) scale(360 180)">
+      <stop stop-color="#3A8CFF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#3A8CFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bannerBrand" x1="110" y1="42" x2="230" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C3FFF"/>
+      <stop offset="1" stop-color="#3A8CFF"/>
+    </linearGradient>
+    <linearGradient id="ctaPrimary" x1="110" y1="0" x2="260" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C3FFF"/>
+      <stop offset="1" stop-color="#3A8CFF"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="420" y2="270" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#131D43"/>
+      <stop offset="1" stop-color="#0D1430"/>
+    </linearGradient>
+  </defs>
+  <rect width="1536" height="450" rx="32" fill="url(#bannerBg)"/>
+  <rect width="1536" height="450" rx="32" fill="url(#bannerGlowA)"/>
+  <rect width="1536" height="450" rx="32" fill="url(#bannerGlowB)"/>
+  <circle cx="1040" cy="132" r="154" stroke="#805BFF" stroke-opacity="0.52" stroke-width="2"/>
+  <circle cx="1168" cy="278" r="188" stroke="#5D7BFF" stroke-opacity="0.38" stroke-width="2"/>
+  <circle cx="948" cy="328" r="136" stroke="#805BFF" stroke-opacity="0.28" stroke-width="2"/>
+
+  <g transform="translate(110 56)">
+    <rect x="0" y="0" width="30" height="90" rx="15" fill="url(#bannerBrand)"/>
+    <rect x="84" y="0" width="30" height="90" rx="15" fill="url(#bannerBrand)"/>
+    <path d="M30 23C44 23 53.5 27.5 57 33C60.5 27.5 70 23 84 23V33C74.3333 33 66 38 57 47C48 38 39.6667 33 30 33V23Z" fill="url(#bannerBrand)"/>
+    <path d="M30 67C44 67 53.5 62.5 57 57C60.5 62.5 70 67 84 67V57C74.3333 57 66 52 57 43C48 52 39.6667 57 30 57V67Z" fill="url(#bannerBrand)"/>
+    <path d="M57 27C40.768 27 27.9733 38.5422 21.5 45C27.9733 51.4578 40.768 63 57 63C73.232 63 86.0267 51.4578 92.5 45C86.0267 38.5422 73.232 27 57 27Z" fill="white"/>
+    <circle cx="57" cy="45" r="11" fill="url(#bannerBrand)"/>
+    <circle cx="57" cy="45" r="4.5" fill="white"/>
+  </g>
+
+  <text x="248" y="168" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="98" font-weight="600" letter-spacing="-0.05em">Hubly</text>
+  <text x="110" y="228" fill="#8F70FF" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="500">Conecta voce aos melhores servicos</text>
+  <text x="110" y="286" fill="white" fill-opacity="0.9" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="500">Centralize sua agenda, reduza faltas e acelere a operacao</text>
+  <text x="110" y="316" fill="white" fill-opacity="0.9" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="500">com WhatsApp, e-mail e indicadores em um unico hub.</text>
+
+  <g transform="translate(110 352)">
+    <rect width="176" height="56" rx="28" fill="url(#ctaPrimary)"/>
+    <text x="88" y="36" text-anchor="middle" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="600">Comece agora</text>
+  </g>
+  <g transform="translate(304 352)">
+    <rect width="190" height="56" rx="28" fill="#0C1430" stroke="rgba(255,255,255,0.16)"/>
+    <text x="95" y="36" text-anchor="middle" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="500">Ver demostracao</text>
+  </g>
+
+  <g transform="translate(786 70)">
+    <rect width="476" height="286" rx="28" fill="#091126" stroke="rgba(255,255,255,0.08)"/>
+    <rect x="22" y="22" width="108" height="242" rx="18" fill="#111B3B"/>
+    <rect x="28" y="30" width="26" height="26" rx="8" fill="url(#bannerBrand)"/>
+    <rect x="66" y="34" width="42" height="8" rx="4" fill="white" fill-opacity="0.92"/>
+    <rect x="34" y="82" width="92" height="24" rx="12" fill="#4D42CC"/>
+    <rect x="34" y="118" width="72" height="10" rx="5" fill="white" fill-opacity="0.28"/>
+    <rect x="34" y="145" width="72" height="10" rx="5" fill="white" fill-opacity="0.18"/>
+    <rect x="34" y="172" width="72" height="10" rx="5" fill="white" fill-opacity="0.18"/>
+    <rect x="34" y="199" width="72" height="10" rx="5" fill="white" fill-opacity="0.18"/>
+
+    <rect x="152" y="26" width="300" height="72" rx="20" fill="url(#panel)"/>
+    <text x="174" y="53" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="600">Painel</text>
+    <g fill="white" fill-opacity="0.82" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="500">
+      <text x="174" y="78">Consultas hoje</text>
+      <text x="262" y="78">Confirmadas</text>
+      <text x="360" y="78">No-show</text>
+    </g>
+    <g font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-weight="600">
+      <text x="174" y="114" fill="white" font-size="36">28</text>
+      <text x="262" y="114" fill="white" font-size="36">24</text>
+      <text x="360" y="114" fill="white" font-size="36">7%</text>
+    </g>
+    <g fill="#50D1A8" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="600">
+      <text x="222" y="114">+12%</text>
+      <text x="316" y="114">85%</text>
+      <text x="410" y="114">-2%</text>
+    </g>
+
+    <rect x="152" y="112" width="300" height="152" rx="20" fill="url(#panel)"/>
+    <text x="174" y="140" fill="white" fill-opacity="0.92" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600">Agenda da semana</text>
+    <g font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="13">
+      <text x="174" y="172" fill="white" fill-opacity="0.48">08:00</text>
+      <text x="174" y="204" fill="white" fill-opacity="0.48">09:00</text>
+      <text x="174" y="236" fill="white" fill-opacity="0.48">10:00</text>
+      <text x="208" y="172" fill="white" fill-opacity="0.88">Joao da Silva</text>
+      <text x="208" y="204" fill="white" fill-opacity="0.88">Maria Oliveira</text>
+      <text x="208" y="236" fill="white" fill-opacity="0.88">Ana Souza</text>
+    </g>
+    <g>
+      <rect x="354" y="158" width="74" height="24" rx="12" fill="#1B8E67"/>
+      <rect x="354" y="190" width="74" height="24" rx="12" fill="#1B8E67"/>
+      <rect x="354" y="222" width="74" height="24" rx="12" fill="#8E6B1B"/>
+    </g>
+    <g fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">
+      <text x="391" y="174" text-anchor="middle">Confirmada</text>
+      <text x="391" y="206" text-anchor="middle">Confirmada</text>
+      <text x="391" y="238" text-anchor="middle">Pendente</text>
+    </g>
+    <path d="M296 238C322 212 340 222 360 198C378 176 400 190 422 152" stroke="url(#ctaPrimary)" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(1288 92)">
+    <rect width="170" height="58" rx="18" fill="#22194C" stroke="rgba(255,255,255,0.08)"/>
+    <circle cx="26" cy="29" r="16" fill="#20C05C"/>
+    <text x="52" y="24" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600">Lembrete enviado</text>
+    <text x="52" y="42" fill="white" fill-opacity="0.62" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="13">WhatsApp</text>
+  </g>
+  <g transform="translate(1288 166)">
+    <rect width="170" height="58" rx="18" fill="#22194C" stroke="rgba(255,255,255,0.08)"/>
+    <rect x="12" y="14" width="28" height="28" rx="10" fill="#7657FF"/>
+    <text x="52" y="24" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600">E-mail enviado</text>
+    <text x="52" y="42" fill="white" fill-opacity="0.62" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="13">Confirmacao de consulta</text>
+  </g>
+
+  <g transform="translate(1258 208) rotate(8)">
+    <rect width="152" height="224" rx="28" fill="#0C1125" stroke="rgba(255,255,255,0.18)"/>
+    <rect x="22" y="22" width="108" height="180" rx="22" fill="url(#panel)"/>
+    <g transform="translate(44 42)">
+      <rect x="0" y="0" width="18" height="46" rx="9" fill="url(#bannerBrand)"/>
+      <rect x="34" y="0" width="18" height="46" rx="9" fill="url(#bannerBrand)"/>
+      <path d="M18 13C25.5 13 30 15.5 31.5 18.5C33 15.5 37.5 13 45 13V18.5C39.5 18.5 35.1667 21 31.5 25C27.8333 21 23.5 18.5 18 18.5V13Z" fill="url(#bannerBrand)"/>
+      <path d="M18 33C25.5 33 30 30.5 31.5 27.5C33 30.5 37.5 33 45 33V27.5C39.5 27.5 35.1667 25 31.5 21C27.8333 25 23.5 27.5 18 27.5V33Z" fill="url(#bannerBrand)"/>
+      <path d="M31.5 15C22.8869 15 16.15 21.1429 12.5 24.5C16.15 27.8571 22.8869 34 31.5 34C40.1131 34 46.85 27.8571 50.5 24.5C46.85 21.1429 40.1131 15 31.5 15Z" fill="white"/>
+      <circle cx="31.5" cy="24.5" r="5.5" fill="url(#bannerBrand)"/>
+    </g>
+    <text x="76" y="114" text-anchor="middle" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600">Hubly</text>
+    <text x="76" y="146" text-anchor="middle" fill="white" fill-opacity="0.88" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="500">Sua consulta esta</text>
+    <text x="76" y="166" text-anchor="middle" fill="white" fill-opacity="0.88" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="500">confirmada</text>
+    <rect x="36" y="180" width="80" height="28" rx="14" fill="url(#ctaPrimary)"/>
+    <text x="76" y="199" text-anchor="middle" fill="white" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">Ver detalhes</text>
+  </g>
+</svg>

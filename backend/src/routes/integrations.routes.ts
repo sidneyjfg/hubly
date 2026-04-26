@@ -14,7 +14,7 @@ import {
 import { criticalRouteRateLimitMiddleware } from "../middlewares/request-protection";
 import { allowRoles } from "../middlewares/rbac";
 import { AuditRepository } from "../repositories/audit.repository";
-import { ClinicIntegrationsRepository } from "../repositories/clinic-integrations.repository";
+import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
 import { EvolutionWhatsAppService } from "../services/evolution-whatsapp.service";
 import { IntegrationsService } from "../services/integrations.service";
 
@@ -29,7 +29,7 @@ export const integrationsRoutes = async (
   const integrationsController = new IntegrationsController(
     new IntegrationsService(
       options.dataSource,
-      new ClinicIntegrationsRepository(options.dataSource),
+      new OrganizationIntegrationsRepository(options.dataSource),
       new AuditRepository(options.dataSource),
       new EvolutionWhatsAppService(),
     ),

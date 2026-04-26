@@ -1,19 +1,19 @@
 import type { Role } from "../utils/roles";
-import type { Clinic } from "./clinic";
+import type { Organization } from "./organization";
 import type { User } from "./user";
 
 export type AuthSession = {
   accessToken: string;
   refreshToken: string;
   sessionId: string;
-  clinicId: string;
+  organizationId: string;
   actorId: string;
   role: Role;
 };
 
 export type AuthenticatedUser = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   fullName: string;
   email: string;
   phone: string;
@@ -24,7 +24,7 @@ export type AuthenticatedUser = {
 
 export type AuthenticatedRequestUser = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   role: Role;
   sessionId: string;
 };
@@ -34,14 +34,15 @@ export type SignUpInput = {
   email: string;
   phone: string;
   password: string;
-  clinic: {
+  organization: {
     legalName: string;
     tradeName: string;
+    bookingPageSlug?: string;
     timezone: string;
   };
 };
 
 export type MeResponse = {
   user: User;
-  clinic: Clinic;
+  organization: Organization;
 };

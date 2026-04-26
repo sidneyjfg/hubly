@@ -16,7 +16,7 @@ import { useAppStore } from "@/store/app-store";
 export default function LoginPage() {
   const router = useRouter();
   const login = useAppStore((state) => state.login);
-  const [email, setEmail] = useState("admin@clinic.test");
+  const [email, setEmail] = useState("admin@organization.test");
   const [password, setPassword] = useState("password123");
 
   const mutation = useMutation({
@@ -50,7 +50,7 @@ export default function LoginPage() {
         <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso real</p>
         <h1 className="mt-4 text-3xl font-semibold text-white">Entrar no painel</h1>
         <p className="mt-3 text-slate-300">
-          Conectado ao backend da Hubly. Use as credenciais seed locais para acessar a clinica de teste.
+          Conectado ao backend da Hubly. Use as credenciais seed locais para acessar a organizationa de teste.
         </p>
         <div className="mt-8 space-y-4">
           <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
@@ -71,7 +71,7 @@ export default function LoginPage() {
           </p>
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
             <p className="font-medium text-white">Credenciais seed</p>
-            <p className="mt-2">E-mail: `admin@clinic.test`</p>
+            <p className="mt-2">E-mail: `admin@organization.test`</p>
             <p>Senha: `password123`</p>
           </div>
           {mutation.error ? <p className="text-sm text-rose-300">{mutation.error.message}</p> : null}

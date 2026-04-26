@@ -7,11 +7,11 @@ import { hashPassword } from "../../../src/utils/password";
 type MockAuthRepository = {
   findByEmail(email: string): Promise<{
     id: string;
-    clinicId: string;
+    organizationId: string;
     fullName: string;
     email: string;
     phone: string;
-    role: "administrator" | "reception" | "professional";
+    role: "administrator" | "reception" | "provider";
     passwordHash: string;
     isActive: boolean;
   } | null>;
@@ -37,16 +37,16 @@ const mockDataSource = {
   },
 };
 
-const clinicsRepository = {
+const organizationsRepository = {
   async create() {
     return {
       id: "cln_new_001",
-      legalName: "Nova Clinica LTDA",
-      tradeName: "Nova Clinica",
+      legalName: "Nova Organizationa LTDA",
+      tradeName: "Nova Organizationa",
       timezone: "America/Sao_Paulo",
     };
   },
-  async findByIdInClinic() {
+  async findByIdInOrganization() {
     return null;
   },
 };
@@ -61,7 +61,7 @@ describe("AuthService", () => {
       async findByEmail(email) {
         return {
           id: "usr_admin_001",
-          clinicId: "cln_main_001",
+          organizationId: "cln_main_001",
           fullName: "Ana Martins",
           email,
           phone: "+5511911111111",
@@ -76,12 +76,12 @@ describe("AuthService", () => {
       mockDataSource as never,
       repository as never,
       authSessionsRepository as never,
-      clinicsRepository as never,
+      organizationsRepository as never,
       auditRepository as never,
     );
 
     const result = await service.signIn({
-      email: "admin@clinic.test",
+      email: "admin@organization.test",
       password: "password123",
     });
 
@@ -100,7 +100,7 @@ describe("AuthService", () => {
       mockDataSource as never,
       repository as never,
       authSessionsRepository as never,
-      clinicsRepository as never,
+      organizationsRepository as never,
       auditRepository as never,
     );
 
@@ -117,7 +117,7 @@ describe("AuthService", () => {
       async findByEmail(email) {
         return {
           id: "usr_admin_001",
-          clinicId: "cln_main_001",
+          organizationId: "cln_main_001",
           fullName: "Ana Martins",
           email,
           phone: "+5511911111111",
@@ -132,13 +132,13 @@ describe("AuthService", () => {
       mockDataSource as never,
       repository as never,
       authSessionsRepository as never,
-      clinicsRepository as never,
+      organizationsRepository as never,
       auditRepository as never,
     );
 
     await expect(
       service.signIn({
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "password123",
       }),
     ).rejects.toBeInstanceOf(AppError);

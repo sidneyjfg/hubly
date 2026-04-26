@@ -32,7 +32,7 @@ export function AppHeader() {
     setCurrentUser({
       id: data.user.id,
       actorId: data.user.id,
-      clinicId: data.user.clinicId,
+      organizationId: data.user.organizationId,
       email: data.user.email,
       fullName: data.user.fullName,
       phone: data.user.phone,

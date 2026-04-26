@@ -7,6 +7,6 @@ export class AuditService {
   public constructor(private readonly auditRepository: AuditRepository) {}
 
   public async list(user: AuthenticatedRequestUser, paginationInput: PaginationInput = {}): Promise<PaginatedResult<AuditEvent>> {
-    return this.auditRepository.findAll(user.clinicId, parsePagination(paginationInput));
+    return this.auditRepository.findAll(user.organizationId, parsePagination(paginationInput));
   }
 }

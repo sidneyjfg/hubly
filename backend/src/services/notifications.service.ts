@@ -1,17 +1,17 @@
 import type { DataSource, EntityManager } from "typeorm";
 import { z } from "zod";
 
-import { AppointmentsRepository } from "../repositories/appointments.repository";
-import { AppointmentNotificationsRepository } from "../repositories/appointment-notifications.repository";
+import { BookingsRepository } from "../repositories/bookings.repository";
+import { BookingNotificationsRepository } from "../repositories/booking-notifications.repository";
 import { AuditRepository } from "../repositories/audit.repository";
-import { ClinicIntegrationsRepository } from "../repositories/clinic-integrations.repository";
-import { ClinicNotificationSettingsRepository } from "../repositories/clinic-notification-settings.repository";
-import { ClinicsRepository } from "../repositories/clinics.repository";
-import { PatientsRepository } from "../repositories/patients.repository";
-import type { Appointment } from "../types/appointment";
+import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
+import { OrganizationNotificationSettingsRepository } from "../repositories/organization-notification-settings.repository";
+import { OrganizationsRepository } from "../repositories/organizations.repository";
+import { CustomersRepository } from "../repositories/customers.repository";
+import type { Booking } from "../types/booking";
 import type { AuthenticatedRequestUser } from "../types/auth";
 import type {
-  AppointmentNotification,
+  BookingNotification,
   ProcessDueNotificationsResult,
   WhatsAppReminderSettings,
   WhatsAppReminderSettingsInput,
@@ -55,14 +55,14 @@ const processDueSchema = z.object({
   limit: z.number().int().min(1).max(100).optional(),
 });
 
-type AppointmentNotificationEvent =
-  | { type: "appointment.created"; appointment: Appointment }
-  | { type: "appointment.rescheduled"; appointment: Appointment }
-  | { type: "appointment.cancelled"; appointment: Appointment }
-  | { type: "appointment.attended"; appointment: Appointment }
-  | { type: "appointment.missed"; appointment: Appointment };
+type BookingNotificationEvent =
+  | { type: "booking.created"; booking: Booking }
+  | { type: "booking.rescheduled"; booking: Booking }
+  | { type: "booking.cancelled"; booking: Booking }
+  | { type: "booking.attended"; booking: Booking }
+  | { type: "booking.missed"; booking: Booking };
 
-const activeAppointmentStatuses = new Set(["scheduled", "confirmed", "rescheduled"]);
+const activeBookingStatuses = new Set(["scheduled", "confirmed", "rescheduled"]);
 
 const normalizePhoneNumber = (value: string): string => value.replace(/\D+/g, "");
 
@@ -83,12 +83,12 @@ const extractExternalMessageId = (payload: Record<string, unknown>): string | nu
 export class NotificationsService {
   public constructor(
     private readonly dataSource: DataSource,
-    private readonly clinicNotificationSettingsRepository: ClinicNotificationSettingsRepository,
-    private readonly appointmentNotificationsRepository: AppointmentNotificationsRepository,
-    private readonly appointmentsRepository: AppointmentsRepository,
-    private readonly patientsRepository: PatientsRepository,
-    private readonly clinicsRepository: ClinicsRepository,
-    private readonly clinicIntegrationsRepository: ClinicIntegrationsRepository,
+    private readonly organizationNotificationSettingsRepository: OrganizationNotificationSettingsRepository,
+    private readonly bookingNotificationsRepository: BookingNotificationsRepository,
+    private readonly bookingsRepository: BookingsRepository,
+    private readonly customersRepository: CustomersRepository,
+    private readonly organizationsRepository: OrganizationsRepository,
+    private readonly organizationIntegrationsRepository: OrganizationIntegrationsRepository,
     private readonly auditRepository: AuditRepository,
     private readonly evolutionWhatsAppService: EvolutionWhatsAppService,
   ) {}
@@ -100,7 +100,7 @@ export class NotificationsService {
   }
 
   public async getWhatsAppSettings(user: AuthenticatedRequestUser): Promise<WhatsAppReminderSettings> {
-    return this.clinicNotificationSettingsRepository.findWhatsAppByClinic(user.clinicId);
+    return this.organizationNotificationSettingsRepository.findWhatsAppByOrganization(user.organizationId);
   }
 
   public async updateWhatsAppSettings(
@@ -110,20 +110,20 @@ export class NotificationsService {
     const data = whatsappReminderSettingsSchema.parse(input);
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
-      const settings = await this.clinicNotificationSettingsRepository.upsertWhatsAppSettings(
+      const settings = await this.organizationNotificationSettingsRepository.upsertWhatsAppSettings(
         {
-          clinicId: user.clinicId,
+          organizationId: user.organizationId,
           isEnabled: data.isEnabled,
           reminders: [...data.reminders].sort((left, right) => right.hoursBefore - left.hoursBefore),
         },
         manager,
       );
 
-      await this.rebuildClinicWhatsAppReminders(user.clinicId, manager);
+      await this.rebuildOrganizationWhatsAppReminders(user.organizationId, manager);
 
       await this.auditRepository.create(
         {
-          clinicId: user.clinicId,
+          organizationId: user.organizationId,
           actorId: user.id,
           action: "notification.whatsapp.settings_updated",
           targetType: "notification_setting",
@@ -136,21 +136,21 @@ export class NotificationsService {
     });
   }
 
-  public async handleAppointmentEvent(
+  public async handleBookingEvent(
     _user: AuthenticatedRequestUser,
-    event: AppointmentNotificationEvent,
+    event: BookingNotificationEvent,
     manager: EntityManager,
   ): Promise<void> {
-    if (event.type === "appointment.cancelled" || event.type === "appointment.attended" || event.type === "appointment.missed") {
-      await this.appointmentNotificationsRepository.cancelPendingForAppointment(
-        event.appointment.clinicId,
-        event.appointment.id,
+    if (event.type === "booking.cancelled" || event.type === "booking.attended" || event.type === "booking.missed") {
+      await this.bookingNotificationsRepository.cancelPendingForBooking(
+        event.booking.organizationId,
+        event.booking.id,
         manager,
       );
       return;
     }
 
-    await this.syncWhatsAppRemindersForAppointment(event.appointment, manager);
+    await this.syncWhatsAppRemindersForBooking(event.booking, manager);
   }
 
   public async processDueWhatsAppReminders(
@@ -161,8 +161,8 @@ export class NotificationsService {
     const runAt = new Date();
     const limit = data.limit ?? 25;
 
-    const dueNotifications = await this.appointmentNotificationsRepository.findDuePendingWhatsApp(
-      user.clinicId,
+    const dueNotifications = await this.bookingNotificationsRepository.findDuePendingWhatsApp(
+      user.organizationId,
       runAt,
       limit,
     );
@@ -176,26 +176,26 @@ export class NotificationsService {
       };
     }
 
-    const integration = await this.clinicIntegrationsRepository.findByClinicAndChannel(user.clinicId, "whatsapp");
+    const integration = await this.organizationIntegrationsRepository.findByOrganizationAndChannel(user.organizationId, "whatsapp");
 
     if (!integration) {
       throw new AppError("notifications.whatsapp.integration_required", "WhatsApp integration must be configured first.", 409);
     }
 
-    const processedItems: AppointmentNotification[] = [];
+    const processedItems: BookingNotification[] = [];
     let sentCount = 0;
     let failedCount = 0;
 
     for (const notification of dueNotifications) {
       const lockedNotification = await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
-        const currentNotification = await this.appointmentNotificationsRepository.markAsProcessing(notification.id, manager);
+        const currentNotification = await this.bookingNotificationsRepository.markAsProcessing(notification.id, manager);
         if (!currentNotification) {
           return null;
         }
 
-        const appointment = await this.appointmentsRepository.findByIdInClinic(user.clinicId, notification.appointmentId, manager);
-        if (!appointment || !activeAppointmentStatuses.has(appointment.status)) {
-          await this.appointmentNotificationsRepository.markAsCancelled(notification.id, manager);
+        const booking = await this.bookingsRepository.findByIdInOrganization(user.organizationId, notification.bookingId, manager);
+        if (!booking || !activeBookingStatuses.has(booking.status)) {
+          await this.bookingNotificationsRepository.markAsCancelled(notification.id, manager);
 
           return null;
         }
@@ -209,11 +209,11 @@ export class NotificationsService {
 
       try {
         const sendResult = await this.evolutionWhatsAppService.sendText(integration.instanceName, {
-          number: lockedNotification.patientPhone,
+          number: lockedNotification.customerPhone,
           text: lockedNotification.message,
         });
 
-        const sentNotification = await this.appointmentNotificationsRepository.markAsSent(
+        const sentNotification = await this.bookingNotificationsRepository.markAsSent(
           lockedNotification.id,
           extractExternalMessageId(sendResult as Record<string, unknown>),
         );
@@ -221,7 +221,7 @@ export class NotificationsService {
         sentCount += 1;
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Unknown WhatsApp delivery failure.";
-        const failedNotification = await this.appointmentNotificationsRepository.markAsFailed(lockedNotification.id, message);
+        const failedNotification = await this.bookingNotificationsRepository.markAsFailed(lockedNotification.id, message);
         processedItems.push(failedNotification);
         failedCount += 1;
       }
@@ -235,9 +235,9 @@ export class NotificationsService {
     };
   }
 
-  public async processDueWhatsAppRemindersAcrossClinics(limit = 100): Promise<ProcessDueNotificationsResult> {
+  public async processDueWhatsAppRemindersAcrossOrganizations(limit = 100): Promise<ProcessDueNotificationsResult> {
     const runAt = new Date();
-    const dueNotifications = await this.appointmentNotificationsRepository.findDuePendingWhatsAppAcrossClinics(
+    const dueNotifications = await this.bookingNotificationsRepository.findDuePendingWhatsAppAcrossOrganizations(
       runAt,
       limit,
     );
@@ -251,24 +251,24 @@ export class NotificationsService {
       };
     }
 
-    const processedItems: AppointmentNotification[] = [];
+    const processedItems: BookingNotification[] = [];
     let sentCount = 0;
     let failedCount = 0;
 
     for (const notification of dueNotifications) {
       const lockedNotification = await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
-        const currentNotification = await this.appointmentNotificationsRepository.markAsProcessing(notification.id, manager);
+        const currentNotification = await this.bookingNotificationsRepository.markAsProcessing(notification.id, manager);
         if (!currentNotification) {
           return null;
         }
 
-        const appointment = await this.appointmentsRepository.findByIdInClinic(
-          notification.clinicId,
-          notification.appointmentId,
+        const booking = await this.bookingsRepository.findByIdInOrganization(
+          notification.organizationId,
+          notification.bookingId,
           manager,
         );
-        if (!appointment || !activeAppointmentStatuses.has(appointment.status)) {
-          await this.appointmentNotificationsRepository.markAsCancelled(notification.id, manager);
+        if (!booking || !activeBookingStatuses.has(booking.status)) {
+          await this.bookingNotificationsRepository.markAsCancelled(notification.id, manager);
 
           return null;
         }
@@ -281,13 +281,13 @@ export class NotificationsService {
       }
 
       try {
-        const integration = await this.clinicIntegrationsRepository.findByClinicAndChannel(
-          lockedNotification.clinicId,
+        const integration = await this.organizationIntegrationsRepository.findByOrganizationAndChannel(
+          lockedNotification.organizationId,
           "whatsapp",
         );
 
         if (!integration) {
-          const failedNotification = await this.appointmentNotificationsRepository.markAsFailed(
+          const failedNotification = await this.bookingNotificationsRepository.markAsFailed(
             lockedNotification.id,
             "Integração de WhatsApp não configurada.",
           );
@@ -297,11 +297,11 @@ export class NotificationsService {
         }
 
         const sendResult = await this.evolutionWhatsAppService.sendText(integration.instanceName, {
-          number: lockedNotification.patientPhone,
+          number: lockedNotification.customerPhone,
           text: lockedNotification.message,
         });
 
-        const sentNotification = await this.appointmentNotificationsRepository.markAsSent(
+        const sentNotification = await this.bookingNotificationsRepository.markAsSent(
           lockedNotification.id,
           extractExternalMessageId(sendResult as Record<string, unknown>),
         );
@@ -309,7 +309,7 @@ export class NotificationsService {
         sentCount += 1;
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Unknown WhatsApp delivery failure.";
-        const failedNotification = await this.appointmentNotificationsRepository.markAsFailed(lockedNotification.id, message);
+        const failedNotification = await this.bookingNotificationsRepository.markAsFailed(lockedNotification.id, message);
         processedItems.push(failedNotification);
         failedCount += 1;
       }
@@ -323,70 +323,70 @@ export class NotificationsService {
     };
   }
 
-  private async rebuildClinicWhatsAppReminders(clinicId: string, manager: EntityManager): Promise<void> {
-    const upcomingAppointments = await this.appointmentsRepository.findUpcomingActiveByClinic(clinicId, new Date(), manager);
+  private async rebuildOrganizationWhatsAppReminders(organizationId: string, manager: EntityManager): Promise<void> {
+    const upcomingBookings = await this.bookingsRepository.findUpcomingActiveByOrganization(organizationId, new Date(), manager);
 
-    for (const appointment of upcomingAppointments) {
-      await this.syncWhatsAppRemindersForAppointment(appointment, manager);
+    for (const booking of upcomingBookings) {
+      await this.syncWhatsAppRemindersForBooking(booking, manager);
     }
   }
 
-  private async syncWhatsAppRemindersForAppointment(
-    appointment: Appointment,
+  private async syncWhatsAppRemindersForBooking(
+    booking: Booking,
     manager: EntityManager,
   ): Promise<void> {
-    const settings = await this.clinicNotificationSettingsRepository.findWhatsAppByClinic(appointment.clinicId, manager);
+    const settings = await this.organizationNotificationSettingsRepository.findWhatsAppByOrganization(booking.organizationId, manager);
 
     if (!settings.isEnabled || settings.reminders.length === 0) {
-      await this.appointmentNotificationsRepository.cancelPendingForAppointment(
-        appointment.clinicId,
-        appointment.id,
+      await this.bookingNotificationsRepository.cancelPendingForBooking(
+        booking.organizationId,
+        booking.id,
         manager,
       );
       return;
     }
 
-    const patient = await this.patientsRepository.findByIdInClinic(appointment.clinicId, appointment.patientId, manager);
-    if (!patient) {
-      throw new AppError("patients.not_found", "Patient not found.", 404);
+    const customer = await this.customersRepository.findByIdInOrganization(booking.organizationId, booking.customerId, manager);
+    if (!customer) {
+      throw new AppError("customers.not_found", "Customer not found.", 404);
     }
 
-    const normalizedPhone = normalizePhoneNumber(patient.phone);
+    const normalizedPhone = normalizePhoneNumber(customer.phone);
     if (!normalizedPhone) {
-      await this.appointmentNotificationsRepository.cancelPendingForAppointment(
-        appointment.clinicId,
-        appointment.id,
+      await this.bookingNotificationsRepository.cancelPendingForBooking(
+        booking.organizationId,
+        booking.id,
         manager,
       );
       return;
     }
 
-    const clinic = await this.clinicsRepository.findByIdInClinic(appointment.clinicId, appointment.clinicId, manager);
-    const timezone = clinic?.timezone ?? "UTC";
-    const startsAt = new Date(appointment.startsAt);
+    const organization = await this.organizationsRepository.findByIdInOrganization(booking.organizationId, booking.organizationId, manager);
+    const timezone = organization?.timezone ?? "UTC";
+    const startsAt = new Date(booking.startsAt);
     const now = new Date();
 
     const reminders = settings.reminders
       .map((rule) => ({
-        clinicId: appointment.clinicId,
-        appointmentId: appointment.id,
+        organizationId: booking.organizationId,
+        bookingId: booking.id,
         scheduledFor: new Date(startsAt.getTime() - (rule.hoursBefore * 60 * 60 * 1000)),
         hoursBefore: rule.hoursBefore,
-        patientPhone: normalizedPhone,
-        message: this.buildWhatsAppReminderMessage(appointment, timezone, rule.hoursBefore),
+        customerPhone: normalizedPhone,
+        message: this.buildWhatsAppReminderMessage(booking, timezone, rule.hoursBefore),
       }))
       .filter((reminder) => reminder.scheduledFor.getTime() > now.getTime());
 
-    await this.appointmentNotificationsRepository.replacePendingForAppointment(
-      appointment.clinicId,
-      appointment.id,
+    await this.bookingNotificationsRepository.replacePendingForBooking(
+      booking.organizationId,
+      booking.id,
       reminders,
       manager,
     );
   }
 
   private buildWhatsAppReminderMessage(
-    appointment: Appointment,
+    booking: Booking,
     timezone: string,
     hoursBefore: number,
   ): string {
@@ -394,15 +394,15 @@ export class NotificationsService {
       timeZone: timezone,
       dateStyle: "short",
       timeStyle: "short",
-    }).format(new Date(appointment.startsAt));
+    }).format(new Date(booking.startsAt));
 
     const leadTimeText = hoursBefore >= 24 && hoursBefore % 24 === 0
       ? `${hoursBefore / 24} dia${hoursBefore / 24 === 1 ? "" : "s"}`
       : `${hoursBefore} hora${hoursBefore === 1 ? "" : "s"}`;
 
-    const patientName = appointment.patientName ?? "paciente";
-    const professionalName = appointment.professionalName ?? "profissional";
+    const customerName = booking.customerName ?? "paciente";
+    const providerName = booking.providerName ?? "profissional";
 
-    return `Olá, ${patientName}. Este é um lembrete de WhatsApp da sua consulta com ${professionalName} em ${formattedDate}. Envio programado com ${leadTimeText} de antecedência.`;
+    return `Olá, ${customerName}. Este é um lembrete de WhatsApp da sua consulta com ${providerName} em ${formattedDate}. Envio programado com ${leadTimeText} de antecedência.`;
   }
 }

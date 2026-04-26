@@ -63,7 +63,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "wrong-password",
       },
     });
@@ -74,7 +74,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "wrong-password",
       },
     });
@@ -92,7 +92,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "wrong-password",
       },
     });
@@ -101,7 +101,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "wrong-password",
       },
     });
@@ -110,7 +110,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "password123",
       },
     });
@@ -126,7 +126,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/forgot-password",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
       },
     });
 
@@ -136,7 +136,7 @@ describe("Security protections", () => {
       method: "POST",
       url: "/v1/auth/forgot-password",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
       },
     });
 
@@ -151,7 +151,7 @@ describe("Security protections", () => {
 
     const firstResponse = await app.inject({
       method: "POST",
-      url: "/v1/patients",
+      url: "/v1/customers",
       headers,
       payload: {
         fullName: "Paciente Um",
@@ -164,7 +164,7 @@ describe("Security protections", () => {
 
     const secondResponse = await app.inject({
       method: "POST",
-      url: "/v1/patients",
+      url: "/v1/customers",
       headers,
       payload: {
         fullName: "Paciente Dois",

@@ -1,7 +1,7 @@
-import type { Appointment, DashboardInsight, Patient, PatientRow, Professional, RevenuePoint } from "@/lib/types";
+import type { Booking, DashboardInsight, Customer, CustomerRow, Provider, RevenuePoint } from "@/lib/types";
 import { addDays, endOfDayIso, formatDateInput, startOfDayIso } from "@/lib/utils";
 
-const activeAppointmentStatuses = ["scheduled", "confirmed", "rescheduled"] as string[];
+const activeBookingStatuses = ["scheduled", "confirmed", "rescheduled"] as string[];
 
 export function buildEmptyRevenueSeries(days = 5): RevenuePoint[] {
   const today = new Date();
@@ -21,7 +21,7 @@ export function buildEmptyRevenueSeries(days = 5): RevenuePoint[] {
   return points;
 }
 
-export function buildRevenueSeries(appointments: Appointment[], days = 5): RevenuePoint[] {
+export function buildRevenueSeries(bookings: Booking[], days = 5): RevenuePoint[] {
   const today = new Date();
   const points: RevenuePoint[] = [];
 
@@ -29,11 +29,11 @@ export function buildRevenueSeries(appointments: Appointment[], days = 5): Reven
     const date = addDays(today, -index);
     const label = new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(date).replace(".", "");
     const dayKey = formatDateInput(date);
-    const dayAppointments = appointments.filter((appointment) => appointment.startsAt.slice(0, 10) === dayKey);
-    const attended = dayAppointments.filter((appointment) => appointment.status === "attended").length;
-    const expected = dayAppointments.filter((appointment) => activeAppointmentStatuses.includes(appointment.status)).length;
-    const missed = dayAppointments.filter((appointment) => appointment.status === "missed").length;
-    const total = dayAppointments.length;
+    const dayBookings = bookings.filter((booking) => booking.startsAt.slice(0, 10) === dayKey);
+    const attended = dayBookings.filter((booking) => booking.status === "attended").length;
+    const expected = dayBookings.filter((booking) => activeBookingStatuses.includes(booking.status)).length;
+    const missed = dayBookings.filter((booking) => booking.status === "missed").length;
+    const total = dayBookings.length;
 
     points.push({
       label,
@@ -46,20 +46,20 @@ export function buildRevenueSeries(appointments: Appointment[], days = 5): Reven
 }
 
 export function buildDashboardInsights(
-  todaysAppointments: Appointment[],
-  recentAppointments: Appointment[],
-  professionals: Professional[]
+  todaysBookings: Booking[],
+  recentBookings: Booking[],
+  providers: Provider[]
 ): DashboardInsight[] {
-  const activeToday = todaysAppointments.filter((appointment) =>
-    activeAppointmentStatuses.includes(appointment.status)
+  const activeToday = todaysBookings.filter((booking) =>
+    activeBookingStatuses.includes(booking.status)
   );
-  const confirmedToday = todaysAppointments.filter((appointment) => appointment.status === "confirmed").length;
-  const completedRecent = recentAppointments.filter((appointment) =>
-    ["attended", "missed"].includes(appointment.status)
+  const confirmedToday = todaysBookings.filter((booking) => booking.status === "confirmed").length;
+  const completedRecent = recentBookings.filter((booking) =>
+    ["attended", "missed"].includes(booking.status)
   );
-  const missedRecent = completedRecent.filter((appointment) => appointment.status === "missed").length;
-  const rescheduledRecent = recentAppointments.filter((appointment) => appointment.status === "rescheduled").length;
-  const activeProfessionals = professionals.filter((professional) => professional.isActive).length;
+  const missedRecent = completedRecent.filter((booking) => booking.status === "missed").length;
+  const rescheduledRecent = recentBookings.filter((booking) => booking.status === "rescheduled").length;
+  const activeProviders = providers.filter((provider) => provider.isActive).length;
 
   return [
     {
@@ -72,36 +72,36 @@ export function buildDashboardInsights(
     },
     {
       label: "Reagendamentos no período",
-      value: recentAppointments.length === 0 ? 0 : Math.round((rescheduledRecent / recentAppointments.length) * 100)
+      value: recentBookings.length === 0 ? 0 : Math.round((rescheduledRecent / recentBookings.length) * 100)
     },
     {
       label: "Profissionais ativos",
-      value: professionals.length === 0 ? 0 : Math.round((activeProfessionals / professionals.length) * 100)
+      value: providers.length === 0 ? 0 : Math.round((activeProviders / providers.length) * 100)
     }
   ];
 }
 
-export function buildPatientRows(patients: Patient[], appointments: Appointment[]): PatientRow[] {
+export function buildCustomerRows(customers: Customer[], bookings: Booking[]): CustomerRow[] {
   const now = Date.now();
 
-  return patients.map((patient) => {
-    const relatedAppointments = appointments
-      .filter((appointment) => appointment.patientId === patient.id)
+  return customers.map((customer) => {
+    const relatedBookings = bookings
+      .filter((booking) => booking.customerId === customer.id)
       .sort((left, right) => new Date(right.startsAt).getTime() - new Date(left.startsAt).getTime());
 
-    const hasUpcoming = relatedAppointments.some(
-      (appointment) => new Date(appointment.startsAt).getTime() >= now && appointment.status !== "cancelled"
+    const hasUpcoming = relatedBookings.some(
+      (booking) => new Date(booking.startsAt).getTime() >= now && booking.status !== "cancelled"
     );
-    const latestFinished = relatedAppointments.find((appointment) =>
-      ["attended", "missed"].includes(appointment.status)
+    const latestFinished = relatedBookings.find((booking) =>
+      ["attended", "missed"].includes(booking.status)
     );
 
     return {
-      id: patient.id,
-      fullName: patient.fullName,
-      email: patient.email,
-      phone: patient.phone,
-      isActive: patient.isActive,
+      id: customer.id,
+      fullName: customer.fullName,
+      email: customer.email,
+      phone: customer.phone,
+      isActive: customer.isActive,
       status: hasUpcoming ? "active" : latestFinished ? "returning" : "pending",
       lastVisit: latestFinished ? latestFinished.startsAt.slice(0, 10) : "Sem histórico"
     };

@@ -28,7 +28,7 @@ describe("Reports routes", () => {
     }
   });
 
-  it("returns no-show overview based on appointment statuses", async () => {
+  it("returns no-show overview based on booking statuses", async () => {
     const headers = await signInAsAdmin(app);
 
     const response = await app.inject({
@@ -38,6 +38,6 @@ describe("Reports routes", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().missedAppointments).toBeGreaterThan(0);
+    expect(response.json().missedBookings).toBeGreaterThan(0);
   });
 });

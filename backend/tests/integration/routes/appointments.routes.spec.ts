@@ -6,7 +6,7 @@ import { buildApp } from "../../../src/app";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { signInAsAdmin } from "../helpers/auth";
 
-describe("Appointments routes", () => {
+describe("Bookings routes", () => {
   let app: FastifyInstance;
   let dataSource: DataSource;
 
@@ -28,11 +28,11 @@ describe("Appointments routes", () => {
     }
   });
 
-  it("lists seeded appointments with patient and professional names", async () => {
+  it("lists seeded bookings with customer and provider names", async () => {
     const headers = await signInAsAdmin(app);
     const response = await app.inject({
       method: "GET",
-      url: "/v1/appointments",
+      url: "/v1/bookings",
       headers,
     });
 
@@ -40,20 +40,20 @@ describe("Appointments routes", () => {
 
     const body = response.json();
     expect(body.items.length).toBeGreaterThan(0);
-    expect(body.items[0].patientName).toBeDefined();
-    expect(body.items[0].professionalName).toBeDefined();
+    expect(body.items[0].customerName).toBeDefined();
+    expect(body.items[0].providerName).toBeDefined();
   });
 
-  it("creates, reschedules and cancels an appointment with conflict protection", async () => {
+  it("creates, reschedules and cancels an booking with conflict protection", async () => {
     const headers = await signInAsAdmin(app);
 
     const createResponse = await app.inject({
       method: "POST",
-      url: "/v1/appointments",
+      url: "/v1/bookings",
       headers,
       payload: {
-        patientId: "pat_001",
-        professionalId: "pro_001",
+        customerId: "pat_001",
+        providerId: "pro_001",
         startsAt: "2026-04-21T12:00:00.000Z",
         endsAt: "2026-04-21T12:30:00.000Z",
         notes: "Primeira consulta",
@@ -61,15 +61,15 @@ describe("Appointments routes", () => {
     });
 
     expect(createResponse.statusCode).toBe(201);
-    const createdAppointment = createResponse.json();
+    const createdBooking = createResponse.json();
 
     const conflictResponse = await app.inject({
       method: "POST",
-      url: "/v1/appointments",
+      url: "/v1/bookings",
       headers,
       payload: {
-        patientId: "pat_002",
-        professionalId: "pro_001",
+        customerId: "pat_002",
+        providerId: "pro_001",
         startsAt: "2026-04-21T12:15:00.000Z",
         endsAt: "2026-04-21T12:45:00.000Z",
       },
@@ -79,11 +79,11 @@ describe("Appointments routes", () => {
 
     const rescheduleResponse = await app.inject({
       method: "PATCH",
-      url: `/v1/appointments/${createdAppointment.id as string}/reschedule`,
+      url: `/v1/bookings/${createdBooking.id as string}/reschedule`,
       headers,
       payload: {
-        patientId: "pat_001",
-        professionalId: "pro_001",
+        customerId: "pat_001",
+        providerId: "pro_001",
         startsAt: "2026-04-21T13:00:00.000Z",
         endsAt: "2026-04-21T13:30:00.000Z",
         notes: "Horario reagendado",
@@ -95,7 +95,7 @@ describe("Appointments routes", () => {
 
     const cancelResponse = await app.inject({
       method: "PATCH",
-      url: `/v1/appointments/${createdAppointment.id as string}/cancel`,
+      url: `/v1/bookings/${createdBooking.id as string}/cancel`,
       headers,
       payload: {
         notes: "Paciente cancelou",
@@ -111,7 +111,7 @@ describe("Appointments routes", () => {
 
     const dailyResponse = await app.inject({
       method: "GET",
-      url: "/v1/appointments/daily-schedule?date=2026-04-20",
+      url: "/v1/bookings/daily-schedule?date=2026-04-20",
       headers,
     });
 
@@ -120,7 +120,7 @@ describe("Appointments routes", () => {
 
     const weeklyResponse = await app.inject({
       method: "GET",
-      url: "/v1/appointments/weekly-schedule?date=2026-04-20",
+      url: "/v1/bookings/weekly-schedule?date=2026-04-20",
       headers,
     });
 
@@ -134,11 +134,11 @@ describe("Appointments routes", () => {
     const [firstResponse, secondResponse] = await Promise.all([
       app.inject({
         method: "POST",
-        url: "/v1/appointments",
+        url: "/v1/bookings",
         headers,
         payload: {
-          patientId: "pat_001",
-          professionalId: "pro_001",
+          customerId: "pat_001",
+          providerId: "pro_001",
           startsAt: "2026-04-22T15:00:00.000Z",
           endsAt: "2026-04-22T15:30:00.000Z",
           notes: "Consulta concorrente A",
@@ -146,11 +146,11 @@ describe("Appointments routes", () => {
       }),
       app.inject({
         method: "POST",
-        url: "/v1/appointments",
+        url: "/v1/bookings",
         headers,
         payload: {
-          patientId: "pat_002",
-          professionalId: "pro_001",
+          customerId: "pat_002",
+          providerId: "pro_001",
           startsAt: "2026-04-22T15:00:00.000Z",
           endsAt: "2026-04-22T15:30:00.000Z",
           notes: "Consulta concorrente B",

@@ -1,39 +1,42 @@
-import { AppointmentEntity } from "./appointment.entity";
-import { AppointmentNotificationEntity } from "./appointment-notification.entity";
+import { BookingEntity } from "./booking.entity";
+import { BookingNotificationEntity } from "./booking-notification.entity";
 import { AuditEventEntity } from "./audit-event.entity";
 import { AuthSessionEntity } from "./auth-session.entity";
-import { ClinicEntity } from "./clinic.entity";
-import { ClinicIntegrationEntity } from "./clinic-integration.entity";
-import { ClinicNotificationSettingEntity } from "./clinic-notification-setting.entity";
-import { PatientEntity } from "./patient.entity";
-import { ProfessionalEntity } from "./professional.entity";
-import { ProfessionalServiceEntity } from "./professional-service.entity";
+import { OrganizationEntity } from "./organization.entity";
+import { OrganizationIntegrationEntity } from "./organization-integration.entity";
+import { OrganizationNotificationSettingEntity } from "./organization-notification-setting.entity";
+import { CustomerEntity } from "./customer.entity";
+import { ProviderAvailabilityEntity } from "./provider-availability.entity";
+import { ProviderEntity } from "./provider.entity";
+import { ServiceOfferingEntity } from "./service-offering.entity";
 import { UserEntity } from "./user.entity";
 
 export const databaseEntities = [
-  ClinicEntity,
+  OrganizationEntity,
   UserEntity,
-  ProfessionalEntity,
-  ProfessionalServiceEntity,
-  PatientEntity,
-  AppointmentEntity,
-  AppointmentNotificationEntity,
+  ProviderEntity,
+  ProviderAvailabilityEntity,
+  ServiceOfferingEntity,
+  CustomerEntity,
+  BookingEntity,
+  BookingNotificationEntity,
   AuditEventEntity,
   AuthSessionEntity,
-  ClinicIntegrationEntity,
-  ClinicNotificationSettingEntity,
+  OrganizationIntegrationEntity,
+  OrganizationNotificationSettingEntity,
 ] as const;
 
 export {
-  AppointmentEntity,
-  AppointmentNotificationEntity,
+  BookingEntity,
+  BookingNotificationEntity,
   AuditEventEntity,
   AuthSessionEntity,
-  ClinicEntity,
-  ClinicIntegrationEntity,
-  ClinicNotificationSettingEntity,
-  PatientEntity,
-  ProfessionalEntity,
-  ProfessionalServiceEntity,
+  OrganizationEntity,
+  OrganizationIntegrationEntity,
+  OrganizationNotificationSettingEntity,
+  CustomerEntity,
+  ProviderAvailabilityEntity,
+  ProviderEntity,
+  ServiceOfferingEntity,
   UserEntity,
 };

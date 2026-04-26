@@ -3,7 +3,7 @@ import type { DataSource } from "typeorm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildApp } from "../../../src/app";
-import { AppointmentNotificationEntity } from "../../../src/database/entities";
+import { BookingNotificationEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { requestProtection } from "../../../src/security/request-protection";
 import { signInAsAdmin } from "../helpers/auth";
@@ -44,7 +44,7 @@ describe("Notifications routes", () => {
     vi.restoreAllMocks();
   });
 
-  it("stores WhatsApp reminder settings and schedules reminders from appointment events", async () => {
+  it("stores WhatsApp reminder settings and schedules reminders from booking events", async () => {
     const headers = await signInAsAdmin(app);
 
     const updateResponse = await app.inject({
@@ -60,15 +60,15 @@ describe("Notifications routes", () => {
     expect(updateResponse.statusCode).toBe(200);
     expect(updateResponse.json().reminders).toEqual([{ hoursBefore: 24 }, { hoursBefore: 5 }]);
 
-    const startsAt = new Date(Date.now() + (30 * 60 * 60 * 1000));
-    const endsAt = new Date(startsAt.getTime() + (30 * 60 * 1000));
+    const startsAt = new Date("2026-04-28T14:00:00.000Z");
+    const endsAt = new Date("2026-04-28T14:30:00.000Z");
     const createResponse = await app.inject({
       method: "POST",
-      url: "/v1/appointments",
+      url: "/v1/bookings",
       headers,
       payload: {
-        patientId: "pat_001",
-        professionalId: "pro_001",
+        customerId: "pat_001",
+        providerId: "pro_001",
         startsAt: startsAt.toISOString(),
         endsAt: endsAt.toISOString(),
         notes: "Consulta com lembretes",
@@ -76,11 +76,11 @@ describe("Notifications routes", () => {
     });
 
     expect(createResponse.statusCode).toBe(201);
-    const appointmentId = createResponse.json().id as string;
+    const bookingId = createResponse.json().id as string;
 
-    const notifications = await dataSource.getRepository(AppointmentNotificationEntity).find({
+    const notifications = await dataSource.getRepository(BookingNotificationEntity).find({
       where: {
-        appointmentId,
+        bookingId,
       },
       order: {
         scheduledFor: "ASC",
@@ -92,7 +92,7 @@ describe("Notifications routes", () => {
 
     const cancelResponse = await app.inject({
       method: "PATCH",
-      url: `/v1/appointments/${appointmentId}/cancel`,
+      url: `/v1/bookings/${bookingId}/cancel`,
       headers,
       payload: {
         notes: "Paciente cancelou",
@@ -101,9 +101,9 @@ describe("Notifications routes", () => {
 
     expect(cancelResponse.statusCode).toBe(200);
 
-    const cancelledNotifications = await dataSource.getRepository(AppointmentNotificationEntity).find({
+    const cancelledNotifications = await dataSource.getRepository(BookingNotificationEntity).find({
       where: {
-        appointmentId,
+        bookingId,
       },
       order: {
         scheduledFor: "ASC",
@@ -123,7 +123,7 @@ describe("Notifications routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "created",
             },
           }),
@@ -133,7 +133,7 @@ describe("Notifications routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "open",
             },
           }),
@@ -165,23 +165,24 @@ describe("Notifications routes", () => {
       },
     });
 
-    const startsAt = new Date(Date.now() + (2 * 60 * 60 * 1000));
-    const endsAt = new Date(startsAt.getTime() + (30 * 60 * 1000));
+    const startsAt = new Date("2026-04-28T15:00:00.000Z");
+    const endsAt = new Date("2026-04-28T15:30:00.000Z");
     const createResponse = await app.inject({
       method: "POST",
-      url: "/v1/appointments",
+      url: "/v1/bookings",
       headers,
       payload: {
-        patientId: "pat_001",
-        professionalId: "pro_001",
+        customerId: "pat_001",
+        providerId: "pro_001",
         startsAt: startsAt.toISOString(),
         endsAt: endsAt.toISOString(),
       },
     });
 
-    const appointmentId = createResponse.json().id as string;
-    const repository = dataSource.getRepository(AppointmentNotificationEntity);
-    const notification = await repository.findOneByOrFail({ appointmentId });
+    expect(createResponse.statusCode).toBe(201);
+    const bookingId = createResponse.json().id as string;
+    const repository = dataSource.getRepository(BookingNotificationEntity);
+    const notification = await repository.findOneByOrFail({ bookingId });
     notification.scheduledFor = new Date(Date.now() - (60 * 60 * 1000));
     await repository.save(notification);
 

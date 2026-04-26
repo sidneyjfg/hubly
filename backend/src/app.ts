@@ -11,7 +11,7 @@ export type AppDependencies = {
 };
 
 const corsAllowedMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"].join(", ");
-const corsAllowedHeaders = ["authorization", "content-type", "x-clinic-id"].join(", ");
+const corsAllowedHeaders = ["authorization", "content-type", "x-organization-id"].join(", ");
 
 const resolveAllowedOrigin = (origin: string | undefined): string | null => {
   if (!origin) {

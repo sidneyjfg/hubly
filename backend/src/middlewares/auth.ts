@@ -16,7 +16,7 @@ export const authMiddleware = async (request: FastifyRequest, _reply: FastifyRep
   const requestPath = request.url.split("?")[0] ?? request.url;
   const route = request.routeOptions.url ?? requestPath;
 
-  if (publicRoutes.has(route) || isApiDocsRoute(route)) {
+  if (publicRoutes.has(route) || route.startsWith("/v1/public/") || isApiDocsRoute(route)) {
     return;
   }
 
@@ -31,7 +31,7 @@ export const authMiddleware = async (request: FastifyRequest, _reply: FastifyRep
 
   request.authUser = {
     id: claims.sub,
-    clinicId: claims.clinicId,
+    organizationId: claims.organizationId,
     role: claims.role,
     sessionId: claims.sessionId,
   };

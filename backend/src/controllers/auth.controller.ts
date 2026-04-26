@@ -52,7 +52,7 @@ export class AuthController {
       email?: string;
       phone?: string;
       password?: string;
-      clinic?: {
+      organization?: {
         legalName?: string;
         tradeName?: string;
         timezone?: string;
@@ -64,10 +64,10 @@ export class AuthController {
       email: (body.email ?? "").toLowerCase(),
       phone: body.phone ?? "",
       password: body.password ?? "",
-      clinic: {
-        legalName: body.clinic?.legalName ?? "",
-        tradeName: body.clinic?.tradeName ?? "",
-        timezone: body.clinic?.timezone ?? "",
+      organization: {
+        legalName: body.organization?.legalName ?? "",
+        tradeName: body.organization?.tradeName ?? "",
+        timezone: body.organization?.timezone ?? "",
       },
     });
 
@@ -76,7 +76,7 @@ export class AuthController {
 
   public me = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const authUser = getAuthUser(request);
-    reply.status(200).send(await this.authService.me(authUser.id, authUser.clinicId));
+    reply.status(200).send(await this.authService.me(authUser.id, authUser.organizationId));
   };
 
   public updateAccount = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
@@ -88,7 +88,7 @@ export class AuthController {
     };
 
     reply.status(200).send(
-      await this.authService.updateAccount(authUser.id, authUser.clinicId, {
+      await this.authService.updateAccount(authUser.id, authUser.organizationId, {
         fullName: body.fullName ?? "",
         email: (body.email ?? "").toLowerCase(),
         phone: body.phone ?? "",
@@ -104,7 +104,7 @@ export class AuthController {
     };
 
     reply.status(200).send(
-      await this.authService.updatePassword(authUser.id, authUser.clinicId, authUser.sessionId, {
+      await this.authService.updatePassword(authUser.id, authUser.organizationId, authUser.sessionId, {
         currentPassword: body.currentPassword ?? "",
         newPassword: body.newPassword ?? "",
       }),

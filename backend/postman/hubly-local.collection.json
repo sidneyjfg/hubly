@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Hubly Local API",
-    "description": "Collection for local API testing. Run Sign In first to populate accessToken, refreshToken and clinicId automatically.",
+    "description": "Collection for local API testing. Run Sign In first to populate accessToken, refreshToken and organizationId automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -11,7 +11,7 @@
     },
     {
       "key": "email",
-      "value": "admin@clinic.test"
+      "value": "admin@organization.test"
     },
     {
       "key": "password",
@@ -26,7 +26,7 @@
       "value": ""
     },
     {
-      "key": "clinicId",
+      "key": "organizationId",
       "value": ""
     }
   ],
@@ -96,12 +96,12 @@
                   "",
                   "pm.collectionVariables.set('accessToken', data.accessToken);",
                   "pm.collectionVariables.set('refreshToken', data.refreshToken);",
-                  "pm.collectionVariables.set('clinicId', data.clinicId);",
+                  "pm.collectionVariables.set('organizationId', data.organizationId);",
                   "",
                   "if (pm.environment) {",
                   "  pm.environment.set('accessToken', data.accessToken);",
                   "  pm.environment.set('refreshToken', data.refreshToken);",
-                  "  pm.environment.set('clinicId', data.clinicId);",
+                  "  pm.environment.set('organizationId', data.organizationId);",
                   "}"
                 ]
               }
@@ -151,12 +151,12 @@
                   "",
                   "pm.collectionVariables.set('accessToken', data.accessToken);",
                   "pm.collectionVariables.set('refreshToken', data.refreshToken);",
-                  "pm.collectionVariables.set('clinicId', data.clinicId);",
+                  "pm.collectionVariables.set('organizationId', data.organizationId);",
                   "",
                   "if (pm.environment) {",
                   "  pm.environment.set('accessToken', data.accessToken);",
                   "  pm.environment.set('refreshToken', data.refreshToken);",
-                  "  pm.environment.set('clinicId', data.clinicId);",
+                  "  pm.environment.set('organizationId', data.organizationId);",
                   "}"
                 ]
               }
@@ -169,7 +169,7 @@
       "name": "Protected",
       "item": [
         {
-          "name": "Clinics",
+          "name": "Organizations",
           "request": {
             "method": "GET",
             "header": [
@@ -179,27 +179,27 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
-            "description": "Lists clinics. Requires administrator or reception role.",
+            "description": "Lists organizations. Requires administrator or reception role.",
             "url": {
-              "raw": "{{baseUrl}}/v1/clinics",
+              "raw": "{{baseUrl}}/v1/organizations",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "clinics"
+                "organizations"
               ]
             }
           },
           "event": []
         },
         {
-          "name": "Professionals",
+          "name": "Providers",
           "request": {
             "method": "GET",
             "header": [
@@ -209,27 +209,27 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
-            "description": "Lists professionals for the authenticated tenant.",
+            "description": "Lists providers for the authenticated tenant.",
             "url": {
-              "raw": "{{baseUrl}}/v1/professionals",
+              "raw": "{{baseUrl}}/v1/providers",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "professionals"
+                "providers"
               ]
             }
           },
           "event": []
         },
         {
-          "name": "Create Professional",
+          "name": "Create Provider",
           "request": {
             "method": "POST",
             "header": [
@@ -239,8 +239,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -249,15 +249,15 @@
                 "type": "text"
               }
             ],
-            "description": "Creates a professional in the authenticated tenant.",
+            "description": "Creates a provider in the authenticated tenant.",
             "url": {
-              "raw": "{{baseUrl}}/v1/professionals",
+              "raw": "{{baseUrl}}/v1/providers",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "professionals"
+                "providers"
               ]
             },
             "body": {
@@ -273,7 +273,7 @@
           "event": []
         },
         {
-          "name": "Update Professional Status",
+          "name": "Update Provider Status",
           "request": {
             "method": "PATCH",
             "header": [
@@ -283,8 +283,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -293,15 +293,15 @@
                 "type": "text"
               }
             ],
-            "description": "Activates or inactivates a professional.",
+            "description": "Activates or inactivates a provider.",
             "url": {
-              "raw": "{{baseUrl}}/v1/professionals/pro_001/status",
+              "raw": "{{baseUrl}}/v1/providers/pro_001/status",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "professionals",
+                "providers",
                 "pro_001",
                 "status"
               ]
@@ -319,7 +319,7 @@
           "event": []
         },
         {
-          "name": "Patients",
+          "name": "Customers",
           "request": {
             "method": "GET",
             "header": [
@@ -329,27 +329,27 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
-            "description": "Lists patients for the authenticated tenant.",
+            "description": "Lists customers for the authenticated tenant.",
             "url": {
-              "raw": "{{baseUrl}}/v1/patients",
+              "raw": "{{baseUrl}}/v1/customers",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "patients"
+                "customers"
               ]
             }
           },
           "event": []
         },
         {
-          "name": "Create Patient",
+          "name": "Create Customer",
           "request": {
             "method": "POST",
             "header": [
@@ -359,8 +359,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -369,20 +369,20 @@
                 "type": "text"
               }
             ],
-            "description": "Creates a patient in the authenticated tenant.",
+            "description": "Creates a customer in the authenticated tenant.",
             "url": {
-              "raw": "{{baseUrl}}/v1/patients",
+              "raw": "{{baseUrl}}/v1/customers",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "patients"
+                "customers"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Marcos Paulo\",\n  \"email\": \"marcos@patient.test\",\n  \"phone\": \"+5511955555555\"\n}",
+              "raw": "{\n  \"fullName\": \"Marcos Paulo\",\n  \"email\": \"marcos@customer.test\",\n  \"phone\": \"+5511955555555\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -393,7 +393,7 @@
           "event": []
         },
         {
-          "name": "Appointments",
+          "name": "Bookings",
           "request": {
             "method": "GET",
             "header": [
@@ -403,27 +403,27 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
-            "description": "Lists appointments for the authenticated tenant.",
+            "description": "Lists bookings for the authenticated tenant.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments",
+              "raw": "{{baseUrl}}/v1/bookings",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments"
+                "bookings"
               ]
             }
           },
           "event": []
         },
         {
-          "name": "Create Appointment",
+          "name": "Create Booking",
           "request": {
             "method": "POST",
             "header": [
@@ -433,8 +433,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -443,20 +443,20 @@
                 "type": "text"
               }
             ],
-            "description": "Creates a new appointment with conflict validation for the professional.",
+            "description": "Creates a new booking with conflict validation for the provider.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments",
+              "raw": "{{baseUrl}}/v1/bookings",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments"
+                "bookings"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patientId\": \"pat_001\",\n  \"professionalId\": \"pro_001\",\n  \"startsAt\": \"2026-04-21T12:00:00.000Z\",\n  \"endsAt\": \"2026-04-21T12:30:00.000Z\",\n  \"notes\": \"Primeira consulta\"\n}",
+              "raw": "{\n  \"customerId\": \"pat_001\",\n  \"providerId\": \"pro_001\",\n  \"startsAt\": \"2026-04-21T12:00:00.000Z\",\n  \"endsAt\": \"2026-04-21T12:30:00.000Z\",\n  \"notes\": \"Primeira consulta\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -467,7 +467,7 @@
           "event": []
         },
         {
-          "name": "Cancel Appointment",
+          "name": "Cancel Booking",
           "request": {
             "method": "PATCH",
             "header": [
@@ -477,8 +477,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -487,15 +487,15 @@
                 "type": "text"
               }
             ],
-            "description": "Cancels an appointment.",
+            "description": "Cancels an booking.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments/apt_001/cancel",
+              "raw": "{{baseUrl}}/v1/bookings/apt_001/cancel",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments",
+                "bookings",
                 "apt_001",
                 "cancel"
               ]
@@ -513,7 +513,7 @@
           "event": []
         },
         {
-          "name": "Reschedule Appointment",
+          "name": "Reschedule Booking",
           "request": {
             "method": "PATCH",
             "header": [
@@ -523,8 +523,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -533,22 +533,22 @@
                 "type": "text"
               }
             ],
-            "description": "Reschedules an appointment with conflict validation.",
+            "description": "Reschedules an booking with conflict validation.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments/apt_001/reschedule",
+              "raw": "{{baseUrl}}/v1/bookings/apt_001/reschedule",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments",
+                "bookings",
                 "apt_001",
                 "reschedule"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patientId\": \"pat_001\",\n  \"professionalId\": \"pro_001\",\n  \"startsAt\": \"2026-04-21T13:00:00.000Z\",\n  \"endsAt\": \"2026-04-21T13:30:00.000Z\",\n  \"notes\": \"Horario reagendado\"\n}",
+              "raw": "{\n  \"customerId\": \"pat_001\",\n  \"providerId\": \"pro_001\",\n  \"startsAt\": \"2026-04-21T13:00:00.000Z\",\n  \"endsAt\": \"2026-04-21T13:30:00.000Z\",\n  \"notes\": \"Horario reagendado\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -559,7 +559,7 @@
           "event": []
         },
         {
-          "name": "Mark Appointment Attended",
+          "name": "Mark Booking Attended",
           "request": {
             "method": "PATCH",
             "header": [
@@ -569,8 +569,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -579,15 +579,15 @@
                 "type": "text"
               }
             ],
-            "description": "Marks an appointment as attended.",
+            "description": "Marks an booking as attended.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments/apt_001/attendance",
+              "raw": "{{baseUrl}}/v1/bookings/apt_001/attendance",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments",
+                "bookings",
                 "apt_001",
                 "attendance"
               ]
@@ -605,7 +605,7 @@
           "event": []
         },
         {
-          "name": "Mark Appointment Missed",
+          "name": "Mark Booking Missed",
           "request": {
             "method": "PATCH",
             "header": [
@@ -615,8 +615,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -625,15 +625,15 @@
                 "type": "text"
               }
             ],
-            "description": "Marks an appointment as missed.",
+            "description": "Marks an booking as missed.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments/apt_001/missed",
+              "raw": "{{baseUrl}}/v1/bookings/apt_001/missed",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments",
+                "bookings",
                 "apt_001",
                 "missed"
               ]
@@ -661,20 +661,20 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
             "description": "Returns the daily schedule for a given date.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments/daily-schedule?date=2026-04-20",
+              "raw": "{{baseUrl}}/v1/bookings/daily-schedule?date=2026-04-20",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments",
+                "bookings",
                 "daily-schedule"
               ],
               "query": [
@@ -698,20 +698,20 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
             "description": "Returns the weekly schedule for a given date.",
             "url": {
-              "raw": "{{baseUrl}}/v1/appointments/weekly-schedule?date=2026-04-20",
+              "raw": "{{baseUrl}}/v1/bookings/weekly-schedule?date=2026-04-20",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "appointments",
+                "bookings",
                 "weekly-schedule"
               ],
               "query": [
@@ -735,8 +735,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
@@ -766,8 +766,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
@@ -796,8 +796,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -806,7 +806,7 @@
                 "type": "text"
               }
             ],
-            "description": "Creates or reuses the clinic WhatsApp instance and requests a connection code for the informed phone.",
+            "description": "Creates or reuses the organization WhatsApp instance and requests a connection code for the informed phone.",
             "url": {
               "raw": "{{baseUrl}}/v1/integrations/whatsapp/session",
               "host": [
@@ -842,8 +842,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               },
               {
@@ -852,7 +852,7 @@
                 "type": "text"
               }
             ],
-            "description": "Restarts the clinic WhatsApp instance and requests a fresh connection code.",
+            "description": "Restarts the organization WhatsApp instance and requests a fresh connection code.",
             "url": {
               "raw": "{{baseUrl}}/v1/integrations/whatsapp/session/regenerate-code",
               "host": [
@@ -889,8 +889,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
@@ -920,8 +920,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],
@@ -961,8 +961,8 @@
                 "type": "text"
               },
               {
-                "key": "x-clinic-id",
-                "value": "{{clinicId}}",
+                "key": "x-organization-id",
+                "value": "{{organizationId}}",
                 "type": "text"
               }
             ],

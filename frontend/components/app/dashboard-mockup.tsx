@@ -3,10 +3,10 @@ import { CalendarRange, CircleAlert, MessageCircleMore, TrendingUp } from "lucid
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 
-const mockAppointments = [
-  { time: "08:30", patient: "Ana Ribeiro", status: "confirmed" as const },
-  { time: "10:00", patient: "Carlos Dias", status: "pending" as const },
-  { time: "11:30", patient: "Mariana Valente", status: "missed" as const }
+const mockBookings = [
+  { time: "08:30", customer: "Ana Ribeiro", status: "confirmed" as const },
+  { time: "10:00", customer: "Carlos Dias", status: "pending" as const },
+  { time: "11:30", customer: "Mariana Valente", status: "missed" as const }
 ];
 
 export function DashboardMockup() {
@@ -34,21 +34,21 @@ export function DashboardMockup() {
               </div>
             </div>
             <div className="space-y-4">
-              {mockAppointments.map((appointment) => (
+              {mockBookings.map((booking) => (
                 <div
                   className="flex items-center justify-between rounded-xl border border-white/8 bg-white/5 px-4 py-4"
-                  key={appointment.patient}
+                  key={booking.customer}
                 >
                   <div className="flex items-center gap-4">
                     <div className="rounded-lg bg-white/8 px-3 py-2 text-sm font-semibold text-white">
-                      {appointment.time}
+                      {booking.time}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{appointment.patient}</p>
+                      <p className="text-sm font-medium text-white">{booking.customer}</p>
                       <p className="text-xs text-slate-400">Consulta confirmada com lembrete automático</p>
                     </div>
                   </div>
-                  <StatusBadge status={appointment.status} />
+                  <StatusBadge status={booking.status} />
                 </div>
               ))}
             </div>

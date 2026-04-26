@@ -36,7 +36,7 @@ export const useAppStore = create<AppState>()(
           currentUser: {
             id: session.actorId,
             actorId: session.actorId,
-            clinicId: session.clinicId,
+            organizationId: session.organizationId,
             email,
             fullName: getDisplayNameFromEmail(email),
             displayName: getDisplayNameFromEmail(email),
@@ -50,7 +50,7 @@ export const useAppStore = create<AppState>()(
           currentUser: state.currentUser
             ? {
                 ...state.currentUser,
-                clinicId: session.clinicId,
+                organizationId: session.organizationId,
                 actorId: session.actorId,
                 role: session.role
               }

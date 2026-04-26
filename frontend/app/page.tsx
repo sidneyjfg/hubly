@@ -8,6 +8,7 @@ import {
   MessageSquareMore,
   ShieldCheck
 } from "lucide-react";
+import Image from "next/image";
 
 import { DashboardMockup } from "@/components/app/dashboard-mockup";
 import { BrandLogo } from "@/components/app/brand-logo";
@@ -79,7 +80,7 @@ const steps = [
 
 const faqs = [
   {
-    question: "A Hubly serve para qualquer tipo de clinica?",
+    question: "A Hubly serve para qualquer tipo de organizationa?",
     answer: "Sim. A interface foi pensada para operações médicas, odontológicas, estética, psicologia e serviços com agenda."
   },
   {
@@ -117,7 +118,7 @@ export default function MarketingPage() {
                 Menos faltas. Mais resultados.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
-                A Hubly conecta sua clinica aos melhores servicos para centralizar agenda, pacientes e automacoes sem perder clareza operacional.
+                A Hubly conecta sua organizationa aos melhores servicos para centralizar agenda, pacientes e automacoes sem perder clareza operacional.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                 <ButtonLink href="/login" size="lg">
@@ -271,7 +272,7 @@ export default function MarketingPage() {
                 <div className="mt-8">
                   <p className="font-semibold text-white">{testimonial.name}</p>
                   <p className="text-sm text-slate-400">
-                    {testimonial.role} · {testimonial.clinic}
+                    {testimonial.role} · {testimonial.organization}
                   </p>
                 </div>
               </Card>
@@ -342,6 +343,19 @@ export default function MarketingPage() {
             </ButtonLink>
           </div>
         </Card>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-20 md:px-10">
+        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b1b] shadow-soft">
+          <Image
+            alt="Banner principal da marca Hubly"
+            className="h-auto w-full object-cover"
+            height={450}
+            priority
+            src="/brand/banner-hubly.svg"
+            width={1536}
+          />
+        </div>
       </section>
 
       <footer className="border-t border-white/10">

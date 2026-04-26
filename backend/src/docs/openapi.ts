@@ -12,7 +12,7 @@ export const buildOpenApiDocument = () => {
         "- Environment Postman: `/docs/postman/environment.json`",
         "",
         "Credenciais seed locais:",
-        "- `admin@clinic.test` / `password123`",
+        "- `admin@organization.test` / `password123`",
       ].join("\n"),
     },
     servers: [
@@ -24,10 +24,10 @@ export const buildOpenApiDocument = () => {
     tags: [
       { name: "Health" },
       { name: "Auth" },
-      { name: "Clinics" },
-      { name: "Professionals" },
-      { name: "Patients" },
-      { name: "Appointments" },
+      { name: "Organizations" },
+      { name: "Providers" },
+      { name: "Customers" },
+      { name: "Bookings" },
       { name: "Notifications" },
       { name: "Integrations" },
       { name: "Reports" },

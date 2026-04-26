@@ -6,7 +6,7 @@ import { buildApp } from "../../../src/app";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { signInAsAdmin } from "../helpers/auth";
 
-describe("Patients routes", () => {
+describe("Customers routes", () => {
   let app: FastifyInstance;
   let dataSource: DataSource;
 
@@ -28,30 +28,30 @@ describe("Patients routes", () => {
     }
   });
 
-  it("creates and updates patients in the authenticated tenant", async () => {
+  it("creates and updates customers in the authenticated tenant", async () => {
     const headers = await signInAsAdmin(app);
 
     const createResponse = await app.inject({
       method: "POST",
-      url: "/v1/patients",
+      url: "/v1/customers",
       headers,
       payload: {
         fullName: "Marcos Paulo",
-        email: "marcos@patient.test",
+        email: "marcos@customer.test",
         phone: "+5511955555555",
       },
     });
 
     expect(createResponse.statusCode).toBe(201);
-    const createdPatient = createResponse.json();
+    const createdCustomer = createResponse.json();
 
     const updateResponse = await app.inject({
       method: "PATCH",
-      url: `/v1/patients/${createdPatient.id as string}`,
+      url: `/v1/customers/${createdCustomer.id as string}`,
       headers,
       payload: {
         fullName: "Marcos Paulo Lima",
-        email: "marcos.lima@patient.test",
+        email: "marcos.lima@customer.test",
         phone: "+5511944444444",
       },
     });

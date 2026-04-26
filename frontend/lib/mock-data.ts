@@ -6,19 +6,19 @@ export const testimonials: Testimonial[] = [
   {
     name: "Juliana Rocha",
     role: "Sócia-diretora",
-    clinic: "Clínica Harmonie",
+    organization: "Clínica Harmonie",
     quote: "A recepção ganhou previsibilidade e o no-show caiu já no primeiro mês com confirmações automáticas."
   },
   {
     name: "Eduardo Martins",
     role: "Gestor de operações",
-    clinic: "Vitta Prime",
+    organization: "Vitta Prime",
     quote: "Conseguimos reagendar rápido, preencher lacunas e ter uma visão clara do que está impactando o faturamento."
   },
   {
     name: "Carolina Nery",
     role: "Head de atendimento",
-    clinic: "Pulse Care",
+    organization: "Pulse Care",
     quote: "A equipe deixou de correr atrás manualmente de pacientes e passou a operar a agenda com muito mais controle."
   }
 ];

@@ -1,0 +1,19 @@
+<svg width="760" height="210" viewBox="0 0 760 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hublyHorizontalGradient" x1="22" y1="18" x2="150" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C3FFF"/>
+      <stop offset="1" stop-color="#3A8CFF"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <rect x="22" y="18" width="34" height="100" rx="17" fill="url(#hublyHorizontalGradient)"/>
+    <rect x="116" y="18" width="34" height="100" rx="17" fill="url(#hublyHorizontalGradient)"/>
+    <path d="M56 43C71.5 43 81.75 48 86 54C90.25 48 100.5 43 116 43V54C105.333 54 96.1667 59.3333 86 69C75.8333 59.3333 66.6667 54 56 54V43Z" fill="url(#hublyHorizontalGradient)"/>
+    <path d="M56 93C71.5 93 81.75 88 86 82C90.25 88 100.5 93 116 93V82C105.333 82 96.1667 76.6667 86 67C75.8333 76.6667 66.6667 82 56 82V93Z" fill="url(#hublyHorizontalGradient)"/>
+    <path d="M86 48C67.8454 48 53.6487 60.7831 46.5 68C53.6487 75.2169 67.8454 88 86 88C104.155 88 118.351 75.2169 125.5 68C118.351 60.7831 104.155 48 86 48Z" fill="white"/>
+    <circle cx="86" cy="68" r="13" fill="url(#hublyHorizontalGradient)"/>
+    <circle cx="86" cy="68" r="5.5" fill="white"/>
+  </g>
+  <text x="188" y="106" fill="#FFFFFF" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="92" font-weight="600" letter-spacing="-0.05em">Hubly</text>
+  <text x="190" y="156" fill="#7C68FF" font-family="Poppins, ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="500">Conecta voce aos melhores servicos</text>
+</svg>

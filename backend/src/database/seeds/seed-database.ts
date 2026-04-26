@@ -1,13 +1,14 @@
 import type { DataSource } from "typeorm";
 
 import {
-  AppointmentEntity,
+  BookingEntity,
   AuditEventEntity,
   AuthSessionEntity,
-  ClinicEntity,
-  ClinicIntegrationEntity,
-  PatientEntity,
-  ProfessionalEntity,
+  OrganizationEntity,
+  OrganizationIntegrationEntity,
+  CustomerEntity,
+  ProviderAvailabilityEntity,
+  ProviderEntity,
   UserEntity,
 } from "../entities";
 import { seedData } from "./seed-data";
@@ -15,19 +16,21 @@ import { seedData } from "./seed-data";
 export const seedDatabase = async (dataSource: DataSource): Promise<void> => {
   await dataSource.transaction(async (manager) => {
     await manager.createQueryBuilder().delete().from(AuthSessionEntity).execute();
-    await manager.createQueryBuilder().delete().from(AppointmentEntity).execute();
+    await manager.createQueryBuilder().delete().from(BookingEntity).execute();
     await manager.createQueryBuilder().delete().from(AuditEventEntity).execute();
-    await manager.createQueryBuilder().delete().from(ClinicIntegrationEntity).execute();
-    await manager.createQueryBuilder().delete().from(ProfessionalEntity).execute();
-    await manager.createQueryBuilder().delete().from(PatientEntity).execute();
+    await manager.createQueryBuilder().delete().from(OrganizationIntegrationEntity).execute();
+    await manager.createQueryBuilder().delete().from(ProviderAvailabilityEntity).execute();
+    await manager.createQueryBuilder().delete().from(ProviderEntity).execute();
+    await manager.createQueryBuilder().delete().from(CustomerEntity).execute();
     await manager.createQueryBuilder().delete().from(UserEntity).execute();
-    await manager.createQueryBuilder().delete().from(ClinicEntity).execute();
+    await manager.createQueryBuilder().delete().from(OrganizationEntity).execute();
 
-    await manager.save(ClinicEntity, [...seedData.clinics]);
+    await manager.save(OrganizationEntity, [...seedData.organizations]);
     await manager.save(UserEntity, [...seedData.users]);
-    await manager.save(ProfessionalEntity, [...seedData.professionals]);
-    await manager.save(PatientEntity, [...seedData.patients]);
-    await manager.save(AppointmentEntity, [...seedData.appointments]);
+    await manager.save(ProviderEntity, [...seedData.providers]);
+    await manager.save(ProviderAvailabilityEntity, [...seedData.providerAvailabilities]);
+    await manager.save(CustomerEntity, [...seedData.customers]);
+    await manager.save(BookingEntity, [...seedData.bookings]);
     await manager.save(AuditEventEntity, [...seedData.auditEvents]);
   });
 };

@@ -15,7 +15,7 @@ const bootstrap = async (): Promise<void> => {
   const reminderIntervalMs = 60 * 1000;
   const reminderTimer = setInterval(async () => {
     try {
-      const result = await notificationsService.processDueWhatsAppRemindersAcrossClinics();
+      const result = await notificationsService.processDueWhatsAppRemindersAcrossOrganizations();
 
       if (result.processedCount > 0) {
         app.log.info(

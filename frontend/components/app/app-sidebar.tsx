@@ -25,9 +25,9 @@ import { useAppStore } from "@/store/app-store";
 
 const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/patients", label: "Pacientes", icon: UsersRound },
-  { href: "/professionals", label: "Profissionais", icon: UserRoundCog },
-  { href: "/schedule", label: "Agenda", icon: CalendarDays },
+  { href: "/customers", label: "Clientes", icon: UsersRound },
+  { href: "/providers", label: "Prestadores", icon: UserRoundCog },
+  { href: "/bookings", label: "Agenda", icon: CalendarDays },
   { href: "/automations", label: "Automações", icon: Bot },
   { href: "/reports", label: "Relatórios", icon: BarChart3 },
   { href: "/account", label: "Conta", icon: UserCircle2 },

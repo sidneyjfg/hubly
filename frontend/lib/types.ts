@@ -1,8 +1,8 @@
-export const userRoles = ["administrator", "reception", "professional"] as const;
+export const userRoles = ["administrator", "reception", "provider"] as const;
 
 export type UserRole = (typeof userRoles)[number];
 
-export const appointmentStatuses = [
+export const bookingStatuses = [
   "scheduled",
   "confirmed",
   "pending",
@@ -12,15 +12,15 @@ export const appointmentStatuses = [
   "missed"
 ] as const;
 
-export type AppointmentStatus = (typeof appointmentStatuses)[number];
+export type BookingStatus = (typeof bookingStatuses)[number];
 
-export type PatientStatus = "active" | "pending" | "returning";
+export type CustomerStatus = "active" | "pending" | "returning";
 
 export type PlanName = "Starter" | "Growth" | "Scale";
 
 export type FakeUser = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   email: string;
   fullName: string;
   phone?: string;
@@ -33,21 +33,21 @@ export type AuthSession = {
   accessToken: string;
   refreshToken: string;
   sessionId: string;
-  clinicId: string;
+  organizationId: string;
   actorId: string;
   role: UserRole;
 };
 
-export type Patient = {
+export type Customer = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   fullName: string;
   email?: string | null;
   phone: string;
   isActive: boolean;
 };
 
-export type Clinic = {
+export type Organization = {
   id: string;
   legalName: string;
   tradeName: string;
@@ -56,7 +56,7 @@ export type Clinic = {
 
 export type UserProfile = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   fullName: string;
   email: string;
   phone: string;
@@ -67,38 +67,38 @@ export type UserProfile = {
 
 export type MeResponse = {
   user: UserProfile;
-  clinic: Clinic;
+  organization: Organization;
 };
 
-export type Professional = {
+export type Provider = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   fullName: string;
   specialty: string;
   isActive: boolean;
 };
 
-export type ProfessionalService = {
+export type ServiceOffering = {
   id: string;
-  clinicId: string;
-  professionalId: string;
-  professionalName?: string;
+  organizationId: string;
+  providerId: string;
+  providerName?: string;
   name: string;
   durationMinutes: number;
   priceCents?: number | null;
   isActive: boolean;
 };
 
-export type Appointment = {
+export type Booking = {
   id: string;
-  clinicId: string;
-  patientId: string;
-  patientName: string;
-  professionalId: string;
-  professionalName: string;
-  serviceId?: string | null;
+  organizationId: string;
+  customerId: string;
+  customerName: string;
+  providerId: string;
+  providerName: string;
+  offeringId?: string | null;
   serviceName?: string | null;
-  status: AppointmentStatus;
+  status: BookingStatus;
   startsAt: string;
   endsAt: string;
   notes?: string | null;
@@ -111,7 +111,7 @@ export type AutomationSettings = {
 };
 
 export type DashboardMetrics = {
-  todaysAppointments: number;
+  todaysBookings: number;
   noShowRate: number;
   estimatedRevenue: number;
   occupancyRate: number;
@@ -128,13 +128,13 @@ export type DashboardInsight = {
   value: number;
 };
 
-export type PatientRow = {
+export type CustomerRow = {
   id: string;
   fullName: string;
   email?: string | null;
   phone: string;
   isActive: boolean;
-  status: PatientStatus;
+  status: CustomerStatus;
   lastVisit: string;
 };
 
@@ -143,7 +143,7 @@ export type WhatsAppReminderRule = {
 };
 
 export type WhatsAppReminderSettings = {
-  clinicId: string;
+  organizationId: string;
   channel: "whatsapp";
   isEnabled: boolean;
   reminders: WhatsAppReminderRule[];
@@ -177,7 +177,7 @@ export type WhatsAppDisconnectResult = {
 export type Testimonial = {
   name: string;
   role: string;
-  clinic: string;
+  organization: string;
   quote: string;
 };
 

@@ -22,19 +22,19 @@ export default function ReportsPage() {
     queryKey: ["reports", activeFilter],
     queryFn: async () => {
       const range = getPeriodRange(filterToDays[activeFilter]);
-      const [overview, appointments] = await Promise.all([
+      const [overview, bookings] = await Promise.all([
         api.getNoShowOverview(range),
-        api.getAppointments({ ...range, limit: 100, page: 1 })
+        api.getBookings({ ...range, limit: 100, page: 1 })
       ]);
 
-      const attended = appointments.items.filter((appointment) => appointment.status === "attended").length;
-      const futureOrConfirmed = appointments.items.filter((appointment) =>
-        ["scheduled", "confirmed", "rescheduled"].includes(appointment.status)
+      const attended = bookings.items.filter((booking) => booking.status === "attended").length;
+      const futureOrConfirmed = bookings.items.filter((booking) =>
+        ["scheduled", "confirmed", "rescheduled"].includes(booking.status)
       ).length;
 
       return {
         overview,
-        appointments: appointments.items,
+        bookings: bookings.items,
         revenue: (attended * 220) + (futureOrConfirmed * 160),
         recovered: futureOrConfirmed
       };
@@ -82,7 +82,7 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      <MiniBarChart points={data ? buildRevenueSeries(data.appointments) : buildEmptyRevenueSeries()} />
+      <MiniBarChart points={data ? buildRevenueSeries(data.bookings) : buildEmptyRevenueSeries()} />
     </div>
   );
 }

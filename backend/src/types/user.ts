@@ -1,10 +1,10 @@
 export type User = {
   id: string;
-  clinicId: string;
+  organizationId: string;
   fullName: string;
   email: string;
   phone: string;
-  role: "administrator" | "reception" | "professional";
+  role: "administrator" | "reception" | "provider";
   isActive: boolean;
   createdAt: string;
 };

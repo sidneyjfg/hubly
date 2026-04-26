@@ -6,7 +6,7 @@ import type { AuditEvent } from "../types/audit";
 import { buildPaginatedResult, getPaginationOffset, type PaginatedResult, type Pagination } from "../utils/pagination";
 
 type AuditCreateInput = {
-  clinicId: string;
+  organizationId: string;
   actorId?: string | null;
   action: string;
   targetType: string;
@@ -21,10 +21,10 @@ export class AuditRepository {
     return (manager ?? this.dataSource.manager).getRepository(AuditEventEntity);
   }
 
-  public async findAll(clinicId: string, pagination: Pagination): Promise<PaginatedResult<AuditEvent>> {
+  public async findAll(organizationId: string, pagination: Pagination): Promise<PaginatedResult<AuditEvent>> {
     const [items, total] = await this.getRepository().findAndCount({
       where: {
-        clinicId,
+        organizationId,
       },
       order: {
         occurredAt: "DESC",
@@ -35,7 +35,7 @@ export class AuditRepository {
 
     return buildPaginatedResult(items.map((item) => ({
       id: item.id,
-      clinicId: item.clinicId,
+      organizationId: item.organizationId,
       actorId: item.actorId ?? "",
       action: item.action,
       targetType: item.targetType,
@@ -47,7 +47,7 @@ export class AuditRepository {
   public async create(input: AuditCreateInput, manager?: EntityManager): Promise<void> {
     await this.getRepository(manager).save({
       id: randomUUID(),
-      clinicId: input.clinicId,
+      organizationId: input.organizationId,
       actorId: input.actorId ?? null,
       action: input.action,
       targetType: input.targetType,

@@ -51,7 +51,7 @@ describe("WhatsApp onboarding E2E", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "close",
             },
           }),
@@ -61,7 +61,7 @@ describe("WhatsApp onboarding E2E", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "close",
             },
           }),
@@ -79,7 +79,7 @@ describe("WhatsApp onboarding E2E", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "connecting",
             },
           }),
@@ -89,7 +89,7 @@ describe("WhatsApp onboarding E2E", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "open",
             },
           }),
@@ -111,7 +111,7 @@ describe("WhatsApp onboarding E2E", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "password123",
       },
     });
@@ -120,7 +120,7 @@ describe("WhatsApp onboarding E2E", () => {
     const session = signInResponse.json();
     const headers = {
       authorization: `Bearer ${session.accessToken as string}`,
-      "x-clinic-id": session.clinicId as string,
+      "x-organization-id": session.organizationId as string,
     };
 
     const startSessionResponse = await app.inject({

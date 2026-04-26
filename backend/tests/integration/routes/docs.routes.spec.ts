@@ -38,7 +38,7 @@ describe("Docs routes", () => {
     const body = response.json();
     expect(body.openapi).toBe("3.1.0");
     expect(body.paths["/v1/auth/sign-in"]).toBeDefined();
-    expect(body.paths["/v1/appointments"]).toBeDefined();
+    expect(body.paths["/v1/bookings"]).toBeDefined();
   });
 
   it("serves a Postman collection with token propagation scripts", async () => {

@@ -1,10 +1,10 @@
 import type {
-  Appointment,
-  Clinic,
+  Booking,
+  Organization,
   IntegrationSummary,
   MeResponse,
-  Patient,
-  ProfessionalService,
+  Customer,
+  ServiceOffering,
   UserProfile,
   UserRole,
   WhatsAppConnectionStatus,
@@ -22,36 +22,36 @@ export const apiRoutes = {
     account: "/v1/auth/account",
     password: "/v1/auth/password"
   },
-  clinics: {
-    update: (id: string) => `/v1/clinics/${id}`
+  organizations: {
+    update: (id: string) => `/v1/organizations/${id}`
   },
-  professionals: {
-    list: "/v1/professionals",
-    create: "/v1/professionals",
-    update: (id: string) => `/v1/professionals/${id}`,
-    status: (id: string) => `/v1/professionals/${id}/status`
+  providers: {
+    list: "/v1/providers",
+    create: "/v1/providers",
+    update: (id: string) => `/v1/providers/${id}`,
+    status: (id: string) => `/v1/providers/${id}/status`
   },
-  professionalServices: {
-    list: "/v1/professional-services",
-    create: "/v1/professional-services",
-    update: (id: string) => `/v1/professional-services/${id}`,
-    status: (id: string) => `/v1/professional-services/${id}/status`
+  serviceOfferings: {
+    list: "/v1/service-offerings",
+    create: "/v1/service-offerings",
+    update: (id: string) => `/v1/service-offerings/${id}`,
+    status: (id: string) => `/v1/service-offerings/${id}/status`
   },
-  patients: {
-    list: "/v1/patients",
-    create: "/v1/patients",
-    update: (id: string) => `/v1/patients/${id}`,
-    status: (id: string) => `/v1/patients/${id}/status`
+  customers: {
+    list: "/v1/customers",
+    create: "/v1/customers",
+    update: (id: string) => `/v1/customers/${id}`,
+    status: (id: string) => `/v1/customers/${id}/status`
   },
-  appointments: {
-    list: "/v1/appointments",
-    create: "/v1/appointments",
-    cancel: (id: string) => `/v1/appointments/${id}/cancel`,
-    reschedule: (id: string) => `/v1/appointments/${id}/reschedule`,
-    attendance: (id: string) => `/v1/appointments/${id}/attendance`,
-    missed: (id: string) => `/v1/appointments/${id}/missed`,
-    dailySchedule: "/v1/appointments/daily-schedule",
-    weeklySchedule: "/v1/appointments/weekly-schedule"
+  bookings: {
+    list: "/v1/bookings",
+    create: "/v1/bookings",
+    cancel: (id: string) => `/v1/bookings/${id}/cancel`,
+    reschedule: (id: string) => `/v1/bookings/${id}/reschedule`,
+    attendance: (id: string) => `/v1/bookings/${id}/attendance`,
+    missed: (id: string) => `/v1/bookings/${id}/missed`,
+    dailySchedule: "/v1/bookings/daily-schedule",
+    weeklySchedule: "/v1/bookings/weekly-schedule"
   },
   reports: {
     catalog: "/v1/reports/catalog",
@@ -77,41 +77,41 @@ export type AuthSessionDTO = {
   accessToken: string;
   refreshToken: string;
   sessionId: string;
-  clinicId: string;
+  organizationId: string;
   actorId: string;
   role: UserRole;
 };
 
-export type PatientDTO = Patient;
+export type CustomerDTO = Customer;
 
-export type PatientWriteDTO = {
+export type CustomerWriteDTO = {
   fullName: string;
   email?: string | null;
   phone: string;
 };
 
-export type ProfessionalWriteDTO = {
+export type ProviderWriteDTO = {
   fullName: string;
   specialty: string;
   isActive?: boolean;
 };
 
-export type ProfessionalServiceDTO = ProfessionalService;
+export type ServiceOfferingDTO = ServiceOffering;
 
-export type ProfessionalServiceWriteDTO = {
-  professionalId: string;
+export type ServiceOfferingWriteDTO = {
+  providerId: string;
   name: string;
   durationMinutes: number;
   priceCents?: number | null;
   isActive?: boolean;
 };
 
-export type AppointmentDTO = Appointment;
+export type BookingDTO = Booking;
 
-export type AppointmentWriteDTO = {
-  patientId: string;
-  professionalId: string;
-  serviceId?: string | null;
+export type BookingWriteDTO = {
+  customerId: string;
+  providerId: string;
+  offeringId?: string | null;
   startsAt: string;
   endsAt: string;
   notes?: string | null;
@@ -127,7 +127,7 @@ export type SignUpInputDTO = {
   email: string;
   phone: string;
   password: string;
-  clinic: {
+  organization: {
     legalName: string;
     tradeName: string;
     timezone: string;
@@ -149,19 +149,19 @@ export type UpdatePasswordInputDTO = {
   newPassword: string;
 };
 
-export type UpdateClinicInputDTO = {
+export type UpdateOrganizationInputDTO = {
   legalName: string;
   tradeName: string;
   timezone: string;
 };
 
 export type NoShowOverviewDTO = {
-  clinicId: string;
+  organizationId: string;
   periodStart: string;
   periodEnd: string;
-  totalAppointments: number;
-  attendedAppointments: number;
-  missedAppointments: number;
+  totalBookings: number;
+  attendedBookings: number;
+  missedBookings: number;
   noShowRate: number;
 };
 
@@ -171,5 +171,5 @@ export type WhatsAppConnectionStatusDTO = WhatsAppConnectionStatus;
 export type WhatsAppSessionConnectResultDTO = WhatsAppSessionConnectResult;
 export type WhatsAppDisconnectResultDTO = WhatsAppDisconnectResult;
 export type UserProfileDTO = UserProfile;
-export type ClinicDTO = Clinic;
+export type OrganizationDTO = Organization;
 export type MeResponseDTO = MeResponse;

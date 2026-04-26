@@ -73,7 +73,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "created",
             },
           }),
@@ -83,7 +83,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "open",
             },
           }),
@@ -108,7 +108,7 @@ describe("Integrations routes", () => {
     );
     expect(global.fetch).toHaveBeenNthCalledWith(
       2,
-      "http://evolution.local/instance/connectionState/clinic-cln_main_001",
+      "http://evolution.local/instance/connectionState/organization-cln_main_001",
       expect.objectContaining({
         method: "GET",
       }),
@@ -125,7 +125,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "created",
             },
           }),
@@ -163,7 +163,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "created",
             },
           }),
@@ -173,7 +173,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "open",
             },
           }),
@@ -210,7 +210,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "close",
             },
           }),
@@ -220,7 +220,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "close",
             },
           }),
@@ -238,7 +238,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "close",
             },
           }),
@@ -279,7 +279,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "open",
             },
           }),
@@ -289,7 +289,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "open",
             },
           }),
@@ -308,7 +308,7 @@ describe("Integrations routes", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json().code).toBe("whatsapp.already_connected");
     expect(global.fetch).not.toHaveBeenCalledWith(
-      "http://evolution.local/instance/connect/clinic-cln_main_001?number=5531995734976",
+      "http://evolution.local/instance/connect/organization-cln_main_001?number=5531995734976",
       expect.anything(),
     );
   });
@@ -323,7 +323,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "open",
             },
           }),
@@ -333,7 +333,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "open",
             },
           }),
@@ -363,7 +363,7 @@ describe("Integrations routes", () => {
     expect(response.json().instanceName).toBeUndefined();
     expect(global.fetch).toHaveBeenNthCalledWith(
       3,
-      "http://evolution.local/instance/logout/clinic-cln_main_001",
+      "http://evolution.local/instance/logout/organization-cln_main_001",
       expect.objectContaining({
         method: "DELETE",
       }),
@@ -380,7 +380,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               status: "close",
             },
           }),
@@ -390,7 +390,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "close",
             },
           }),
@@ -413,7 +413,7 @@ describe("Integrations routes", () => {
         text: async () =>
           JSON.stringify({
             instance: {
-              instanceName: "clinic-cln_main_001",
+              instanceName: "organization-cln_main_001",
               state: "connecting",
             },
           }),
@@ -433,7 +433,7 @@ describe("Integrations routes", () => {
     expect(response.json().pairingCode).toBe("NEWCODE99");
     expect(global.fetch).toHaveBeenNthCalledWith(
       3,
-      "http://evolution.local/instance/restart/clinic-cln_main_001",
+      "http://evolution.local/instance/restart/organization-cln_main_001",
       expect.objectContaining({
         method: "PUT",
       }),

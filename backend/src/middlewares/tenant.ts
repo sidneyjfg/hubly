@@ -15,7 +15,7 @@ export const tenantMiddleware = async (request: FastifyRequest, _reply: FastifyR
   const requestPath = request.url.split("?")[0] ?? request.url;
   const route = request.routeOptions.url ?? requestPath;
 
-  if (publicRoutes.has(route) || isApiDocsRoute(route)) {
+  if (publicRoutes.has(route) || route.startsWith("/v1/public/") || isApiDocsRoute(route)) {
     return;
   }
 
@@ -23,8 +23,8 @@ export const tenantMiddleware = async (request: FastifyRequest, _reply: FastifyR
     throw new AppError("auth.unauthorized", "Unauthorized request.", 401);
   }
 
-  const clinicHeader = request.headers["x-clinic-id"];
-  if (typeof clinicHeader === "string" && clinicHeader !== request.authUser.clinicId) {
+  const organizationHeader = request.headers["x-organization-id"];
+  if (typeof organizationHeader === "string" && organizationHeader !== request.authUser.organizationId) {
     throw new AppError("tenant.access_denied", "Tenant mismatch.", 403);
   }
 };

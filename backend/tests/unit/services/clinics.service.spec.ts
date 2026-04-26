@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { ClinicsService } from "../../../src/services/clinics.service";
+import { OrganizationsService } from "../../../src/services/organizations.service";
 
-describe("ClinicsService", () => {
-  it("lists clinics from repository", async () => {
-    const service = new ClinicsService({
+describe("OrganizationsService", () => {
+  it("lists organizations from repository", async () => {
+    const service = new OrganizationsService({
       async findAll() {
         return {
           items: [
             {
               id: "cln_main_001",
-              legalName: "Clinica Exemplo LTDA",
-              tradeName: "Clinica Exemplo",
+              legalName: "Organizationa Exemplo LTDA",
+              tradeName: "Organizationa Exemplo",
               timezone: "America/Sao_Paulo",
             },
           ],
@@ -25,12 +25,12 @@ describe("ClinicsService", () => {
 
     const result = await service.list({
       id: "usr_admin_001",
-      clinicId: "cln_main_001",
+      organizationId: "cln_main_001",
       role: "administrator",
       sessionId: "sess_001",
     });
 
     expect(result.items).toHaveLength(1);
-    expect(result.items[0]?.tradeName).toBe("Clinica Exemplo");
+    expect(result.items[0]?.tradeName).toBe("Organizationa Exemplo");
   });
 });

@@ -6,7 +6,7 @@ import { buildApp } from "../../../src/app";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { signInAsAdmin } from "../helpers/auth";
 
-describe("Clinics routes", () => {
+describe("Organizations routes", () => {
   let app: FastifyInstance;
   let dataSource: DataSource;
 
@@ -28,11 +28,11 @@ describe("Clinics routes", () => {
     }
   });
 
-  it("lists only clinics from the authenticated tenant", async () => {
+  it("lists only organizations from the authenticated tenant", async () => {
     const headers = await signInAsAdmin(app);
     const response = await app.inject({
       method: "GET",
-      url: "/v1/clinics",
+      url: "/v1/organizations",
       headers,
     });
 
@@ -40,23 +40,23 @@ describe("Clinics routes", () => {
 
     const body = response.json();
     expect(body.items).toHaveLength(1);
-    expect(body.items[0].tradeName).toBe("Clinica Exemplo");
+    expect(body.items[0].tradeName).toBe("Organizationa Exemplo");
   });
 
-  it("updates the authenticated clinic", async () => {
+  it("updates the authenticated organization", async () => {
     const headers = await signInAsAdmin(app);
     const response = await app.inject({
       method: "PATCH",
-      url: "/v1/clinics/cln_main_001",
+      url: "/v1/organizations/cln_main_001",
       headers,
       payload: {
-        legalName: "Clinica Exemplo Atualizada LTDA",
-        tradeName: "Clinica Exemplo Atualizada",
+        legalName: "Organizationa Exemplo Atualizada LTDA",
+        tradeName: "Organizationa Exemplo Atualizada",
         timezone: "America/Sao_Paulo",
       },
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().tradeName).toBe("Clinica Exemplo Atualizada");
+    expect(response.json().tradeName).toBe("Organizationa Exemplo Atualizada");
   });
 });

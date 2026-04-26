@@ -24,14 +24,14 @@ export default function SettingsPage() {
       return;
     }
 
-    setLegalName(data.clinic.legalName);
-    setTradeName(data.clinic.tradeName);
-    setTimezone(data.clinic.timezone);
+    setLegalName(data.organization.legalName);
+    setTradeName(data.organization.tradeName);
+    setTimezone(data.organization.timezone);
   }, [data]);
 
   const mutation = useMutation({
     mutationFn: () =>
-      api.updateClinic(data!.clinic.id, {
+      api.updateOrganization(data!.organization.id, {
         legalName,
         tradeName,
         timezone

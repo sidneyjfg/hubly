@@ -25,7 +25,7 @@ export const notificationsRoutes = async (
   app.get(
     "/notifications/channels",
     {
-      preHandler: allowRoles(["administrator", "reception", "professional"]),
+      preHandler: allowRoles(["administrator", "reception", "provider"]),
       schema: notificationsChannelsRouteSchema,
     },
     notificationsController.listChannels,

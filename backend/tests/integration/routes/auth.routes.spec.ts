@@ -32,7 +32,7 @@ describe("Auth routes", () => {
       method: "POST",
       url: "/v1/auth/sign-in",
       payload: {
-        email: "admin@clinic.test",
+        email: "admin@organization.test",
         password: "password123",
       },
     });
@@ -45,18 +45,18 @@ describe("Auth routes", () => {
     expect(body.role).toBe("administrator");
   });
 
-  it("signs up a clinic admin and returns a session", async () => {
+  it("signs up a organization admin and returns a session", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/auth/sign-up",
       payload: {
         fullName: "Camila Freitas",
-        email: "camila@nova-clinica.test",
+        email: "camila@nova-organizationa.test",
         phone: "+5511955555555",
         password: "password123",
-        clinic: {
-          legalName: "Nova Clinica LTDA",
-          tradeName: "Nova Clinica",
+        organization: {
+          legalName: "Nova Organizationa LTDA",
+          tradeName: "Nova Organizationa",
           timezone: "America/Sao_Paulo",
         },
       },
@@ -67,7 +67,7 @@ describe("Auth routes", () => {
     const body = response.json();
     expect(body.accessToken.split(".")).toHaveLength(3);
     expect(body.role).toBe("administrator");
-    expect(body.clinicId).toBeTruthy();
+    expect(body.organizationId).toBeTruthy();
   });
 
   it("returns the authenticated account profile through me", async () => {
@@ -79,9 +79,9 @@ describe("Auth routes", () => {
         email: "marcos@me-route.test",
         phone: "+5511966666666",
         password: "password123",
-        clinic: {
-          legalName: "Clinica Perfil LTDA",
-          tradeName: "Clinica Perfil",
+        organization: {
+          legalName: "Organizationa Perfil LTDA",
+          tradeName: "Organizationa Perfil",
           timezone: "America/Sao_Paulo",
         },
       },
@@ -93,7 +93,7 @@ describe("Auth routes", () => {
       url: "/v1/auth/me",
       headers: {
         authorization: `Bearer ${session.accessToken as string}`,
-        "x-clinic-id": session.clinicId as string,
+        "x-organization-id": session.organizationId as string,
       },
     });
 
@@ -101,7 +101,7 @@ describe("Auth routes", () => {
     const body = meResponse.json();
     expect(body.user.email).toBe("marcos@me-route.test");
     expect(body.user.phone).toBe("+5511966666666");
-    expect(body.clinic.tradeName).toBe("Clinica Perfil");
+    expect(body.organization.tradeName).toBe("Organizationa Perfil");
   });
 
   it("updates account data and password for the authenticated user", async () => {
@@ -113,9 +113,9 @@ describe("Auth routes", () => {
         email: "renata@account-route.test",
         phone: "+5511977777777",
         password: "password123",
-        clinic: {
-          legalName: "Clinica Conta LTDA",
-          tradeName: "Clinica Conta",
+        organization: {
+          legalName: "Organizationa Conta LTDA",
+          tradeName: "Organizationa Conta",
           timezone: "America/Sao_Paulo",
         },
       },
@@ -124,7 +124,7 @@ describe("Auth routes", () => {
     const session = signUpResponse.json();
     const headers = {
       authorization: `Bearer ${session.accessToken as string}`,
-      "x-clinic-id": session.clinicId as string,
+      "x-organization-id": session.organizationId as string,
     };
 
     const accountResponse = await app.inject({

@@ -9,7 +9,7 @@
     },
     {
       "key": "email",
-      "value": "admin@clinic.test",
+      "value": "admin@organization.test",
       "type": "default",
       "enabled": true
     },
@@ -32,7 +32,7 @@
       "enabled": true
     },
     {
-      "key": "clinicId",
+      "key": "organizationId",
       "value": "",
       "type": "default",
       "enabled": true

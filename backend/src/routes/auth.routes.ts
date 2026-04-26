@@ -15,7 +15,7 @@ import { forgotPasswordRateLimitMiddleware, loginRateLimitMiddleware } from "../
 import { AuditRepository } from "../repositories/audit.repository";
 import { AuthRepository } from "../repositories/auth.repository";
 import { AuthSessionsRepository } from "../repositories/auth-sessions.repository";
-import { ClinicsRepository } from "../repositories/clinics.repository";
+import { OrganizationsRepository } from "../repositories/organizations.repository";
 import { AuthService } from "../services/auth.service";
 
 type AuthRouteOptions = {
@@ -31,7 +31,7 @@ export const authRoutes = async (
       options.dataSource,
       new AuthRepository(options.dataSource),
       new AuthSessionsRepository(options.dataSource),
-      new ClinicsRepository(options.dataSource),
+      new OrganizationsRepository(options.dataSource),
       new AuditRepository(options.dataSource),
     ),
   );

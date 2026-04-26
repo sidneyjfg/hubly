@@ -196,7 +196,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
     session = await getValidSession(session);
     headers.set("Authorization", `Bearer ${session.accessToken}`);
-    headers.set("x-clinic-id", session.clinicId);
+    headers.set("x-organization-id", session.organizationId);
   }
 
   const response = await fetch(buildUrl(path, options.query), {

@@ -9,7 +9,7 @@ export type WhatsAppReminderRule = {
 };
 
 export type WhatsAppReminderSettings = {
-  clinicId: string;
+  organizationId: string;
   channel: "whatsapp";
   isEnabled: boolean;
   reminders: WhatsAppReminderRule[];
@@ -20,7 +20,7 @@ export type WhatsAppReminderSettingsInput = {
   reminders: WhatsAppReminderRule[];
 };
 
-export const appointmentNotificationStatuses = [
+export const bookingNotificationStatuses = [
   "pending",
   "processing",
   "sent",
@@ -28,20 +28,20 @@ export const appointmentNotificationStatuses = [
   "failed",
 ] as const;
 
-export type AppointmentNotificationStatus = (typeof appointmentNotificationStatuses)[number];
+export type BookingNotificationStatus = (typeof bookingNotificationStatuses)[number];
 
-export type AppointmentNotification = {
+export type BookingNotification = {
   id: string;
-  clinicId: string;
-  appointmentId: string;
+  organizationId: string;
+  bookingId: string;
   channel: "whatsapp";
-  status: AppointmentNotificationStatus;
+  status: BookingNotificationStatus;
   scheduledFor: string;
   sentAt?: string | null;
   cancelledAt?: string | null;
   failedAt?: string | null;
   hoursBefore: number;
-  patientPhone: string;
+  customerPhone: string;
   message: string;
   externalMessageId?: string | null;
   lastError?: string | null;
@@ -51,5 +51,5 @@ export type ProcessDueNotificationsResult = {
   processedCount: number;
   sentCount: number;
   failedCount: number;
-  items: AppointmentNotification[];
+  items: BookingNotification[];
 };

@@ -2,22 +2,22 @@
 
 import {
   apiRoutes,
-  type AppointmentDTO,
-  type AppointmentWriteDTO,
+  type BookingDTO,
+  type BookingWriteDTO,
   type AuthSessionDTO,
-  type ClinicDTO,
+  type OrganizationDTO,
   type IntegrationSummaryDTO,
   type MeResponseDTO,
   type NoShowOverviewDTO,
-  type PatientDTO,
-  type PatientWriteDTO,
-  type ProfessionalServiceDTO,
-  type ProfessionalServiceWriteDTO,
-  type ProfessionalWriteDTO,
+  type CustomerDTO,
+  type CustomerWriteDTO,
+  type ServiceOfferingDTO,
+  type ServiceOfferingWriteDTO,
+  type ProviderWriteDTO,
   type SignInInputDTO,
   type SignUpInputDTO,
   type UpdateAccountInputDTO,
-  type UpdateClinicInputDTO,
+  type UpdateOrganizationInputDTO,
   type UpdatePasswordInputDTO,
   type WhatsAppConnectionStatusDTO,
   type WhatsAppDisconnectResultDTO,
@@ -25,13 +25,13 @@ import {
   type WhatsAppSessionConnectResultDTO
 } from "@/lib/backend-contract";
 import { apiRequest } from "@/lib/api-client";
-import type { Professional, WhatsAppReminderRule } from "@/lib/types";
+import type { Provider, WhatsAppReminderRule } from "@/lib/types";
 
-type AppointmentScheduleResponse = {
+type BookingScheduleResponse = {
   referenceDate: string;
   startDate: string;
   endDate: string;
-  items: AppointmentDTO[];
+  items: BookingDTO[];
   limit: number;
   page: number;
   total: number;
@@ -102,16 +102,16 @@ export const api = {
     });
   },
 
-  updateClinic(id: string, input: UpdateClinicInputDTO) {
-    return apiRequest<ClinicDTO>(apiRoutes.clinics.update(id), {
+  updateOrganization(id: string, input: UpdateOrganizationInputDTO) {
+    return apiRequest<OrganizationDTO>(apiRoutes.organizations.update(id), {
       method: "PATCH",
       auth: true,
       body: input
     });
   },
 
-  getPatients(query: PaginationQuery = {}) {
-    return apiRequest<PaginatedResponse<PatientDTO>>(apiRoutes.patients.list, {
+  getCustomers(query: PaginationQuery = {}) {
+    return apiRequest<PaginatedResponse<CustomerDTO>>(apiRoutes.customers.list, {
       auth: true,
       query: {
         limit: query.limit?.toString(),
@@ -120,32 +120,32 @@ export const api = {
     });
   },
 
-  createPatient(input: PatientWriteDTO) {
-    return apiRequest<PatientDTO>(apiRoutes.patients.create, {
+  createCustomer(input: CustomerWriteDTO) {
+    return apiRequest<CustomerDTO>(apiRoutes.customers.create, {
       method: "POST",
       auth: true,
       body: input
     });
   },
 
-  updatePatient(id: string, input: PatientWriteDTO) {
-    return apiRequest<PatientDTO>(apiRoutes.patients.update(id), {
+  updateCustomer(id: string, input: CustomerWriteDTO) {
+    return apiRequest<CustomerDTO>(apiRoutes.customers.update(id), {
       method: "PATCH",
       auth: true,
       body: input
     });
   },
 
-  setPatientStatus(id: string, isActive: boolean) {
-    return apiRequest<PatientDTO>(apiRoutes.patients.status(id), {
+  setCustomerStatus(id: string, isActive: boolean) {
+    return apiRequest<CustomerDTO>(apiRoutes.customers.status(id), {
       method: "PATCH",
       auth: true,
       body: { isActive }
     });
   },
 
-  getProfessionals(query: PaginationQuery = {}) {
-    return apiRequest<PaginatedResponse<Professional>>(apiRoutes.professionals.list, {
+  getProviders(query: PaginationQuery = {}) {
+    return apiRequest<PaginatedResponse<Provider>>(apiRoutes.providers.list, {
       auth: true,
       query: {
         limit: query.limit?.toString(),
@@ -154,67 +154,67 @@ export const api = {
     });
   },
 
-  createProfessional(input: ProfessionalWriteDTO) {
-    return apiRequest<Professional>(apiRoutes.professionals.create, {
+  createProvider(input: ProviderWriteDTO) {
+    return apiRequest<Provider>(apiRoutes.providers.create, {
       method: "POST",
       auth: true,
       body: input
     });
   },
 
-  updateProfessional(id: string, input: ProfessionalWriteDTO) {
-    return apiRequest<Professional>(apiRoutes.professionals.update(id), {
+  updateProvider(id: string, input: ProviderWriteDTO) {
+    return apiRequest<Provider>(apiRoutes.providers.update(id), {
       method: "PATCH",
       auth: true,
       body: input
     });
   },
 
-  setProfessionalStatus(id: string, isActive: boolean) {
-    return apiRequest<Professional>(apiRoutes.professionals.status(id), {
+  setProviderStatus(id: string, isActive: boolean) {
+    return apiRequest<Provider>(apiRoutes.providers.status(id), {
       method: "PATCH",
       auth: true,
       body: { isActive }
     });
   },
 
-  getProfessionalServices(query: PaginationQuery & { professionalId?: string } = {}) {
-    return apiRequest<PaginatedResponse<ProfessionalServiceDTO>>(apiRoutes.professionalServices.list, {
+  getServiceOfferings(query: PaginationQuery & { providerId?: string } = {}) {
+    return apiRequest<PaginatedResponse<ServiceOfferingDTO>>(apiRoutes.serviceOfferings.list, {
       auth: true,
       query: {
         limit: query.limit?.toString(),
         page: query.page?.toString(),
-        professionalId: query.professionalId
+        providerId: query.providerId
       }
     });
   },
 
-  createProfessionalService(input: ProfessionalServiceWriteDTO) {
-    return apiRequest<ProfessionalServiceDTO>(apiRoutes.professionalServices.create, {
+  createServiceOffering(input: ServiceOfferingWriteDTO) {
+    return apiRequest<ServiceOfferingDTO>(apiRoutes.serviceOfferings.create, {
       method: "POST",
       auth: true,
       body: input
     });
   },
 
-  updateProfessionalService(id: string, input: ProfessionalServiceWriteDTO) {
-    return apiRequest<ProfessionalServiceDTO>(apiRoutes.professionalServices.update(id), {
+  updateServiceOffering(id: string, input: ServiceOfferingWriteDTO) {
+    return apiRequest<ServiceOfferingDTO>(apiRoutes.serviceOfferings.update(id), {
       method: "PATCH",
       auth: true,
       body: input
     });
   },
 
-  setProfessionalServiceStatus(id: string, isActive: boolean) {
-    return apiRequest<ProfessionalServiceDTO>(apiRoutes.professionalServices.status(id), {
+  setServiceOfferingStatus(id: string, isActive: boolean) {
+    return apiRequest<ServiceOfferingDTO>(apiRoutes.serviceOfferings.status(id), {
       method: "PATCH",
       auth: true,
       body: { isActive }
     });
   },
 
-  getAppointments(query?: { from?: string; limit?: number; page?: number; to?: string }) {
-    return apiRequest<PaginatedResponse<AppointmentDTO>>(apiRoutes.appointments.list, {
+  getBookings(query?: { from?: string; limit?: number; page?: number; to?: string }) {
+    return apiRequest<PaginatedResponse<BookingDTO>>(apiRoutes.bookings.list, {
       auth: true,
       query: {
         from: query?.from,
@@ -226,7 +226,7 @@ export const api = {
   },
 
   getDailySchedule(date: string, query: PaginationQuery = {}) {
-    return apiRequest<AppointmentScheduleResponse>(apiRoutes.appointments.dailySchedule, {
+    return apiRequest<BookingScheduleResponse>(apiRoutes.bookings.dailySchedule, {
       auth: true,
       query: {
         date: date.slice(0, 10),
@@ -237,7 +237,7 @@ export const api = {
   },
 
   getWeeklySchedule(date: string, query: PaginationQuery = {}) {
-    return apiRequest<AppointmentScheduleResponse>(apiRoutes.appointments.weeklySchedule, {
+    return apiRequest<BookingScheduleResponse>(apiRoutes.bookings.weeklySchedule, {
       auth: true,
       query: {
         date: date.slice(0, 10),
@@ -247,16 +247,16 @@ export const api = {
     });
   },
 
-  createAppointment(input: AppointmentWriteDTO) {
-    return apiRequest<AppointmentDTO>(apiRoutes.appointments.create, {
+  createBooking(input: BookingWriteDTO) {
+    return apiRequest<BookingDTO>(apiRoutes.bookings.create, {
       method: "POST",
       auth: true,
       body: input
     });
   },
 
-  cancelAppointment(id: string, notes?: string) {
-    return apiRequest<AppointmentDTO>(apiRoutes.appointments.cancel(id), {
+  cancelBooking(id: string, notes?: string) {
+    return apiRequest<BookingDTO>(apiRoutes.bookings.cancel(id), {
       method: "PATCH",
       auth: true,
       body: {
@@ -265,8 +265,8 @@ export const api = {
     });
   },
 
-  markAppointmentAttended(id: string, notes?: string) {
-    return apiRequest<AppointmentDTO>(apiRoutes.appointments.attendance(id), {
+  markBookingAttended(id: string, notes?: string) {
+    return apiRequest<BookingDTO>(apiRoutes.bookings.attendance(id), {
       method: "PATCH",
       auth: true,
       body: {
@@ -275,8 +275,8 @@ export const api = {
     });
   },
 
-  markAppointmentMissed(id: string, notes?: string) {
-    return apiRequest<AppointmentDTO>(apiRoutes.appointments.missed(id), {
+  markBookingMissed(id: string, notes?: string) {
+    return apiRequest<BookingDTO>(apiRoutes.bookings.missed(id), {
       method: "PATCH",
       auth: true,
       body: {

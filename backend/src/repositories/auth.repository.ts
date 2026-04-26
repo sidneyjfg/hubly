@@ -27,7 +27,7 @@ export class AuthRepository {
 
     return {
       id: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
@@ -50,7 +50,7 @@ export class AuthRepository {
 
     return {
       id: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
@@ -60,11 +60,11 @@ export class AuthRepository {
     };
   }
 
-  public async findProfileByIdInClinic(clinicId: string, id: string): Promise<User | null> {
+  public async findProfileByIdInOrganization(organizationId: string, id: string): Promise<User | null> {
     const user = await this.getRepository().findOne({
       where: {
         id,
-        clinicId,
+        organizationId,
       },
     });
 
@@ -74,7 +74,7 @@ export class AuthRepository {
 
     return {
       id: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
@@ -84,10 +84,10 @@ export class AuthRepository {
     };
   }
 
-  public async findByClinicAndEmail(clinicId: string, email: string, excludeUserId?: string): Promise<User | null> {
+  public async findByOrganizationAndEmail(organizationId: string, email: string, excludeUserId?: string): Promise<User | null> {
     const user = await this.getRepository().findOne({
       where: {
-        clinicId,
+        organizationId,
         email,
         ...(excludeUserId ? { id: Not(excludeUserId) } : {}),
       },
@@ -99,7 +99,7 @@ export class AuthRepository {
 
     return {
       id: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
@@ -111,7 +111,7 @@ export class AuthRepository {
 
   public async create(
     input: {
-      clinicId: string;
+      organizationId: string;
       fullName: string;
       email: string;
       phone: string;
@@ -123,7 +123,7 @@ export class AuthRepository {
   ): Promise<User> {
     const user = await this.getRepository(manager).save({
       id: randomUUID(),
-      clinicId: input.clinicId,
+      organizationId: input.organizationId,
       fullName: input.fullName,
       email: input.email,
       phone: input.phone,
@@ -134,7 +134,7 @@ export class AuthRepository {
 
     return {
       id: user.id,
-      clinicId: user.clinicId,
+      organizationId: user.organizationId,
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
@@ -144,8 +144,8 @@ export class AuthRepository {
     };
   }
 
-  public async updateAccountInClinic(
-    clinicId: string,
+  public async updateAccountInOrganization(
+    organizationId: string,
     userId: string,
     input: UserAccountWriteInput,
     manager?: EntityManager,
@@ -154,7 +154,7 @@ export class AuthRepository {
     const user = await repository.findOne({
       where: {
         id: userId,
-        clinicId,
+        organizationId,
       },
     });
 
@@ -170,7 +170,7 @@ export class AuthRepository {
 
     return {
       id: savedUser.id,
-      clinicId: savedUser.clinicId,
+      organizationId: savedUser.organizationId,
       fullName: savedUser.fullName,
       email: savedUser.email,
       phone: savedUser.phone,
@@ -180,8 +180,8 @@ export class AuthRepository {
     };
   }
 
-  public async updatePasswordInClinic(
-    clinicId: string,
+  public async updatePasswordInOrganization(
+    organizationId: string,
     userId: string,
     passwordHash: string,
     manager?: EntityManager,
@@ -190,7 +190,7 @@ export class AuthRepository {
     const user = await repository.findOne({
       where: {
         id: userId,
-        clinicId,
+        organizationId,
       },
     });
 
