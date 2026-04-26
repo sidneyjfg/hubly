@@ -38,6 +38,22 @@ export const organizationsRoutes = async (
     organizationsController.create,
   );
 
+  app.get(
+    "/organizations/storefront",
+    {
+      preHandler: allowRoles(["administrator", "reception", "provider"]),
+    },
+    organizationsController.getStorefront,
+  );
+
+  app.put(
+    "/organizations/storefront",
+    {
+      preHandler: [allowRoles(["administrator", "provider"]), criticalRouteRateLimitMiddleware("organizations:storefront")],
+    },
+    organizationsController.updateStorefront,
+  );
+
   app.patch(
     "/organizations/:id",
     {

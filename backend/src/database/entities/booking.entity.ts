@@ -60,6 +60,33 @@ export class BookingEntity {
   @Column({ type: "varchar", length: 255, nullable: true })
   public notes!: string | null;
 
+  @Column({ type: "varchar", length: 20, default: "presential" })
+  public paymentType!: string;
+
+  @Column({ type: "int", default: 0 })
+  public originalAmountCents!: number;
+
+  @Column({ type: "int", default: 0 })
+  public discountedAmountCents!: number;
+
+  @Column({ type: "int", default: 0 })
+  public onlineDiscountCents!: number;
+
+  @Column({ type: "int", default: 1000 })
+  public platformCommissionRateBps!: number;
+
+  @Column({ type: "int", default: 0 })
+  public platformCommissionCents!: number;
+
+  @Column({ type: "int", default: 0 })
+  public providerNetAmountCents!: number;
+
+  @Column({ type: "varchar", length: 32, default: "pending_local" })
+  public paymentStatus!: string;
+
+  @Column({ type: "varchar", length: 500, nullable: true })
+  public paymentCheckoutUrl!: string | null;
+
   @CreateDateColumn({ type: "datetime" })
   public createdAt!: Date;
 }

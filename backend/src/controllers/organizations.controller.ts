@@ -49,4 +49,48 @@ export class OrganizationsController {
       await this.organizationsService.update(getAuthUser(request), params.id ?? "", input),
     );
   };
+
+  public getStorefront = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.organizationsService.getStorefront(getAuthUser(request)));
+  };
+
+  public updateStorefront = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const body = request.body as {
+      tradeName?: string;
+      bookingPageSlug?: string;
+      publicDescription?: string | null;
+      publicPhone?: string | null;
+      publicEmail?: string | null;
+      addressLine?: string | null;
+      addressNumber?: string | null;
+      district?: string | null;
+      city?: string | null;
+      state?: string | null;
+      postalCode?: string | null;
+      coverImageUrl?: string | null;
+      logoImageUrl?: string | null;
+      galleryImageUrls?: string[];
+      isStorefrontPublished?: boolean;
+    };
+
+    reply.status(200).send(
+      await this.organizationsService.updateStorefront(getAuthUser(request), {
+        tradeName: body.tradeName ?? "",
+        ...(body.bookingPageSlug === undefined ? {} : { bookingPageSlug: body.bookingPageSlug }),
+        publicDescription: body.publicDescription ?? null,
+        publicPhone: body.publicPhone ?? null,
+        publicEmail: body.publicEmail ?? null,
+        addressLine: body.addressLine ?? null,
+        addressNumber: body.addressNumber ?? null,
+        district: body.district ?? null,
+        city: body.city ?? null,
+        state: body.state ?? null,
+        postalCode: body.postalCode ?? null,
+        coverImageUrl: body.coverImageUrl ?? null,
+        logoImageUrl: body.logoImageUrl ?? null,
+        galleryImageUrls: body.galleryImageUrls ?? [],
+        isStorefrontPublished: body.isStorefrontPublished ?? false,
+      }),
+    );
+  };
 }

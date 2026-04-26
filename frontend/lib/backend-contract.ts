@@ -23,7 +23,8 @@ export const apiRoutes = {
     password: "/v1/auth/password"
   },
   organizations: {
-    update: (id: string) => `/v1/organizations/${id}`
+    update: (id: string) => `/v1/organizations/${id}`,
+    storefront: "/v1/organizations/storefront"
   },
   providers: {
     list: "/v1/providers",
@@ -153,6 +154,24 @@ export type UpdateOrganizationInputDTO = {
   legalName: string;
   tradeName: string;
   timezone: string;
+};
+
+export type UpdateStorefrontInputDTO = {
+  tradeName: string;
+  bookingPageSlug?: string;
+  publicDescription?: string | null;
+  publicPhone?: string | null;
+  publicEmail?: string | null;
+  addressLine?: string | null;
+  addressNumber?: string | null;
+  district?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  coverImageUrl?: string | null;
+  logoImageUrl?: string | null;
+  galleryImageUrls?: string[];
+  isStorefrontPublished?: boolean;
 };
 
 export type NoShowOverviewDTO = {

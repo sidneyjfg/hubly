@@ -57,6 +57,7 @@ const processDueSchema = z.object({
 
 type BookingNotificationEvent =
   | { type: "booking.created"; booking: Booking }
+  | { type: "booking.confirmed"; booking: Booking }
   | { type: "booking.rescheduled"; booking: Booking }
   | { type: "booking.cancelled"; booking: Booking }
   | { type: "booking.attended"; booking: Booking }

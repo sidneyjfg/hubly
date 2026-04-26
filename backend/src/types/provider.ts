@@ -57,6 +57,19 @@ export type PublicBookingPage = {
   bookingPageSlug: string;
   tradeName: string;
   timezone: string;
+  publicDescription?: string | null;
+  publicPhone?: string | null;
+  publicEmail?: string | null;
+  addressLine?: string | null;
+  addressNumber?: string | null;
+  district?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  coverImageUrl?: string | null;
+  logoImageUrl?: string | null;
+  galleryImageUrls: string[];
+  isStorefrontPublished: boolean;
   providers: Provider[];
   serviceOfferings: ServiceOffering[];
 };
@@ -76,4 +89,5 @@ export type PublicBookingRequestInput = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
+  paymentType?: "online" | "presential";
 };

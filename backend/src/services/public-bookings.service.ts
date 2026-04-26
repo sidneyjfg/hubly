@@ -16,6 +16,8 @@ import { AppError } from "../utils/app-error";
 import { buildAvailableSlots, isWithinProviderAvailability, resolveWeekday } from "../utils/provider-availability";
 import { EvolutionWhatsAppService } from "./evolution-whatsapp.service";
 import { NotificationsService } from "./notifications.service";
+import { PaymentsService } from "./payments.service";
+import type { PaymentBreakdown } from "../types/payment";
 
 const publicBookingRequestSchema = z.object({
   fullName: z.string().min(3).max(120),
@@ -26,6 +28,7 @@ const publicBookingRequestSchema = z.object({
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),
   notes: z.string().max(255).nullable().optional(),
+  paymentType: z.enum(["online", "presential"]).default("presential"),
 });
 
 const availabilityQuerySchema = z.object({
@@ -45,6 +48,7 @@ export class PublicBookingsService {
     private readonly bookingsRepository: BookingsRepository,
     private readonly notificationsService: NotificationsService,
     private readonly auditRepository: AuditRepository,
+    private readonly paymentsService?: PaymentsService,
   ) {}
 
   public async getBookingPage(slug: string): Promise<PublicBookingPage> {
@@ -63,6 +67,19 @@ export class PublicBookingsService {
       bookingPageSlug: organization.bookingPageSlug,
       tradeName: organization.tradeName,
       timezone: organization.timezone,
+      publicDescription: organization.publicDescription ?? null,
+      publicPhone: organization.publicPhone ?? null,
+      publicEmail: organization.publicEmail ?? null,
+      addressLine: organization.addressLine ?? null,
+      addressNumber: organization.addressNumber ?? null,
+      district: organization.district ?? null,
+      city: organization.city ?? null,
+      state: organization.state ?? null,
+      postalCode: organization.postalCode ?? null,
+      coverImageUrl: organization.coverImageUrl ?? null,
+      logoImageUrl: organization.logoImageUrl ?? null,
+      galleryImageUrls: organization.galleryImageUrls,
+      isStorefrontPublished: organization.isStorefrontPublished,
       providers,
       serviceOfferings,
     };
@@ -127,6 +144,7 @@ export class PublicBookingsService {
       email: input.email ?? null,
       notes: input.notes ?? null,
       offeringId: input.offeringId ?? null,
+      paymentType: input.paymentType ?? "presential",
     });
 
     const startsAt = new Date(data.startsAt);
@@ -154,11 +172,14 @@ export class PublicBookingsService {
         throw new AppError("bookings.outside_provider_availability", "Booking is outside provider working hours.", 409);
       }
 
+      let serviceName: string | null = null;
       if (data.offeringId) {
         const offering = await this.serviceOfferingsRepository.findByIdInOrganization(organization.id, data.offeringId, manager);
         if (!offering || !offering.isActive || offering.providerId !== data.providerId) {
           throw new AppError("service_offerings.not_found", "Service offering not found.", 404);
         }
+
+        serviceName = offering.name;
       }
 
       const hasConflict = await this.bookingsRepository.hasConflict(
@@ -189,7 +210,26 @@ export class PublicBookingsService {
           manager,
         ));
 
-      const booking = await this.bookingsRepository.create(
+      const paymentBreakdown: PaymentBreakdown = this.paymentsService
+        ? await this.paymentsService.buildBreakdown(
+          organization.id,
+          data.providerId,
+          data.offeringId ?? null,
+          data.paymentType,
+          manager,
+        )
+        : {
+          paymentType: data.paymentType,
+          originalAmountCents: 0,
+          discountedAmountCents: 0,
+          onlineDiscountCents: 0,
+          platformCommissionRateBps: 1000,
+          platformCommissionCents: 0,
+          providerNetAmountCents: 0,
+          paymentStatus: data.paymentType === "online" ? "pending" as const : "pending_local" as const,
+        };
+
+      let booking = await this.bookingsRepository.create(
         {
           organizationId: organization.id,
           customerId: customer.id,
@@ -200,9 +240,23 @@ export class PublicBookingsService {
           startsAt,
           endsAt,
           notes: data.notes ?? null,
+          ...paymentBreakdown,
         },
         manager,
       );
+
+      if (data.paymentType === "online") {
+        if (!this.paymentsService) {
+          throw new AppError("payments.unavailable", "Payments service unavailable.", 500);
+        }
+
+        booking = await this.paymentsService.prepareOnlinePayment({
+          booking,
+          ...(customer.email === undefined ? {} : { customerEmail: customer.email }),
+          serviceName,
+          manager,
+        });
+      }
 
       await this.auditRepository.create(
         {

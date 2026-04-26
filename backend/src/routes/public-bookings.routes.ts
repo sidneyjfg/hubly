@@ -20,6 +20,7 @@ import { ServiceOfferingsRepository } from "../repositories/service-offerings.re
 import { EvolutionWhatsAppService } from "../services/evolution-whatsapp.service";
 import { NotificationsService } from "../services/notifications.service";
 import { PublicBookingsService } from "../services/public-bookings.service";
+import { buildPaymentsService } from "./payments.routes";
 
 type PublicBookingsRouteOptions = {
   dataSource: DataSource;
@@ -52,6 +53,7 @@ export const publicBookingsRoutes = async (
       new BookingsRepository(options.dataSource),
       notificationsService,
       new AuditRepository(options.dataSource),
+      buildPaymentsService(options.dataSource),
     ),
   );
 

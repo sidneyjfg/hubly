@@ -7,7 +7,9 @@ import { OrganizationIntegrationEntity } from "./organization-integration.entity
 import { OrganizationNotificationSettingEntity } from "./organization-notification-setting.entity";
 import { CustomerEntity } from "./customer.entity";
 import { ProviderAvailabilityEntity } from "./provider-availability.entity";
+import { ProviderPaymentSettingsEntity } from "./provider-payment-settings.entity";
 import { ProviderEntity } from "./provider.entity";
+import { PaymentTransactionEntity } from "./payment-transaction.entity";
 import { ServiceOfferingEntity } from "./service-offering.entity";
 import { UserEntity } from "./user.entity";
 
@@ -16,9 +18,11 @@ export const databaseEntities = [
   UserEntity,
   ProviderEntity,
   ProviderAvailabilityEntity,
+  ProviderPaymentSettingsEntity,
   ServiceOfferingEntity,
   CustomerEntity,
   BookingEntity,
+  PaymentTransactionEntity,
   BookingNotificationEntity,
   AuditEventEntity,
   AuthSessionEntity,
@@ -36,7 +40,9 @@ export {
   OrganizationNotificationSettingEntity,
   CustomerEntity,
   ProviderAvailabilityEntity,
+  ProviderPaymentSettingsEntity,
   ProviderEntity,
+  PaymentTransactionEntity,
   ServiceOfferingEntity,
   UserEntity,
 };

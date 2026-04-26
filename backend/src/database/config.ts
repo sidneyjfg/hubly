@@ -8,6 +8,8 @@ import { AddUserPhoneColumn1713563000000 } from "./migrations/1713563000000-add-
 import { AddIntegrationPhoneNumber1713564000000 } from "./migrations/1713564000000-add-integration-phone-number";
 import { AddCustomerStatusAndServiceOfferings1713565000000 } from "./migrations/1713565000000-add-customer-status-and-service-offerings";
 import { AddPublicBookingAndProviderAvailability1713566000000 } from "./migrations/1713566000000-add-public-booking-and-provider-availability";
+import { AddMarketplacePayments1713567000000 } from "./migrations/1713567000000-add-marketplace-payments";
+import { AddOrganizationStorefront1713568000000 } from "./migrations/1713568000000-add-organization-storefront";
 import { databaseEntities } from "./entities";
 
 export type DatabaseDriver = "mysql" | "sqljs";
@@ -39,6 +41,8 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
         AddIntegrationPhoneNumber1713564000000,
         AddCustomerStatusAndServiceOfferings1713565000000,
         AddPublicBookingAndProviderAvailability1713566000000,
+        AddMarketplacePayments1713567000000,
+        AddOrganizationStorefront1713568000000,
       ],
     };
   }
@@ -62,6 +66,8 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
       AddIntegrationPhoneNumber1713564000000,
       AddCustomerStatusAndServiceOfferings1713565000000,
       AddPublicBookingAndProviderAvailability1713566000000,
+      AddMarketplacePayments1713567000000,
+      AddOrganizationStorefront1713568000000,
     ],
   };
 };

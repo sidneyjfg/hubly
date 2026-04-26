@@ -82,6 +82,7 @@ describe("Public bookings routes", () => {
         startsAt: "2026-04-21T14:00:00.000Z",
         endsAt: "2026-04-21T14:30:00.000Z",
         notes: "Agendamento publico",
+        paymentType: "presential",
       },
     });
 
@@ -92,6 +93,8 @@ describe("Public bookings routes", () => {
         providerId: "pro_001",
         customerName: "Roberta Lima",
         status: "scheduled",
+        paymentType: "presential",
+        paymentStatus: "pending_local",
       }),
     );
 

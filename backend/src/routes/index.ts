@@ -11,6 +11,7 @@ import { organizationsRoutes } from "./organizations.routes";
 import { healthRoutes } from "./health.routes";
 import { integrationsRoutes } from "./integrations.routes";
 import { notificationsRoutes } from "./notifications.routes";
+import { paymentsRoutes } from "./payments.routes";
 import { publicBookingsRoutes } from "./public-bookings.routes";
 import { customersRoutes } from "./customers.routes";
 import { providerServicesRoutes } from "./service-offerings.routes";
@@ -26,6 +27,7 @@ const routeRegistry = [
   providerServicesRoutes,
   customersRoutes,
   bookingsRoutes,
+  paymentsRoutes,
   notificationsRoutes,
   integrationsRoutes,
   reportsRoutes,

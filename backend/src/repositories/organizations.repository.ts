@@ -2,7 +2,7 @@ import type { DataSource, EntityManager } from "typeorm";
 import { randomUUID } from "node:crypto";
 
 import { OrganizationEntity } from "../database/entities";
-import type { Organization, OrganizationWriteInput } from "../types/organization";
+import type { Organization, OrganizationStorefrontInput, OrganizationWriteInput } from "../types/organization";
 import { buildPaginatedResult, getPaginationOffset, type PaginatedResult, type Pagination } from "../utils/pagination";
 
 export class OrganizationsRepository {
@@ -19,6 +19,19 @@ export class OrganizationsRepository {
       tradeName: organization.tradeName,
       bookingPageSlug: organization.bookingPageSlug,
       timezone: organization.timezone,
+      publicDescription: organization.publicDescription,
+      publicPhone: organization.publicPhone,
+      publicEmail: organization.publicEmail,
+      addressLine: organization.addressLine,
+      addressNumber: organization.addressNumber,
+      district: organization.district,
+      city: organization.city,
+      state: organization.state,
+      postalCode: organization.postalCode,
+      coverImageUrl: organization.coverImageUrl,
+      logoImageUrl: organization.logoImageUrl,
+      galleryImageUrls: organization.galleryImageUrls ?? [],
+      isStorefrontPublished: organization.isStorefrontPublished,
     };
   }
 
@@ -89,6 +102,40 @@ export class OrganizationsRepository {
     const savedOrganization = await repository.save(organization);
 
     return this.mapOrganization(savedOrganization);
+  }
+
+  public async updateStorefrontInOrganization(
+    organizationId: string,
+    input: OrganizationStorefrontInput,
+  ): Promise<Organization | null> {
+    const repository = this.getRepository();
+    const organization = await repository.findOne({
+      where: {
+        id: organizationId,
+      },
+    });
+
+    if (!organization) {
+      return null;
+    }
+
+    organization.tradeName = input.tradeName;
+    organization.bookingPageSlug = input.bookingPageSlug ?? organization.bookingPageSlug;
+    organization.publicDescription = input.publicDescription ?? null;
+    organization.publicPhone = input.publicPhone ?? null;
+    organization.publicEmail = input.publicEmail ?? null;
+    organization.addressLine = input.addressLine ?? null;
+    organization.addressNumber = input.addressNumber ?? null;
+    organization.district = input.district ?? null;
+    organization.city = input.city ?? null;
+    organization.state = input.state ?? null;
+    organization.postalCode = input.postalCode ?? null;
+    organization.coverImageUrl = input.coverImageUrl ?? null;
+    organization.logoImageUrl = input.logoImageUrl ?? null;
+    organization.galleryImageUrls = input.galleryImageUrls ?? [];
+    organization.isStorefrontPublished = input.isStorefrontPublished ?? false;
+
+    return this.mapOrganization(await repository.save(organization));
   }
 
   public async findByBookingPageSlug(slug: string, manager?: EntityManager): Promise<Organization | null> {

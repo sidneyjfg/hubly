@@ -23,6 +23,15 @@ export type Booking = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
+  paymentType: BookingPaymentType;
+  originalAmountCents: number;
+  discountedAmountCents: number;
+  onlineDiscountCents: number;
+  platformCommissionRateBps: number;
+  platformCommissionCents: number;
+  providerNetAmountCents: number;
+  paymentStatus: BookingPaymentStatus;
+  paymentCheckoutUrl?: string | null;
 };
 
 export type BookingWriteInput = {
@@ -33,6 +42,16 @@ export type BookingWriteInput = {
   endsAt: string;
   notes?: string | null;
 };
+
+export type BookingPaymentType = "online" | "presential";
+
+export type BookingPaymentStatus =
+  | "not_required"
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled"
+  | "pending_local";
 
 export type BookingStatusUpdateInput = {
   notes?: string | null;

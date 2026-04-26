@@ -216,6 +216,8 @@ const bookingSchema = {
     "status",
     "startsAt",
     "endsAt",
+    "paymentType",
+    "paymentStatus",
   ],
   properties: {
     id: { type: "string" },
@@ -233,6 +235,18 @@ const bookingSchema = {
     startsAt: { type: "string", format: "date-time" },
     endsAt: { type: "string", format: "date-time" },
     notes: { type: ["string", "null"] },
+    paymentType: { type: "string", enum: ["online", "presential"] },
+    originalAmountCents: { type: "number" },
+    discountedAmountCents: { type: "number" },
+    onlineDiscountCents: { type: "number" },
+    platformCommissionRateBps: { type: "number" },
+    platformCommissionCents: { type: "number" },
+    providerNetAmountCents: { type: "number" },
+    paymentStatus: {
+      type: "string",
+      enum: ["not_required", "pending", "approved", "rejected", "cancelled", "pending_local"],
+    },
+    paymentCheckoutUrl: { type: ["string", "null"] },
   },
 } as const;
 
@@ -291,12 +305,37 @@ const publicAvailableSlotSchema = {
 const publicBookingPageSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["organizationId", "bookingPageSlug", "tradeName", "timezone", "providers", "serviceOfferings"],
+  required: [
+    "organizationId",
+    "bookingPageSlug",
+    "tradeName",
+    "timezone",
+    "galleryImageUrls",
+    "isStorefrontPublished",
+    "providers",
+    "serviceOfferings",
+  ],
   properties: {
     organizationId: { type: "string" },
     bookingPageSlug: { type: "string" },
     tradeName: { type: "string" },
     timezone: { type: "string" },
+    publicDescription: { type: ["string", "null"] },
+    publicPhone: { type: ["string", "null"] },
+    publicEmail: { type: ["string", "null"] },
+    addressLine: { type: ["string", "null"] },
+    addressNumber: { type: ["string", "null"] },
+    district: { type: ["string", "null"] },
+    city: { type: ["string", "null"] },
+    state: { type: ["string", "null"] },
+    postalCode: { type: ["string", "null"] },
+    coverImageUrl: { type: ["string", "null"] },
+    logoImageUrl: { type: ["string", "null"] },
+    galleryImageUrls: {
+      type: "array",
+      items: { type: "string" },
+    },
+    isStorefrontPublished: { type: "boolean" },
     providers: {
       type: "array",
       items: providerSchema,
@@ -333,6 +372,7 @@ const publicBookingCreateSchema = {
     startsAt: { type: "string", format: "date-time" },
     endsAt: { type: "string", format: "date-time" },
     notes: { type: ["string", "null"], maxLength: 255 },
+    paymentType: { type: "string", enum: ["online", "presential"], default: "presential" },
   },
 } as const;
 

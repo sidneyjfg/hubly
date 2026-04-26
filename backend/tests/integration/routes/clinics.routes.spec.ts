@@ -59,4 +59,55 @@ describe("Organizations routes", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json().tradeName).toBe("Organizationa Exemplo Atualizada");
   });
+
+  it("updates the public storefront for the authenticated organization", async () => {
+    const headers = await signInAsAdmin(app);
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/organizations/storefront",
+      headers,
+      payload: {
+        tradeName: "Barbearia Hubly Prime",
+        bookingPageSlug: "barbearia-hubly-prime",
+        publicDescription: "Cortes, barba e estética masculina com agendamento fácil.",
+        publicPhone: "+5511999999999",
+        publicEmail: "contato@hubly.test",
+        addressLine: "Rua das Flores",
+        addressNumber: "123",
+        district: "Centro",
+        city: "São Paulo",
+        state: "SP",
+        postalCode: "01000-000",
+        coverImageUrl: "https://cdn.example.test/capa.jpg",
+        logoImageUrl: "https://cdn.example.test/logo.jpg",
+        galleryImageUrls: ["https://cdn.example.test/ambiente.jpg"],
+        isStorefrontPublished: true,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        id: "cln_main_001",
+        tradeName: "Barbearia Hubly Prime",
+        bookingPageSlug: "barbearia-hubly-prime",
+        city: "São Paulo",
+        isStorefrontPublished: true,
+      }),
+    );
+
+    const publicResponse = await app.inject({
+      method: "GET",
+      url: "/v1/public/organizations/barbearia-hubly-prime",
+    });
+
+    expect(publicResponse.statusCode).toBe(200);
+    expect(publicResponse.json()).toEqual(
+      expect.objectContaining({
+        tradeName: "Barbearia Hubly Prime",
+        publicDescription: "Cortes, barba e estética masculina com agendamento fácil.",
+        galleryImageUrls: ["https://cdn.example.test/ambiente.jpg"],
+      }),
+    );
+  });
 });

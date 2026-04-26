@@ -19,6 +19,7 @@ import {
   type UpdateAccountInputDTO,
   type UpdateOrganizationInputDTO,
   type UpdatePasswordInputDTO,
+  type UpdateStorefrontInputDTO,
   type WhatsAppConnectionStatusDTO,
   type WhatsAppDisconnectResultDTO,
   type WhatsAppReminderSettingsDTO,
@@ -105,6 +106,20 @@ export const api = {
   updateOrganization(id: string, input: UpdateOrganizationInputDTO) {
     return apiRequest<OrganizationDTO>(apiRoutes.organizations.update(id), {
       method: "PATCH",
+      auth: true,
+      body: input
+    });
+  },
+
+  getStorefront() {
+    return apiRequest<OrganizationDTO>(apiRoutes.organizations.storefront, {
+      auth: true
+    });
+  },
+
+  updateStorefront(input: UpdateStorefrontInputDTO) {
+    return apiRequest<OrganizationDTO>(apiRoutes.organizations.storefront, {
+      method: "PUT",
       auth: true,
       body: input
     });

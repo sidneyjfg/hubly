@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { DataSource, EntityManager, Not } from "typeorm";
 
 import { BookingEntity } from "../database/entities";
-import type { Booking, BookingStatus, NoShowOverview } from "../types/booking";
+import type { Booking, BookingPaymentStatus, BookingPaymentType, BookingStatus, NoShowOverview } from "../types/booking";
 import { buildPaginatedResult, getPaginationOffset, type PaginatedResult, type Pagination } from "../utils/pagination";
 
 export class BookingsRepository {
@@ -27,6 +27,15 @@ export class BookingsRepository {
       startsAt: booking.startsAt.toISOString(),
       endsAt: booking.endsAt.toISOString(),
       notes: booking.notes,
+      paymentType: booking.paymentType as BookingPaymentType,
+      originalAmountCents: booking.originalAmountCents,
+      discountedAmountCents: booking.discountedAmountCents,
+      onlineDiscountCents: booking.onlineDiscountCents,
+      platformCommissionRateBps: booking.platformCommissionRateBps,
+      platformCommissionCents: booking.platformCommissionCents,
+      providerNetAmountCents: booking.providerNetAmountCents,
+      paymentStatus: booking.paymentStatus as BookingPaymentStatus,
+      paymentCheckoutUrl: booking.paymentCheckoutUrl,
     };
   }
 
@@ -112,6 +121,15 @@ export class BookingsRepository {
       startsAt: Date;
       endsAt: Date;
       notes?: string | null;
+      paymentType?: BookingPaymentType;
+      originalAmountCents?: number;
+      discountedAmountCents?: number;
+      onlineDiscountCents?: number;
+      platformCommissionRateBps?: number;
+      platformCommissionCents?: number;
+      providerNetAmountCents?: number;
+      paymentStatus?: BookingPaymentStatus;
+      paymentCheckoutUrl?: string | null;
     },
     manager: EntityManager,
   ): Promise<Booking> {
@@ -126,6 +144,15 @@ export class BookingsRepository {
       startsAt: input.startsAt,
       endsAt: input.endsAt,
       notes: input.notes ?? null,
+      paymentType: input.paymentType ?? "presential",
+      originalAmountCents: input.originalAmountCents ?? 0,
+      discountedAmountCents: input.discountedAmountCents ?? input.originalAmountCents ?? 0,
+      onlineDiscountCents: input.onlineDiscountCents ?? 0,
+      platformCommissionRateBps: input.platformCommissionRateBps ?? 1000,
+      platformCommissionCents: input.platformCommissionCents ?? 0,
+      providerNetAmountCents: input.providerNetAmountCents ?? 0,
+      paymentStatus: input.paymentStatus ?? "pending_local",
+      paymentCheckoutUrl: input.paymentCheckoutUrl ?? null,
     });
 
     const savedBooking = await this.getRepository(manager).findOneOrFail({
@@ -154,6 +181,15 @@ export class BookingsRepository {
       startsAt?: Date;
       endsAt?: Date;
       notes?: string | null;
+      paymentType?: BookingPaymentType;
+      originalAmountCents?: number;
+      discountedAmountCents?: number;
+      onlineDiscountCents?: number;
+      platformCommissionRateBps?: number;
+      platformCommissionCents?: number;
+      providerNetAmountCents?: number;
+      paymentStatus?: BookingPaymentStatus;
+      paymentCheckoutUrl?: string | null;
     },
     manager: EntityManager,
   ): Promise<Booking | null> {
@@ -180,6 +216,15 @@ export class BookingsRepository {
     booking.startsAt = input.startsAt ?? booking.startsAt;
     booking.endsAt = input.endsAt ?? booking.endsAt;
     booking.notes = input.notes ?? booking.notes;
+    booking.paymentType = input.paymentType ?? booking.paymentType;
+    booking.originalAmountCents = input.originalAmountCents ?? booking.originalAmountCents;
+    booking.discountedAmountCents = input.discountedAmountCents ?? booking.discountedAmountCents;
+    booking.onlineDiscountCents = input.onlineDiscountCents ?? booking.onlineDiscountCents;
+    booking.platformCommissionRateBps = input.platformCommissionRateBps ?? booking.platformCommissionRateBps;
+    booking.platformCommissionCents = input.platformCommissionCents ?? booking.platformCommissionCents;
+    booking.providerNetAmountCents = input.providerNetAmountCents ?? booking.providerNetAmountCents;
+    booking.paymentStatus = input.paymentStatus ?? booking.paymentStatus;
+    booking.paymentCheckoutUrl = input.paymentCheckoutUrl === undefined ? booking.paymentCheckoutUrl : input.paymentCheckoutUrl;
 
     await repository.save(booking);
 

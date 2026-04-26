@@ -32,6 +32,7 @@ export class PublicBookingsController {
       startsAt?: string;
       endsAt?: string;
       notes?: string | null;
+      paymentType?: "online" | "presential";
     };
 
     reply.status(201).send(await this.publicBookingsService.createBooking(params.slug ?? "", {
@@ -43,6 +44,7 @@ export class PublicBookingsController {
       startsAt: body.startsAt ?? "",
       endsAt: body.endsAt ?? "",
       notes: body.notes ?? null,
+      paymentType: body.paymentType ?? "presential",
     }));
   };
 }

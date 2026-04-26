@@ -26,6 +26,45 @@ export class OrganizationEntity {
   @Column({ type: "varchar", length: 60 })
   public timezone!: string;
 
+  @Column({ type: "varchar", length: 500, nullable: true })
+  public publicDescription!: string | null;
+
+  @Column({ type: "varchar", length: 30, nullable: true })
+  public publicPhone!: string | null;
+
+  @Column({ type: "varchar", length: 160, nullable: true })
+  public publicEmail!: string | null;
+
+  @Column({ type: "varchar", length: 180, nullable: true })
+  public addressLine!: string | null;
+
+  @Column({ type: "varchar", length: 20, nullable: true })
+  public addressNumber!: string | null;
+
+  @Column({ type: "varchar", length: 120, nullable: true })
+  public district!: string | null;
+
+  @Column({ type: "varchar", length: 120, nullable: true })
+  public city!: string | null;
+
+  @Column({ type: "varchar", length: 2, nullable: true })
+  public state!: string | null;
+
+  @Column({ type: "varchar", length: 12, nullable: true })
+  public postalCode!: string | null;
+
+  @Column({ type: "varchar", length: 500, nullable: true })
+  public coverImageUrl!: string | null;
+
+  @Column({ type: "varchar", length: 500, nullable: true })
+  public logoImageUrl!: string | null;
+
+  @Column({ type: "json", nullable: true })
+  public galleryImageUrls!: string[] | null;
+
+  @Column({ type: "boolean", default: false })
+  public isStorefrontPublished!: boolean;
+
   @CreateDateColumn({ type: "datetime" })
   public createdAt!: Date;
 
