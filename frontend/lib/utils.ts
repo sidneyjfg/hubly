@@ -1,5 +1,39 @@
+import type { UserRole } from "@/lib/types";
+
 export function cn(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(" ");
+}
+
+export function getDefaultRouteForRole(role: UserRole): string {
+  if (role === "administrator") {
+    return "/admin";
+  }
+
+  if (role === "provider") {
+    return "/bookings";
+  }
+
+  return "/dashboard";
+}
+
+export function getRoleLabel(role: UserRole): string {
+  const labels: Record<UserRole, string> = {
+    administrator: "Administrador",
+    reception: "Recepção",
+    provider: "Profissional"
+  };
+
+  return labels[role];
+}
+
+export function getRoleAccessDescription(role: UserRole): string {
+  const descriptions: Record<UserRole, string> = {
+    administrator: "Acesso total ao admin, operação e configurações da clínica.",
+    reception: "Acesso operacional para agenda, pacientes e atendimento.",
+    provider: "Acesso focado na própria rotina de agenda e atendimentos."
+  };
+
+  return descriptions[role];
 }
 
 export function formatCurrency(value: number): string {

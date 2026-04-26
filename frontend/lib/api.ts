@@ -14,6 +14,9 @@ import {
   type ServiceOfferingDTO,
   type ServiceOfferingWriteDTO,
   type ProviderWriteDTO,
+  type PublicAvailableSlotDTO,
+  type PublicBookingPageDTO,
+  type PublicBookingWriteDTO,
   type SignInInputDTO,
   type SignUpInputDTO,
   type UpdateAccountInputDTO,
@@ -64,6 +67,14 @@ type ProcessResult = {
   processedCount: number;
   sentCount: number;
   failedCount: number;
+};
+
+type PublicOrganizationsResponse = {
+  items: PublicBookingPageDTO[];
+};
+
+type PublicAvailabilityResponse = {
+  items: PublicAvailableSlotDTO[];
 };
 
 export const api = {
@@ -370,6 +381,31 @@ export const api = {
     return apiRequest<WhatsAppDisconnectResultDTO>(apiRoutes.integrations.whatsappDisconnect, {
       method: "POST",
       auth: true
+    });
+  },
+
+  listPublicOrganizations() {
+    return apiRequest<PublicOrganizationsResponse>(apiRoutes.publicOrganizations.list);
+  },
+
+  getPublicOrganization(slug: string) {
+    return apiRequest<PublicBookingPageDTO>(apiRoutes.publicOrganizations.detail(slug));
+  },
+
+  getPublicAvailability(slug: string, query: { providerId: string; date: string; offeringId?: string | null }) {
+    return apiRequest<PublicAvailabilityResponse>(apiRoutes.publicOrganizations.availability(slug), {
+      query: {
+        providerId: query.providerId,
+        date: query.date,
+        offeringId: query.offeringId ?? undefined
+      }
+    });
+  },
+
+  createPublicBooking(slug: string, input: PublicBookingWriteDTO) {
+    return apiRequest<BookingDTO>(apiRoutes.publicOrganizations.bookings(slug), {
+      method: "POST",
+      body: input
     });
   }
 };

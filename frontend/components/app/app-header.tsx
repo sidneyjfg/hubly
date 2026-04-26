@@ -11,7 +11,7 @@ import { BrandLogo } from "@/components/app/brand-logo";
 import { ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/store/app-store";
-import { getDisplayNameFromEmail } from "@/lib/utils";
+import { getDisplayNameFromEmail, getRoleLabel } from "@/lib/utils";
 
 export function AppHeader() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
@@ -61,12 +61,17 @@ export function AppHeader() {
           <ButtonLink href="/account" size="sm" variant="ghost">
             Conta
           </ButtonLink>
-          <ButtonLink href="/schedule" size="sm" variant="secondary">
+          {currentUser?.role === "administrator" ? (
+            <ButtonLink href="/admin" size="sm" variant="secondary">
+              Admin
+            </ButtonLink>
+          ) : null}
+          <ButtonLink href="/bookings" size="sm" variant="secondary">
             Ver agenda
           </ButtonLink>
           <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-right">
             <p className="text-sm font-medium text-white">{currentUser?.displayName ?? "Usuário"}</p>
-            <p className="text-xs capitalize text-slate-400">{currentUser?.role}</p>
+            <p className="text-xs text-slate-400">{currentUser ? getRoleLabel(currentUser.role) : "Perfil"}</p>
           </div>
         </div>
       </div>

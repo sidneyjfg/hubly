@@ -7,6 +7,7 @@ import {
   BarChart3,
   Bot,
   CalendarDays,
+  Crown,
   Images,
   LayoutDashboard,
   LogOut,
@@ -21,26 +22,35 @@ import { useState } from "react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
+import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 
-const navigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/customers", label: "Clientes", icon: UsersRound },
-  { href: "/providers", label: "Prestadores", icon: UserRoundCog },
-  { href: "/storefront", label: "Vitrine", icon: Images },
-  { href: "/bookings", label: "Agenda", icon: CalendarDays },
-  { href: "/automations", label: "Automações", icon: Bot },
-  { href: "/reports", label: "Relatórios", icon: BarChart3 },
-  { href: "/account", label: "Conta", icon: UserCircle2 },
-  { href: "/settings", label: "Configurações", icon: Settings }
+const navigation: Array<{
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: UserRole[];
+}> = [
+  { href: "/admin", label: "Admin", icon: Crown, roles: ["administrator"] },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["administrator", "reception"] },
+  { href: "/customers", label: "Clientes", icon: UsersRound, roles: ["administrator", "reception", "provider"] },
+  { href: "/providers", label: "Profissionais", icon: UserRoundCog, roles: ["administrator", "reception"] },
+  { href: "/storefront", label: "Vitrine", icon: Images, roles: ["administrator", "reception", "provider"] },
+  { href: "/bookings", label: "Agenda", icon: CalendarDays, roles: ["administrator", "reception", "provider"] },
+  { href: "/automations", label: "Automações", icon: Bot, roles: ["administrator"] },
+  { href: "/reports", label: "Relatórios", icon: BarChart3, roles: ["administrator", "reception"] },
+  { href: "/account", label: "Conta", icon: UserCircle2, roles: ["administrator", "reception", "provider"] },
+  { href: "/settings", label: "Configurações", icon: Settings, roles: ["administrator"] }
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const logout = useAppStore((state) => state.logout);
+  const role = useAppStore((state) => state.currentUser?.role);
   const [isExpanded, setIsExpanded] = useState(true);
   const ToggleIcon = isExpanded ? PanelLeftClose : PanelLeftOpen;
+  const visibleNavigation = role ? navigation.filter((item) => item.roles.includes(role)) : navigation;
 
   return (
     <aside
@@ -64,7 +74,7 @@ export function AppSidebar() {
       </div>
 
       <nav className="space-y-1.5">
-        {navigation.map((item) => {
+        {visibleNavigation.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 

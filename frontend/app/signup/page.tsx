@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { getDisplayNameFromEmail } from "@/lib/utils";
+import { getDefaultRouteForRole, getDisplayNameFromEmail } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 
 export default function SignUpPage() {
@@ -53,7 +53,7 @@ export default function SignUpPage() {
         displayName: fullName || getDisplayNameFromEmail(email),
         role: session.role
       });
-      router.push("/dashboard");
+      router.push(getDefaultRouteForRole(session.role));
     }
   });
 

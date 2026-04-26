@@ -4,6 +4,7 @@ import type {
   IntegrationSummary,
   MeResponse,
   Customer,
+  Provider,
   ServiceOffering,
   UserProfile,
   UserRole,
@@ -71,6 +72,12 @@ export const apiRoutes = {
     whatsappRegenerateCode: "/v1/integrations/whatsapp/session/regenerate-code",
     whatsappDisconnect: "/v1/integrations/whatsapp/disconnect",
     whatsappSendText: "/v1/integrations/whatsapp/messages/send"
+  },
+  publicOrganizations: {
+    list: "/v1/public/organizations",
+    detail: (slug: string) => `/v1/public/organizations/${slug}`,
+    availability: (slug: string) => `/v1/public/organizations/${slug}/availability`,
+    bookings: (slug: string) => `/v1/public/organizations/${slug}/bookings`
   }
 } as const;
 
@@ -116,6 +123,31 @@ export type BookingWriteDTO = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
+};
+
+export type PublicBookingPageDTO = Omit<Organization, "id"> & {
+  organizationId: string;
+  providers: Provider[];
+  serviceOfferings: ServiceOffering[];
+};
+
+export type PublicAvailableSlotDTO = {
+  startsAt: string;
+  endsAt: string;
+  label: string;
+};
+
+export type PublicBookingWriteDTO = {
+  fullName: string;
+  email?: string | null;
+  phone: string;
+  password: string;
+  providerId: string;
+  offeringId?: string | null;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+  paymentType?: "online" | "presential";
 };
 
 export type SignInInputDTO = {

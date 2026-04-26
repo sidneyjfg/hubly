@@ -104,7 +104,8 @@ export default function MarketingPage() {
               <ButtonLink href="/login" variant="ghost">
                 Entrar
               </ButtonLink>
-              <ButtonLink href="/dashboard">Abrir app</ButtonLink>
+              <ButtonLink href="/clientes" variant="secondary">Aba clientes</ButtonLink>
+              <ButtonLink href="/signup">Aba parceiro</ButtonLink>
             </div>
           </header>
 
@@ -121,12 +122,12 @@ export default function MarketingPage() {
                 A Hubly conecta pessoas procurando serviços a profissionais preparados para atender. Você cresce primeiro e paga apenas quando a plataforma gera clientes.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-                <ButtonLink href="/login" size="lg">
-                  Começar grátis
+                <ButtonLink href="/clientes" size="lg">
+                  Encontrar estabelecimento
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </ButtonLink>
-                <ButtonLink href="#como-funciona" size="lg" variant="secondary">
-                  Receber meus primeiros clientes
+                <ButtonLink href="/signup" size="lg" variant="secondary">
+                  Sou parceiro
                 </ButtonLink>
               </div>
               <div className="mt-10 flex flex-wrap gap-6 text-sm text-slate-400">
