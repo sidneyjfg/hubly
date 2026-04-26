@@ -21,7 +21,6 @@ export class CreateInitialSchema1713560000000 implements MigrationInterface {
         organizationId varchar(36) NOT NULL,
         fullName varchar(120) NOT NULL,
         email varchar(160) NOT NULL,
-        phone varchar(30) NOT NULL,
         role varchar(32) NOT NULL,
         passwordHash varchar(255) NOT NULL,
         isActive boolean NOT NULL DEFAULT true,
