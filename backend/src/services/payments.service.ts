@@ -21,10 +21,11 @@ import { ProvidersRepository } from "../repositories/providers.repository";
 import { ServiceOfferingsRepository } from "../repositories/service-offerings.repository";
 import { StripeWebhookEventsRepository } from "../repositories/stripe-webhook-events.repository";
 import type { AuthenticatedRequestUser } from "../types/auth";
-import type { Booking, BookingPaymentStatus } from "../types/booking";
+import type { Booking } from "../types/booking";
 import type {
   FinancialHistoryItem,
   PaymentBreakdown,
+  PaymentStatus,
   PaymentType,
   StripeAccountStatus,
   StripeAccountStatusResponse,
@@ -61,8 +62,8 @@ const payoutSchema = z.object({
   idempotencyKey: z.string().trim().min(12).max(160).optional(),
 });
 
-const mapPaymentIntentStatus = (status: PaymentIntent.Status | undefined): BookingPaymentStatus => {
-  if (status === "succeeded") return "approved";
+const mapPaymentIntentStatus = (status: PaymentIntent.Status | undefined): PaymentStatus => {
+  if (status === "succeeded") return "confirmed";
   if (status === "canceled") return "cancelled";
   if (status === "requires_capture") return "rejected";
   return "pending";
@@ -95,6 +96,10 @@ const toHistoryItem = (item: {
   failureReason: item.failureReason,
   metadata: item.metadata ?? null,
 });
+
+type BookingPaymentSnapshot = Booking & PaymentBreakdown & {
+  paymentCheckoutUrl?: string | null;
+};
 
 export class PaymentsService {
   public constructor(
@@ -475,11 +480,11 @@ export class PaymentsService {
   }
 
   public async prepareOnlinePayment(input: {
-    booking: Booking;
+    booking: BookingPaymentSnapshot;
     customerEmail?: string | null;
     serviceName?: string | null;
     manager?: EntityManager;
-  }): Promise<Booking> {
+  }): Promise<Booking & { paymentClientSecret?: string | null }> {
     const stripeAccountId = await this.requireOrganizationStripeAccount(input.booking.organizationId, input.manager);
     const account = await this.stripeService.retrieveAccount(stripeAccountId);
     await this.saveOrganizationStripeAccountSnapshot(input.booking.organizationId, account, input.manager);
@@ -589,7 +594,7 @@ export class PaymentsService {
   }
 
   private async handlePaymentIntentSucceeded(event: Event, paymentIntent: PaymentIntent): Promise<void> {
-    await this.handlePaymentIntentTerminalEvent(event, paymentIntent, "approved", "payment_succeeded");
+    await this.handlePaymentIntentTerminalEvent(event, paymentIntent, "confirmed", "payment_succeeded");
   }
 
   private async handlePaymentIntentFailed(event: Event, paymentIntent: PaymentIntent): Promise<void> {
@@ -599,7 +604,7 @@ export class PaymentsService {
   private async handlePaymentIntentTerminalEvent(
     event: Event,
     paymentIntent: PaymentIntent,
-    paymentStatus: BookingPaymentStatus,
+    paymentStatus: PaymentStatus,
     ledgerType: "payment_succeeded" | "payment_failed",
   ): Promise<void> {
     await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
@@ -616,7 +621,7 @@ export class PaymentsService {
 
       const booking = await this.bookingsRepository.updateInOrganization(transaction.organizationId, transaction.bookingId, {
         paymentStatus,
-        ...(paymentStatus === "approved" ? { status: "confirmed" as const } : { status: "cancelled" as const }),
+        ...(paymentStatus === "confirmed" ? { status: "confirmed" as const } : { status: "cancelled" as const }),
       }, manager);
       if (!booking) throw new AppError("bookings.not_found", "Booking not found.", 404);
 
@@ -634,7 +639,7 @@ export class PaymentsService {
         failureReason: paymentIntent.last_payment_error?.message ?? null,
       }, manager);
 
-      if (paymentStatus === "approved") {
+      if (paymentStatus === "confirmed") {
         await this.notificationsService.handleBookingEvent({
           id: "stripe-webhook",
           organizationId: transaction.organizationId,

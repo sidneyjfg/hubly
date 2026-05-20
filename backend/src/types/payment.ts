@@ -1,6 +1,6 @@
 export type PaymentType = "online" | "presential";
 
-export type PaymentStatus = "not_required" | "pending" | "approved" | "rejected" | "cancelled" | "pending_local";
+export type PaymentStatus = "not_required" | "pending" | "confirmed" | "rejected" | "cancelled" | "pending_local";
 
 export type ProviderPaymentSettings = {
   providerId: string;

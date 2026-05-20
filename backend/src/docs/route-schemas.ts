@@ -216,8 +216,6 @@ const bookingSchema = {
     "status",
     "startsAt",
     "endsAt",
-    "paymentType",
-    "paymentStatus",
   ],
   properties: {
     id: { type: "string" },
@@ -230,24 +228,13 @@ const bookingSchema = {
     serviceName: { type: ["string", "null"] },
     status: {
       type: "string",
-      enum: ["scheduled", "confirmed", "payment_pending", "cancelled", "rescheduled", "attended", "missed"],
+      enum: ["scheduled", "confirmed", "cancelled", "rescheduled", "attended", "missed"],
     },
     startsAt: { type: "string", format: "date-time" },
     endsAt: { type: "string", format: "date-time" },
     notes: { type: ["string", "null"] },
-    paymentType: { type: "string", enum: ["online", "presential"] },
     originalAmountCents: { type: "number" },
     discountedAmountCents: { type: "number" },
-    onlineDiscountCents: { type: "number" },
-    platformCommissionRateBps: { type: "number" },
-    platformCommissionCents: { type: "number" },
-    providerNetAmountCents: { type: "number" },
-    paymentStatus: {
-      type: "string",
-      enum: ["not_required", "pending", "approved", "rejected", "cancelled", "pending_local"],
-    },
-    paymentCheckoutUrl: { type: ["string", "null"] },
-    paymentClientSecret: { type: ["string", "null"] },
   },
 } as const;
 
@@ -387,7 +374,7 @@ const publicBookingCreateSchema = {
     startsAt: { type: "string", format: "date-time" },
     endsAt: { type: "string", format: "date-time" },
     notes: { type: ["string", "null"], maxLength: 255 },
-    paymentType: { type: "string", enum: ["online", "presential"], default: "presential" },
+    paymentType: false,
   },
 } as const;
 

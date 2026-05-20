@@ -167,19 +167,18 @@ export type ServiceOfferingWriteDTO = {
   name: string;
   durationMinutes: number;
   priceCents?: number | null;
-  requireOnlinePayment?: boolean;
   isActive?: boolean;
 };
 
 export type SubscriptionReadinessDTO = {
   organizationId: string;
   organizationName: string;
-  onlineRevenueCents: number;
-  localRevenueCents: number;
-  onlineCount: number;
-  localCount: number;
+  attendedRevenueCents: number;
+  upcomingCount: number;
+  attendedCount: number;
+  missedCount: number;
   pendingStatusCount: number;
-  localPaymentRatio: number;
+  noShowRate: number;
 };
 
 export type BookingDTO = Booking;
@@ -216,7 +215,6 @@ export type PublicBookingWriteDTO = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
-  paymentType?: "online" | "presential";
 };
 
 export type PublicCustomerSessionDTO = {

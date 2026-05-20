@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, LogOut, Mail, MapPin, Phone, ReceiptText, UserRound } from "lucide-react";
+import { CalendarDays, LogOut, Mail, MapPin, Phone, ReceiptText, Star, UserRound } from "lucide-react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -11,8 +11,11 @@ import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { clearCustomerSession, getCustomerSession } from "@/lib/customer-session";
 
+type PortalTab = "upcoming" | "history" | "reviews";
+
 export default function CustomerPortalPage() {
   const [accessToken, setAccessToken] = useState("");
+  const [activeTab, setActiveTab] = useState<PortalTab>("upcoming");
 
   useEffect(() => {
     const session = getCustomerSession();
@@ -117,26 +120,100 @@ export default function CustomerPortalPage() {
             </Card>
           </div>
 
-          <div className="space-y-6">
-            <Card>
-              <div className="mb-5 flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-sky-300" />
-                <p className="font-semibold text-white">Próximos agendamentos</p>
-              </div>
-              <BookingList bookings={upcomingBookings} emptyText="Nenhum agendamento futuro." />
-            </Card>
+          <div className="space-y-4">
+            <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+              {[
+                { icon: CalendarDays, label: "Agenda", value: "upcoming" },
+                { icon: ReceiptText, label: "Histórico", value: "history" },
+                { icon: Star, label: "Avaliações", value: "reviews" }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.value;
 
-            <Card>
-              <div className="mb-5 flex items-center gap-2">
-                <ReceiptText className="h-4 w-4 text-sky-300" />
-                <p className="font-semibold text-white">Histórico</p>
-              </div>
-              <BookingList bookings={pastBookings} emptyText="Nenhum histórico ainda." />
-            </Card>
+                return (
+                  <button
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                      isActive ? "bg-primary text-white" : "text-slate-300 hover:bg-white/8"
+                    }`}
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value as PortalTab)}
+                    type="button"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {activeTab === "upcoming" ? (
+              <Card>
+                <div className="mb-5 flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-sky-300" />
+                  <p className="font-semibold text-white">Próximos agendamentos</p>
+                </div>
+                <BookingList bookings={upcomingBookings} emptyText="Nenhum agendamento futuro." />
+              </Card>
+            ) : null}
+
+            {activeTab === "history" ? (
+              <Card>
+                <div className="mb-5 flex items-center gap-2">
+                  <ReceiptText className="h-4 w-4 text-sky-300" />
+                  <p className="font-semibold text-white">Histórico</p>
+                </div>
+                <BookingList bookings={pastBookings} emptyText="Nenhum histórico ainda." />
+              </Card>
+            ) : null}
+
+            {activeTab === "reviews" ? (
+              <Card>
+                <div className="mb-5 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-sky-300" />
+                  <p className="font-semibold text-white">Avaliações</p>
+                </div>
+                <ReviewList places={portal?.places ?? []} />
+              </Card>
+            ) : null}
           </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function ReviewList({ places }: {
+  places: Array<{
+    organizationId: string;
+    organizationName: string;
+    organizationSlug: string;
+    visits: number;
+  }>;
+}) {
+  if (!places.length) {
+    return <p className="text-sm text-slate-400">Nenhum estabelecimento disponível para avaliar ainda.</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {places.map((place) => (
+        <div className="rounded-lg border border-white/10 bg-white/5 p-4" key={place.organizationId}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="font-medium text-white">{place.organizationName}</p>
+              <p className="mt-1 text-sm text-slate-400">{place.visits} agendamentos registrados</p>
+              <p className="mt-2 text-xs text-slate-500">A avaliação fica vinculada ao estabelecimento visitado.</p>
+            </div>
+            <Link
+              className="inline-flex h-9 items-center justify-center rounded-lg border border-white/10 px-3 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+              href={`/clientes/${place.organizationSlug}`}
+            >
+              Ver perfil
+            </Link>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -149,7 +226,6 @@ function BookingList({ bookings, emptyText }: {
     serviceName?: string | null;
     startsAt: string;
     status: string;
-    paymentStatus?: string;
     discountedAmountCents?: number;
   }>;
   emptyText: string;
@@ -172,7 +248,7 @@ function BookingList({ bookings, emptyText }: {
             </div>
             <div className="text-right text-sm">
               <p className="font-semibold text-white">{formatCurrency(booking.discountedAmountCents ?? 0)}</p>
-              <p className="mt-1 text-slate-400">{formatPaymentStatus(booking.paymentStatus ?? "pending_local")}</p>
+              <p className="mt-1 text-slate-400">{formatBookingStatus(booking.status)}</p>
             </div>
           </div>
         </div>
@@ -195,14 +271,14 @@ function formatCurrency(cents: number): string {
   }).format(cents / 100);
 }
 
-function formatPaymentStatus(status: string): string {
+function formatBookingStatus(status: string): string {
   const labels: Record<string, string> = {
-    approved: "Pago",
-    pending: "Pendente",
-    pending_local: "Pagamento no local",
-    rejected: "Recusado",
+    scheduled: "Marcado",
+    confirmed: "Confirmado",
+    rescheduled: "Remarcado",
+    attended: "Compareceu",
+    missed: "Falta",
     cancelled: "Cancelado",
-    not_required: "Não exigido"
   };
 
   return labels[status] ?? status;

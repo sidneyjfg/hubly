@@ -108,10 +108,10 @@ export class SystemAdminService {
       .createQueryBuilder("booking")
       .select("booking.organizationId", "organizationId")
       .addSelect("org.tradeName", "organizationName")
-      .addSelect("SUM(CASE WHEN booking.paymentType = 'online' AND booking.paymentStatus = 'approved' THEN booking.discountedAmountCents ELSE 0 END)", "onlineRevenueCents")
-      .addSelect("SUM(CASE WHEN booking.paymentType = 'presential' AND booking.status = 'attended' THEN booking.discountedAmountCents ELSE 0 END)", "localRevenueCents")
-      .addSelect("COUNT(CASE WHEN booking.paymentType = 'online' THEN 1 END)", "onlineCount")
-      .addSelect("COUNT(CASE WHEN booking.paymentType = 'presential' THEN 1 END)", "localCount")
+      .addSelect("SUM(CASE WHEN booking.status = 'attended' THEN booking.discountedAmountCents ELSE 0 END)", "attendedRevenueCents")
+      .addSelect("COUNT(CASE WHEN booking.status IN ('scheduled', 'confirmed', 'rescheduled') THEN 1 END)", "upcomingCount")
+      .addSelect("COUNT(CASE WHEN booking.status = 'attended' THEN 1 END)", "attendedCount")
+      .addSelect("COUNT(CASE WHEN booking.status = 'missed' THEN 1 END)", "missedCount")
       .addSelect("COUNT(CASE WHEN booking.status = 'scheduled' AND booking.startsAt < CURRENT_TIMESTAMP THEN 1 END)", "pendingStatusCount")
       .innerJoin("booking.organization", "org")
       .groupBy("booking.organizationId")
@@ -119,18 +119,19 @@ export class SystemAdminService {
       .getRawMany();
 
     return stats.map((row) => {
-      const onlineCount = Number(row.onlineCount);
-      const localCount = Number(row.localCount);
+      const attendedCount = Number(row.attendedCount);
+      const missedCount = Number(row.missedCount);
+      const completedCount = attendedCount + missedCount;
 
       return {
         organizationId: row.organizationId,
         organizationName: row.organizationName,
-        onlineRevenueCents: Number(row.onlineRevenueCents),
-        localRevenueCents: Number(row.localRevenueCents),
-        onlineCount,
-        localCount,
+        attendedRevenueCents: Number(row.attendedRevenueCents),
+        upcomingCount: Number(row.upcomingCount),
+        attendedCount,
+        missedCount,
         pendingStatusCount: Number(row.pendingStatusCount),
-        localPaymentRatio: onlineCount + localCount > 0 ? localCount / (onlineCount + localCount) : 0,
+        noShowRate: completedCount > 0 ? missedCount / completedCount : 0,
       };
     });
   }

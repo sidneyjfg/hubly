@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/ui/badge";
 
 const mockBookings = [
   { time: "08:30", customer: "Ana Ribeiro", status: "confirmed" as const },
-  { time: "10:00", customer: "Carlos Dias", status: "payment_pending" as const },
+  { time: "10:00", customer: "Carlos Dias", status: "scheduled" as const },
   { time: "11:30", customer: "Mariana Valente", status: "missed" as const }
 ];
 

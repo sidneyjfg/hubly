@@ -19,7 +19,7 @@ export const seedData = {
       postalCode: "01310-100",
       coverImageUrl: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1400&q=80",
       logoImageUrl: null,
-      galleryImageUrls: [],
+      galleryImageUrls: ["https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=900&q=80"],
       isStorefrontPublished: true,
     },
     {
@@ -39,7 +39,7 @@ export const seedData = {
       postalCode: "01426-001",
       coverImageUrl: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1400&q=80",
       logoImageUrl: null,
-      galleryImageUrls: [],
+      galleryImageUrls: ["https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=900&q=80"],
       isStorefrontPublished: true,
     },
     {
@@ -59,7 +59,7 @@ export const seedData = {
       postalCode: "04101-000",
       coverImageUrl: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1400&q=80",
       logoImageUrl: null,
-      galleryImageUrls: [],
+      galleryImageUrls: ["https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=900&q=80"],
       isStorefrontPublished: true,
     },
     {
@@ -79,7 +79,7 @@ export const seedData = {
       postalCode: "02022-001",
       coverImageUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1400&q=80",
       logoImageUrl: null,
-      galleryImageUrls: [],
+      galleryImageUrls: ["https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=900&q=80"],
       isStorefrontPublished: true,
     },
     {
@@ -99,7 +99,7 @@ export const seedData = {
       postalCode: "01010-000",
       coverImageUrl: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1400&q=80",
       logoImageUrl: null,
-      galleryImageUrls: [],
+      galleryImageUrls: ["https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=900&q=80"],
       isStorefrontPublished: true,
     },
   ],

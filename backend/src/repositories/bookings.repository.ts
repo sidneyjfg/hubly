@@ -1,37 +1,21 @@
 import { randomUUID } from "node:crypto";
-import type { DataSource, EntityManager, Not } from "typeorm";
+import type { DataSource, EntityManager } from "typeorm";
 
 import { BookingEntity } from "../database/entities";
-import type { Booking, BookingPaymentStatus, BookingPaymentType, BookingStatus, NoShowOverview } from "../types/booking";
+import type { Booking, BookingStatus, NoShowOverview } from "../types/booking";
+import type { PaymentStatus, PaymentType } from "../types/payment";
 import { buildPaginatedResult, getPaginationOffset, type PaginatedResult, type Pagination } from "../utils/pagination";
 
-const ONLINE_PAYMENT_HOLD_MINUTES = 15;
 const blockingBookingStatuses = new Set(["scheduled", "confirmed", "rescheduled", "attended", "missed"]);
 
 export const isBookingBlockingSlot = (booking: {
   status: string;
-  paymentType?: string | null;
-  paymentStatus?: string | null;
-  createdAt?: Date | string;
-}, now: Date = new Date()): boolean => {
+}): boolean => {
   if (booking.status === "cancelled") {
     return false;
   }
 
-  if (blockingBookingStatuses.has(booking.status)) {
-    return true;
-  }
-
-  if (booking.status !== "payment_pending" || booking.paymentType !== "online" || booking.paymentStatus !== "pending") {
-    return false;
-  }
-
-  const createdAt = booking.createdAt instanceof Date ? booking.createdAt : new Date(booking.createdAt ?? 0);
-  if (Number.isNaN(createdAt.getTime())) {
-    return false;
-  }
-
-  return now.getTime() - createdAt.getTime() < ONLINE_PAYMENT_HOLD_MINUTES * 60 * 1000;
+  return blockingBookingStatuses.has(booking.status);
 };
 
 export class BookingsRepository {
@@ -56,15 +40,8 @@ export class BookingsRepository {
       startsAt: booking.startsAt.toISOString(),
       endsAt: booking.endsAt.toISOString(),
       notes: booking.notes,
-      paymentType: booking.paymentType as BookingPaymentType,
       originalAmountCents: booking.originalAmountCents,
       discountedAmountCents: booking.discountedAmountCents,
-      onlineDiscountCents: booking.onlineDiscountCents,
-      platformCommissionRateBps: booking.platformCommissionRateBps,
-      platformCommissionCents: booking.platformCommissionCents,
-      providerNetAmountCents: booking.providerNetAmountCents,
-      paymentStatus: booking.paymentStatus as BookingPaymentStatus,
-      paymentCheckoutUrl: booking.paymentCheckoutUrl,
       createdAt: booking.createdAt.toISOString(),
     };
   }
@@ -178,14 +155,14 @@ export class BookingsRepository {
       startsAt: Date;
       endsAt: Date;
       notes?: string | null;
-      paymentType?: BookingPaymentType;
+      paymentType?: PaymentType;
       originalAmountCents?: number;
       discountedAmountCents?: number;
       onlineDiscountCents?: number;
       platformCommissionRateBps?: number;
       platformCommissionCents?: number;
       providerNetAmountCents?: number;
-      paymentStatus?: BookingPaymentStatus;
+      paymentStatus?: PaymentStatus;
       paymentCheckoutUrl?: string | null;
     },
     manager?: EntityManager,
@@ -238,14 +215,14 @@ export class BookingsRepository {
       startsAt?: Date;
       endsAt?: Date;
       notes?: string | null;
-      paymentType?: BookingPaymentType;
+      paymentType?: PaymentType;
       originalAmountCents?: number;
       discountedAmountCents?: number;
       onlineDiscountCents?: number;
       platformCommissionRateBps?: number;
       platformCommissionCents?: number;
       providerNetAmountCents?: number;
-      paymentStatus?: BookingPaymentStatus;
+      paymentStatus?: PaymentStatus;
       paymentCheckoutUrl?: string | null;
     },
     manager?: EntityManager,

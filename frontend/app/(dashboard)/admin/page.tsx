@@ -32,7 +32,6 @@ type AdminMetric = {
 const statusLabels: Record<BookingStatus, string> = {
   scheduled: "Agendadas",
   confirmed: "Confirmadas",
-  payment_pending: "Aguardando pagamento",
   cancelled: "Canceladas",
   rescheduled: "Reagendadas",
   attended: "Compareceu",
@@ -105,7 +104,6 @@ function AdminPageContent() {
     {
       scheduled: 0,
       confirmed: 0,
-      payment_pending: 0,
       cancelled: 0,
       rescheduled: 0,
       attended: 0,

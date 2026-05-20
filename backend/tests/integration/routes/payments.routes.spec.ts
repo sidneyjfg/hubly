@@ -3,7 +3,6 @@ import type { DataSource } from "typeorm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildApp } from "../../../src/app";
-import { BookingEntity, FinancialLedgerEntity, PaymentTransactionEntity, ProviderEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { requestProtection } from "../../../src/security/request-protection";
 import { env } from "../../../src/utils/env";
@@ -181,19 +180,8 @@ describe("Payments routes", () => {
     expect(response.statusCode).toBe(401);
   });
 
-  it("simulates Stripe setup and online booking payment without platform commission", async () => {
+  it("does not accept online payment data when creating public bookings", async () => {
     const headers = await signInAsAdmin(app);
-
-    const settingsResponse = await app.inject({
-      method: "PATCH",
-      url: "/v1/organization/payment-settings",
-      headers,
-      payload: {
-        onlineDiscountBps: 0,
-        absorbsProcessingFee: true,
-      },
-    });
-    expect(settingsResponse.statusCode).toBe(200);
 
     const organizationAccountResponse = await app.inject({
       method: "POST",
@@ -258,113 +246,7 @@ describe("Payments routes", () => {
         paymentType: "online",
       },
     });
-    expect(bookingResponse.statusCode).toBe(201);
-    expect(bookingResponse.json()).toEqual(
-      expect.objectContaining({
-        organizationId: "cln_main_001",
-        providerId: "pro_001",
-        offeringId: "svc_001",
-        status: "payment_pending",
-        paymentType: "online",
-        paymentStatus: "pending",
-        originalAmountCents: 18000,
-        discountedAmountCents: 18000,
-        platformCommissionRateBps: 0,
-        platformCommissionCents: 0,
-        providerNetAmountCents: 18000,
-        paymentClientSecret: "pi_booking_001_secret_test",
-      }),
-    );
-
-    const createdPaymentIntent = stripeMocks.paymentIntentsCreate.mock.calls[0]?.[0];
-    const createdPaymentIntentOptions = stripeMocks.paymentIntentsCreate.mock.calls[0]?.[1];
-    expect(createdPaymentIntent).toEqual(
-      expect.objectContaining({
-        amount: 18000,
-        currency: "brl",
-        metadata: expect.objectContaining({
-          bookingId: bookingResponse.json().id,
-          organizationId: "cln_main_001",
-          providerId: "pro_001",
-        }),
-      }),
-    );
-    expect(createdPaymentIntentOptions).toEqual({
-      idempotencyKey: `payment_intent:${bookingResponse.json().id}`,
-      stripeAccount: "acct_provider_001",
-    });
-
-    stripeMocks.webhooksConstructEvent.mockReturnValue({
-      id: "evt_payment_succeeded_001",
-      type: "payment_intent.succeeded",
-      data: {
-        object: {
-          id: "pi_booking_001",
-          amount: 18000,
-          currency: "brl",
-          application_fee_amount: null,
-          transfer_data: null,
-          metadata: {
-            bookingId: bookingResponse.json().id,
-            organizationId: "cln_main_001",
-            providerId: "pro_001",
-          },
-          latest_charge: "ch_booking_001",
-          status: "succeeded",
-        },
-      },
-      account: "acct_provider_001",
-    });
-
-    const webhookResponse = await app.inject({
-      method: "POST",
-      url: "/v1/public/payments/stripe/webhooks",
-      headers: {
-        "stripe-signature": "valid_test_signature",
-      },
-      payload: {
-        id: "evt_payment_succeeded_001",
-      },
-    });
-    expect(webhookResponse.statusCode).toBe(200);
-    expect(webhookResponse.json()).toEqual({
-      received: true,
-      eventType: "payment_intent.succeeded",
-    });
-
-    const booking = await dataSource.getRepository(BookingEntity).findOneByOrFail({ id: bookingResponse.json().id });
-    expect(booking.status).toBe("confirmed");
-    expect(booking.paymentStatus).toBe("approved");
-
-    const paymentTransaction = await dataSource.getRepository(PaymentTransactionEntity).findOneByOrFail({
-      stripePaymentIntentId: "pi_booking_001",
-    });
-    expect(paymentTransaction.status).toBe("approved");
-    expect(paymentTransaction.platformCommissionCents).toBe(0);
-    expect(paymentTransaction.providerNetAmountCents).toBe(18000);
-
-    const ledger = await dataSource.getRepository(FinancialLedgerEntity).find({
-      where: {
-        bookingId: booking.id,
-      },
-      order: {
-        createdAt: "ASC",
-      },
-    });
-    expect(ledger.map((entry) => entry.type)).toEqual(["payment_created", "payment_succeeded"]);
-    expect(ledger[1]).toEqual(
-      expect.objectContaining({
-        providerId: "pro_001",
-        stripeAccountId: "acct_provider_001",
-        stripeObjectId: "pi_booking_001",
-        stripeEventId: "evt_payment_succeeded_001",
-        amountCents: 18000,
-        currency: "brl",
-        status: "approved",
-      }),
-    );
-
-    const provider = await dataSource.getRepository(ProviderEntity).findOneByOrFail({ id: "pro_001" });
-    expect(provider.stripeAccountId).toBe("acct_provider_001");
+    expect(bookingResponse.statusCode).toBe(400);
+    expect(stripeMocks.paymentIntentsCreate).not.toHaveBeenCalled();
   });
 });

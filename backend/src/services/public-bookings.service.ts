@@ -1,13 +1,10 @@
-import type { DataSource, EntityManager } from "typeorm";
+import type { DataSource } from "typeorm";
 import { z } from "zod";
 
 import { AuditRepository } from "../repositories/audit.repository";
 import { BookingsRepository, isBookingBlockingSlot } from "../repositories/bookings.repository";
 import { CustomersRepository } from "../repositories/customers.repository";
-import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
-import { OrganizationNotificationSettingsRepository } from "../repositories/organization-notification-settings.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
-import { OrganizationPaymentSettingsRepository } from "../repositories/organization-payment-settings.repository";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
 import { ServiceOfferingsRepository } from "../repositories/service-offerings.repository";
@@ -16,12 +13,8 @@ import type { PublicAvailableSlot, PublicBookingPage, PublicBookingRequestInput 
 import { AppError } from "../utils/app-error";
 import { hashPassword, verifyPassword } from "../utils/password";
 import { buildAvailableSlots, isWithinProviderAvailability, resolveWeekday } from "../utils/provider-availability";
-import { env } from "../utils/env";
 import { createCustomerAccessToken, verifyCustomerAccessToken } from "../utils/customer-tokens";
-import { EvolutionWhatsAppService } from "./evolution-whatsapp.service";
 import { NotificationsService } from "./notifications.service";
-import { PaymentsService } from "./payments.service";
-import type { PaymentBreakdown } from "../types/payment";
 
 const publicBookingRequestSchema = z.object({
   fullName: z.string().min(3).max(120),
@@ -34,7 +27,6 @@ const publicBookingRequestSchema = z.object({
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),
   notes: z.string().max(255).nullable().optional(),
-  paymentType: z.enum(["online", "presential"]).default("presential"),
 });
 
 const availabilityQuerySchema = z.object({
@@ -77,8 +69,6 @@ export class PublicBookingsService {
     private readonly bookingsRepository: BookingsRepository,
     private readonly notificationsService: NotificationsService,
     private readonly auditRepository: AuditRepository,
-    private readonly organizationPaymentSettingsRepository: OrganizationPaymentSettingsRepository,
-    private readonly paymentsService?: PaymentsService,
   ) {}
 
   public async getBookingPage(slug: string): Promise<PublicBookingPage> {
@@ -174,6 +164,8 @@ export class PublicBookingsService {
     city?: string | null;
     state?: string | null;
     coverImageUrl?: string | null;
+    logoImageUrl?: string | null;
+    galleryImageUrls: string[];
   }): boolean {
     return Boolean(
       organization.tradeName.trim()
@@ -182,7 +174,8 @@ export class PublicBookingsService {
         && organization.addressLine?.trim()
         && organization.city?.trim()
         && organization.state?.trim()
-        && organization.coverImageUrl?.trim(),
+        && organization.coverImageUrl?.trim()
+        && organization.galleryImageUrls.some((imageUrl) => imageUrl.trim())
     );
   }
 
@@ -356,9 +349,7 @@ export class PublicBookingsService {
       };
 
       current.visits += 1;
-      current.spentCents += booking.status !== "cancelled" && !["cancelled", "rejected"].includes(booking.paymentStatus)
-        ? booking.discountedAmountCents
-        : 0;
+      current.spentCents += booking.status !== "cancelled" ? booking.discountedAmountCents : 0;
       if (booking.startsAt > current.lastVisitAt) {
         current.lastVisitAt = booking.startsAt;
       }
@@ -412,7 +403,6 @@ export class PublicBookingsService {
       email: input.email ?? null,
       notes: input.notes ?? null,
       offeringId: input.offeringId ?? null,
-      paymentType: input.paymentType ?? "presential",
     });
 
     if (!data.password && !data.customerAccessToken) {
@@ -434,7 +424,7 @@ export class PublicBookingsService {
       throw new AppError("bookings.invalid_window", "Invalid booking window.", 400);
     }
 
-    const result = await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+    return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
       const provider = await this.providersRepository.findByIdInOrganization(organization.id, data.providerId, manager);
       if (!provider || !provider.isActive) {
         throw new AppError("providers.not_found", "Provider not found.", 404);
@@ -452,18 +442,11 @@ export class PublicBookingsService {
         throw new AppError("bookings.outside_provider_availability", "Booking is outside provider working hours.", 409);
       }
 
-      let serviceName: string | null = null;
       if (data.offeringId) {
         const offering = await this.serviceOfferingsRepository.findByIdInOrganization(organization.id, data.offeringId, manager);
         if (!offering || !offering.isActive || offering.providerId !== data.providerId) {
           throw new AppError("service_offerings.not_found", "Service offering not found.", 404);
         }
-
-        if (offering.requireOnlinePayment && data.paymentType === "presential") {
-          throw new AppError("bookings.online_payment_required", "Este serviço exige pagamento online antecipado.", 400);
-        }
-
-        serviceName = offering.name;
       }
 
       const hasConflict = await this.bookingsRepository.hasConflict(
@@ -504,24 +487,9 @@ export class PublicBookingsService {
         );
       }
 
-      const paymentBreakdown: PaymentBreakdown = this.paymentsService
-        ? await this.paymentsService.buildBreakdown(
-          organization.id,
-          data.providerId,
-          data.offeringId ?? null,
-          data.paymentType,
-          manager,
-        )
-        : {
-          paymentType: data.paymentType,
-          originalAmountCents: 0,
-          discountedAmountCents: 0,
-          onlineDiscountCents: 0,
-          platformCommissionRateBps: 0,
-          platformCommissionCents: 0,
-          providerNetAmountCents: 0,
-          paymentStatus: data.paymentType === "online" ? "pending" as const : "pending_local" as const,
-        };
+      const originalAmountCents = data.offeringId
+        ? (await this.serviceOfferingsRepository.findByIdInOrganization(organization.id, data.offeringId, manager))?.priceCents ?? 0
+        : 0;
 
       const booking = await this.bookingsRepository.create(
         {
@@ -530,11 +498,12 @@ export class PublicBookingsService {
           providerId: data.providerId,
           offeringId: data.offeringId ?? null,
           createdByUserId: null,
-          status: paymentBreakdown.paymentType === "online" ? "payment_pending" : "scheduled",
+          status: "scheduled",
           startsAt,
           endsAt,
           notes: data.notes ?? null,
-          ...paymentBreakdown,
+          originalAmountCents,
+          discountedAmountCents: originalAmountCents,
         },
         manager,
       );
@@ -564,33 +533,7 @@ export class PublicBookingsService {
         manager,
       );
 
-      return {
-        booking,
-        customerEmail: customer.email,
-        serviceName,
-      };
+      return booking;
     });
-
-    if (data.paymentType !== "online") {
-      return result.booking;
-    }
-
-    if (!this.paymentsService) {
-      throw new AppError("payments.unavailable", "Payments service unavailable.", 500);
-    }
-
-    try {
-      return await this.paymentsService.prepareOnlinePayment({
-        booking: result.booking,
-        ...(result.customerEmail === undefined ? {} : { customerEmail: result.customerEmail }),
-        serviceName: result.serviceName,
-      });
-    } catch (error) {
-      await this.bookingsRepository.updateInOrganization(organization.id, result.booking.id, {
-        status: "cancelled",
-        paymentStatus: "cancelled",
-      });
-      throw error;
-    }
   }
 }

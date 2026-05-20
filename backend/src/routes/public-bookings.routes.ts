@@ -14,7 +14,6 @@ import { BookingsRepository } from "../repositories/bookings.repository";
 import { CustomersRepository } from "../repositories/customers.repository";
 import { OrganizationIntegrationsRepository } from "../repositories/organization-integrations.repository";
 import { OrganizationNotificationSettingsRepository } from "../repositories/organization-notification-settings.repository";
-import { OrganizationPaymentSettingsRepository } from "../repositories/organization-payment-settings.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
@@ -22,7 +21,6 @@ import { ServiceOfferingsRepository } from "../repositories/service-offerings.re
 import { EvolutionWhatsAppService } from "../services/evolution-whatsapp.service";
 import { NotificationsService } from "../services/notifications.service";
 import { PublicBookingsService } from "../services/public-bookings.service";
-import { buildPaymentsService } from "./payments.routes";
 
 type PublicBookingsRouteOptions = {
   dataSource: DataSource;
@@ -55,8 +53,6 @@ export const publicBookingsRoutes = async (
       new BookingsRepository(options.dataSource),
       notificationsService,
       new AuditRepository(options.dataSource),
-      new OrganizationPaymentSettingsRepository(options.dataSource),
-      buildPaymentsService(options.dataSource),
     ),
   );
 

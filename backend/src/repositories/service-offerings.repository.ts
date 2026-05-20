@@ -21,7 +21,6 @@ export class ServiceOfferingsRepository {
       name: service.name,
       durationMinutes: service.durationMinutes,
       priceCents: service.priceCents,
-      requireOnlinePayment: service.requireOnlinePayment,
       isActive: service.isActive,
     };
   }
@@ -97,7 +96,6 @@ public async findAll(
       name: input.name,
       durationMinutes: input.durationMinutes,
       priceCents: input.priceCents ?? null,
-      requireOnlinePayment: input.requireOnlinePayment ?? false,
       isActive: input.isActive ?? true,
     });
 
@@ -138,7 +136,6 @@ public async findAll(
     service.name = input.name;
     service.durationMinutes = input.durationMinutes;
     service.priceCents = input.priceCents ?? null;
-    service.requireOnlinePayment = input.requireOnlinePayment ?? service.requireOnlinePayment;
     service.isActive = input.isActive ?? service.isActive;
 
     await repository.save(service);

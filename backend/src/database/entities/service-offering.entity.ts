@@ -33,9 +33,6 @@ export class ServiceOfferingEntity {
   @Column({ type: "int", nullable: true })
   public priceCents!: number | null;
 
-  @Column({ type: "boolean", default: false })
-  public requireOnlinePayment!: boolean;
-
   @Column({ type: "boolean", default: true })
   public isActive!: boolean;
 

@@ -5,7 +5,6 @@ export type UserRole = (typeof userRoles)[number];
 export const bookingStatuses = [
   "scheduled",
   "confirmed",
-  "payment_pending",
   "cancelled",
   "rescheduled",
   "attended",
@@ -111,7 +110,6 @@ export type ServiceOffering = {
   name: string;
   durationMinutes: number;
   priceCents?: number | null;
-  requireOnlinePayment: boolean;
   isActive: boolean;
 };
 
@@ -156,12 +154,12 @@ export type OrganizationSubscriptionOverview = {
 export type SystemAdminSubscriptionReadiness = {
   organizationId: string;
   organizationName: string;
-  onlineRevenueCents: number;
-  localRevenueCents: number;
-  onlineCount: number;
-  localCount: number;
+  attendedRevenueCents: number;
+  upcomingCount: number;
+  attendedCount: number;
+  missedCount: number;
   pendingStatusCount: number;
-  localPaymentRatio: number;
+  noShowRate: number;
 };
 
 export type Booking = {
@@ -177,16 +175,8 @@ export type Booking = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
-  paymentType?: "online" | "presential";
   originalAmountCents?: number;
   discountedAmountCents?: number;
-  onlineDiscountCents?: number;
-  platformCommissionRateBps?: number;
-  platformCommissionCents?: number;
-  providerNetAmountCents?: number;
-  paymentStatus?: "not_required" | "pending" | "approved" | "rejected" | "cancelled" | "pending_local";
-  paymentCheckoutUrl?: string | null;
-  paymentClientSecret?: string | null;
 };
 
 export type StripeAccountStatus = "pending" | "verified" | "restricted";

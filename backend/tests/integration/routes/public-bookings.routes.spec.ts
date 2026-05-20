@@ -3,7 +3,6 @@ import type { DataSource } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../../../src/app";
-import { BookingEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 
 describe("Public bookings routes", () => {
@@ -101,7 +100,6 @@ describe("Public bookings routes", () => {
         startsAt: "2026-04-21T14:00:00.000Z",
         endsAt: "2026-04-21T14:30:00.000Z",
         notes: "Agendamento publico",
-        paymentType: "presential",
       },
     });
 
@@ -112,8 +110,6 @@ describe("Public bookings routes", () => {
         providerId: "pro_001",
         customerName: "Roberta Lima",
         status: "scheduled",
-        paymentType: "presential",
-        paymentStatus: "pending_local",
       }),
     );
 
@@ -134,7 +130,7 @@ describe("Public bookings routes", () => {
     expect(outsideResponse.statusCode).toBe(409);
   });
 
-  it("reuses the connected customer profile in the portal and releases stale online payment holds", async () => {
+  it("reuses the connected customer profile in the portal", async () => {
     const signUpResponse = await app.inject({
       method: "POST",
       url: "/v1/public/customers/sign-up",
@@ -167,7 +163,6 @@ describe("Public bookings routes", () => {
         providerId: "pro_001",
         startsAt: "2026-04-21T16:00:00.000Z",
         endsAt: "2026-04-21T16:30:00.000Z",
-        paymentType: "presential",
       },
     });
 
@@ -194,31 +189,6 @@ describe("Public bookings routes", () => {
         expect.objectContaining({
           id: bookingResponse.json().id,
           organizationName: "Organizationa Exemplo",
-        }),
-      ]),
-    );
-
-    await dataSource.getRepository(BookingEntity).update(
-      { id: bookingResponse.json().id },
-      {
-        status: "payment_pending",
-        paymentType: "online",
-        paymentStatus: "pending",
-        createdAt: new Date("2026-04-21T15:00:00.000Z"),
-      },
-    );
-
-    const availabilityResponse = await app.inject({
-      method: "GET",
-      url: "/v1/public/organizations/organizationa-exemplo/availability?providerId=pro_001&date=2026-04-21",
-    });
-
-    expect(availabilityResponse.statusCode).toBe(200);
-    expect(availabilityResponse.json().items).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          startsAt: "2026-04-21T16:00:00.000Z",
-          endsAt: "2026-04-21T16:30:00.000Z",
         }),
       ]),
     );

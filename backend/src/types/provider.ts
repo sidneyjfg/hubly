@@ -43,7 +43,6 @@ export type ServiceOffering = {
   durationMinutes: number;
   priceCents?: number | null;
   isActive: boolean;
-  requireOnlinePayment?: boolean;
 };
 
 export type ServiceOfferingWriteInput = {
@@ -52,7 +51,6 @@ export type ServiceOfferingWriteInput = {
   durationMinutes: number;
   priceCents?: number | null;
   isActive?: boolean;
-  requireOnlinePayment?: boolean;
 };
 
 export type PublicBookingPage = {
@@ -94,5 +92,4 @@ export type PublicBookingRequestInput = {
   startsAt: string;
   endsAt: string;
   notes?: string | null;
-  paymentType?: "online" | "presential";
 };

@@ -72,10 +72,19 @@ type ReadinessItem = {
   href: string;
 };
 
+type GuideStep = {
+  id: string;
+  title: string;
+  clickTarget: string;
+  outcome: string;
+  href?: string;
+};
+
 export default function StorefrontPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<StorefrontForm>(emptyForm);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [activeGuideStep, setActiveGuideStep] = useState("profile");
 
   const { data } = useQuery({
     queryKey: ["storefront"],
@@ -256,6 +265,50 @@ export default function StorefrontPage() {
 
   const selectedPhotoUrl = selectedPhoto ?? previewImages[0] ?? "";
   const isVisiblyPublished = form.isStorefrontPublished && canPublishStorefront;
+  const guideSteps: GuideStep[] = [
+    {
+      id: "profile",
+      title: "Complete o perfil público",
+      clickTarget: "Clique no bloco Informações principais e preencha nome, link, contato e descrição.",
+      outcome: "Esses dados formam o texto inicial que o cliente vê antes de escolher um serviço."
+    },
+    {
+      id: "address",
+      title: "Informe a localização",
+      clickTarget: "Clique no bloco Endereço e preencha rua, número, bairro, cidade, UF e CEP.",
+      outcome: "A vitrine ganha contexto local e passa a aparecer corretamente na descoberta por região."
+    },
+    {
+      id: "photos",
+      title: "Adicione fotos reais",
+      clickTarget: "Clique em Fotos da vitrine e informe capa, logo e pelo menos uma foto de galeria.",
+      outcome: "A página pública só é liberada quando há imagens suficientes para não ficar incompleta."
+    },
+    {
+      id: "team",
+      title: "Configure equipe, serviços e agenda",
+      clickTarget: "Clique em Configurar profissionais e cadastre profissional ativo, serviço com preço e disponibilidade.",
+      outcome: "Somente profissionais prontos aparecem para o cliente escolher horário.",
+      href: "/providers"
+    },
+    {
+      id: "publish",
+      title: "Publique a vitrine",
+      clickTarget: "Volte para esta tela, ative Publicado no topo e clique em Salvar vitrine.",
+      outcome: "Se todos os passos estiverem completos, a empresa aparece em /clientes e recebe agendamentos."
+    }
+  ];
+
+  const focusGuideStep = (step: GuideStep) => {
+    setActiveGuideStep(step.id);
+    document.getElementById(`storefront-step-${step.id}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  };
+
+  const focusClass = (stepId: string): string =>
+    activeGuideStep === stepId ? "ring-2 ring-sky-300/70 ring-offset-2 ring-offset-background" : "";
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -265,7 +318,10 @@ export default function StorefrontPage() {
             <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Vitrine</p>
             <h1 className="mt-2 text-3xl font-semibold text-white">Perfil público da empresa</h1>
           </div>
-          <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+          <div
+            className={`flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 ${focusClass("publish")}`}
+            id="storefront-step-publish"
+          >
             <span className="text-sm text-slate-300">{isVisiblyPublished ? "Publicado" : "Rascunho"}</span>
             <span className={!canPublishStorefront ? "opacity-50" : undefined}>
               <Toggle
@@ -284,6 +340,61 @@ export default function StorefrontPage() {
             A vitrine fica bloqueada para clientes até perfil, profissionais, serviços e agenda estarem configurados corretamente.
           </div>
         ) : null}
+
+        <Card>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Passo a passo</p>
+              <h2 className="mt-2 text-xl font-semibold text-white">Configure na ordem certa</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                Clique em um passo para destacar onde preencher e entender o que muda para o cliente final.
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              Vitrine: {isVisiblyPublished ? "visível" : "bloqueada"}
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3">
+            {guideSteps.map((step, index) => {
+              const content = (
+                <>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-400/15 text-sm font-semibold text-sky-100">
+                    {index + 1}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-white">{step.title}</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-400">{step.clickTarget}</span>
+                    <span className="mt-1 block text-xs leading-5 text-emerald-200">{step.outcome}</span>
+                  </span>
+                </>
+              );
+
+              return step.href ? (
+                <Link
+                  className={`flex gap-3 rounded-lg border p-4 text-left transition ${
+                    activeGuideStep === step.id ? "border-sky-300 bg-sky-400/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                  }`}
+                  href={step.href}
+                  key={step.id}
+                  onClick={() => setActiveGuideStep(step.id)}
+                >
+                  {content}
+                </Link>
+              ) : (
+                <button
+                  className={`flex gap-3 rounded-lg border p-4 text-left transition ${
+                    activeGuideStep === step.id ? "border-sky-300 bg-sky-400/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                  }`}
+                  key={step.id}
+                  onClick={() => focusGuideStep(step)}
+                  type="button"
+                >
+                  {content}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
 
         <Card>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -329,7 +440,7 @@ export default function StorefrontPage() {
           </div>
         </Card>
 
-        <Card>
+        <Card id="storefront-step-profile" className={focusClass("profile")}>
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-400/10 text-sky-300">
               <Store className="h-5 w-5" />
@@ -354,7 +465,7 @@ export default function StorefrontPage() {
           </div>
         </Card>
 
-        <Card>
+        <Card id="storefront-step-address" className={focusClass("address")}>
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-400/10 text-sky-300">
               <MapPin className="h-5 w-5" />
@@ -376,7 +487,7 @@ export default function StorefrontPage() {
           </div>
         </Card>
 
-        <Card>
+        <Card id="storefront-step-photos" className={focusClass("photos")}>
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-400/10 text-sky-300">
               <Camera className="h-5 w-5" />

@@ -24,7 +24,6 @@ type ServiceFormState = {
   name: string;
   durationMinutes: string;
   price: string;
-  requireOnlinePayment: boolean;
 };
 
 const emptyProviderForm: ProviderFormState = {
@@ -36,8 +35,7 @@ const emptyServiceForm: ServiceFormState = {
   providerId: "",
   name: "",
   durationMinutes: "60",
-  price: "",
-  requireOnlinePayment: false
+  price: ""
 };
 
 function centsFromPrice(value: string): number | null {
@@ -156,8 +154,7 @@ export default function ProvidersPage() {
       providerId: service.providerId,
       name: service.name,
       durationMinutes: service.durationMinutes.toString(),
-      price: priceFromCents(service.priceCents),
-      requireOnlinePayment: service.requireOnlinePayment
+      price: priceFromCents(service.priceCents)
     });
   };
 

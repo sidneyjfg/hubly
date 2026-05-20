@@ -77,21 +77,6 @@ function getViewTitle(view: ScheduleView): string {
   return titles[view];
 }
 
-function getPaymentLabel(paymentType?: string, paymentStatus?: string): string {
-  if (paymentType !== "online") {
-    return "Pagamento local";
-  }
-
-  const labels: Record<string, string> = {
-    approved: "Pagamento aprovado",
-    cancelled: "Pagamento cancelado",
-    pending: "Pagamento pendente",
-    rejected: "Pagamento rejeitado"
-  };
-
-  return labels[paymentStatus ?? ""] ?? "Pagamento online";
-}
-
 function toLocalDateTimeInput(date: Date): string {
   const offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000));
   return offsetDate.toISOString().slice(0, 16);
@@ -311,9 +296,6 @@ export default function SchedulePage() {
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <StatusBadge status={booking.status} />
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
-                  {getPaymentLabel(booking.paymentType, booking.paymentStatus)}
-                </span>
                 <Button
                   onClick={() => mutation.mutate({ bookingId: booking.id, action: "attended" })}
                   size="sm"

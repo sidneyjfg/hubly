@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { PublicBookingsService } from "../services/public-bookings.service";
+import { AppError } from "../utils/app-error";
 
 export class PublicBookingsController {
   public constructor(private readonly publicBookingsService: PublicBookingsService) {}
@@ -38,8 +39,12 @@ export class PublicBookingsController {
       startsAt?: string;
       endsAt?: string;
       notes?: string | null;
-      paymentType?: "online" | "presential";
+      paymentType?: unknown;
     };
+
+    if (body.paymentType !== undefined) {
+      throw new AppError("bookings.payment_not_supported", "Agendamento nao aceita dados de pagamento.", 400);
+    }
 
     reply.status(201).send(await this.publicBookingsService.createBooking(params.slug ?? "", {
       fullName: body.fullName ?? "",
@@ -52,7 +57,6 @@ export class PublicBookingsController {
       startsAt: body.startsAt ?? "",
       endsAt: body.endsAt ?? "",
       notes: body.notes ?? null,
-      paymentType: body.paymentType ?? "presential",
     }));
   };
 
