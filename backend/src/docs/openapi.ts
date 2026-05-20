@@ -5,7 +5,7 @@ export const buildOpenApiDocument = () => {
       title: "Hubly API",
       version: "0.1.0",
       description: [
-        "API do MVP de agendamento para clínicas.",
+        "API do MVP de agendamento, gestão e presença digital para negócios locais.",
         "",
         "Downloads úteis para teste local:",
         "- Collection Postman: `/docs/postman/collection.json`",

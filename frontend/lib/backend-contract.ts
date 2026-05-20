@@ -15,6 +15,7 @@ import type {
   StripeConnectAccount,
   StripeOnboardingLink,
   OrganizationPaymentSettings,
+  OrganizationSubscriptionOverview,
   ProviderPaymentSettings,
   WhatsAppConnectionStatus,
   WhatsAppDisconnectResult,
@@ -36,11 +37,14 @@ export const apiRoutes = {
     tenants: "/v1/system-admin/tenants",
     audit: "/v1/system-admin/audit/events",
     summary: "/v1/system-admin/summary",
-    marketplaceAudit: "/v1/system-admin/marketplace-audit"
+    subscriptionReadiness: "/v1/system-admin/subscription-readiness"
   },
   organizations: {
     update: (id: string) => `/v1/organizations/${id}`,
     storefront: "/v1/organizations/storefront",
+    subscription: "/v1/organization/subscription",
+    subscriptionCheckout: "/v1/organization/subscription/checkout",
+    subscriptionCancel: "/v1/organization/subscription/cancel",
     paymentSettings: "/v1/organization/payment-settings",
     stripeAccount: "/v1/organization/stripe/accounts",
     stripeOnboarding: "/v1/organization/stripe/onboarding-links",
@@ -142,6 +146,7 @@ export type ProviderAvailabilityDTO = ProviderAvailability;
 
 export type ProviderPaymentSettingsDTO = ProviderPaymentSettings;
 export type OrganizationPaymentSettingsDTO = OrganizationPaymentSettings;
+export type OrganizationSubscriptionOverviewDTO = OrganizationSubscriptionOverview;
 
 export type ProviderPaymentSettingsUpdateDTO = {
   commissionRateBps?: number;
@@ -166,17 +171,15 @@ export type ServiceOfferingWriteDTO = {
   isActive?: boolean;
 };
 
-export type MarketplaceAuditDTO = {
+export type SubscriptionReadinessDTO = {
   organizationId: string;
   organizationName: string;
   onlineRevenueCents: number;
-  onlineCommissionCents: number;
-  presentialRevenueCents: number;
-  presentialCommissionCents: number;
+  localRevenueCents: number;
   onlineCount: number;
-  presentialCount: number;
+  localCount: number;
   pendingStatusCount: number;
-  presentialRatio: number;
+  localPaymentRatio: number;
 };
 
 export type BookingDTO = Booking;

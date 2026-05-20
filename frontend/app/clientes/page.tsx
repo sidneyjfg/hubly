@@ -20,7 +20,7 @@ function normalizeSearchValue(value: string): string {
     .trim();
 }
 
-export default function CustomerMarketplacePage() {
+export default function CustomerDiscoveryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [customerName, setCustomerName] = useState("");
 
@@ -90,7 +90,7 @@ export default function CustomerMarketplacePage() {
             Encontre um estabelecimento e agende com segurança.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
-            Escolha a clínica, profissional, serviço e horário. Ao entrar como cliente, seus dados de perfil são reaproveitados no agendamento e no histórico.
+            Escolha o negócio, profissional, serviço e horário. Ao entrar como cliente, seus dados de perfil são reaproveitados no agendamento e no histórico.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             {customerName ? (
@@ -126,7 +126,7 @@ export default function CustomerMarketplacePage() {
           <Input
             className="mt-5"
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Buscar por clínica, cidade ou especialidade"
+            placeholder="Buscar por negócio, cidade ou serviço"
             value={searchTerm}
           />
           <div className="mt-5 grid gap-4">

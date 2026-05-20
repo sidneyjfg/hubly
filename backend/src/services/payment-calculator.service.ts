@@ -5,7 +5,7 @@ const clampBasisPoints = (value: number): number => Math.min(10000, Math.max(0, 
 const calculateBasisPointsAmount = (amountCents: number, basisPoints: number): number =>
   Math.round((amountCents * clampBasisPoints(basisPoints)) / 10000);
 
-const STRIPE_PLATFORM_FEE_BPS = 1000;
+const PLATFORM_COMMISSION_BPS = 0;
 
 export class PaymentCalculatorService {
   public calculate(
@@ -18,16 +18,16 @@ export class PaymentCalculatorService {
       ? calculateBasisPointsAmount(safeOriginalAmountCents, settings.onlineDiscountBps)
       : 0;
     const discountedAmountCents = Math.max(0, safeOriginalAmountCents - onlineDiscountCents);
-    const platformCommissionCents = calculateBasisPointsAmount(discountedAmountCents, STRIPE_PLATFORM_FEE_BPS);
+    const platformCommissionCents = calculateBasisPointsAmount(discountedAmountCents, PLATFORM_COMMISSION_BPS);
 
     return {
       paymentType,
       originalAmountCents: safeOriginalAmountCents,
       discountedAmountCents,
       onlineDiscountCents,
-      platformCommissionRateBps: STRIPE_PLATFORM_FEE_BPS,
+      platformCommissionRateBps: PLATFORM_COMMISSION_BPS,
       platformCommissionCents,
-      providerNetAmountCents: Math.max(0, discountedAmountCents - platformCommissionCents),
+      providerNetAmountCents: discountedAmountCents,
       paymentStatus: paymentType === "online" ? "pending" : "pending_local",
     };
   }

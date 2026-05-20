@@ -12,17 +12,15 @@ export type SystemAdminSummary = {
   users: number;
 };
 
-export type SystemAdminMarketplaceAudit = {
+export type SystemAdminSubscriptionReadiness = {
   organizationId: string;
   organizationName: string;
   onlineRevenueCents: number;
-  onlineCommissionCents: number;
-  presentialRevenueCents: number;
-  presentialCommissionCents: number;
+  localRevenueCents: number;
   onlineCount: number;
-  presentialCount: number;
+  localCount: number;
   pendingStatusCount: number;
-  presentialRatio: number;
+  localPaymentRatio: number;
 };
 
 export type SystemAdminAuditEvent = {
@@ -35,6 +33,28 @@ export type SystemAdminAuditEvent = {
   targetType: string;
 };
 
+export type SystemAdminBillingPlan = {
+  id: string;
+  code: "free" | "pro" | "premium" | string;
+  name: string;
+  description: string | null;
+  amountCents: number;
+  currency: string;
+  interval: "month" | "year" | string;
+  stripeMode: "test" | "live" | string;
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SystemAdminBillingPlansResponse = {
+  stripeBillingMode: "test" | "live";
+  items: SystemAdminBillingPlan[];
+};
+
 type PaginatedResponse<T> = {
   items: T[];
   limit: number;
@@ -44,7 +64,7 @@ type PaginatedResponse<T> = {
 };
 
 type SystemAdminRequestOptions = {
-  method?: "GET" | "POST";
+  method?: "GET" | "PATCH" | "POST";
   body?: unknown;
   query?: Record<string, string | undefined>;
   session?: SystemAdminSession | null;
@@ -149,9 +169,27 @@ export const systemAdminApi = {
     });
   },
 
-  getMarketplaceAudit(session: SystemAdminSession) {
-    return systemAdminRequest<SystemAdminMarketplaceAudit[]>("/v1/system-admin/marketplace-audit", {
+  getSubscriptionReadiness(session: SystemAdminSession) {
+    return systemAdminRequest<SystemAdminSubscriptionReadiness[]>("/v1/system-admin/subscription-readiness", {
       session
+    });
+  },
+
+  getBillingPlans(session: SystemAdminSession) {
+    return systemAdminRequest<SystemAdminBillingPlansResponse>("/v1/system-admin/billing/plans", {
+      session
+    });
+  },
+
+  updateBillingPlan(
+    session: SystemAdminSession,
+    id: string,
+    input: Partial<Pick<SystemAdminBillingPlan, "amountCents" | "description" | "interval" | "isActive" | "isDefault" | "name" | "stripePriceId" | "stripeProductId">>
+  ) {
+    return systemAdminRequest<SystemAdminBillingPlan>(`/v1/system-admin/billing/plans/${id}`, {
+      method: "PATCH",
+      session,
+      body: input
     });
   }
 };

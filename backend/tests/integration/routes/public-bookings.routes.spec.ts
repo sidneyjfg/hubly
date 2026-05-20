@@ -44,7 +44,7 @@ describe("Public bookings routes", () => {
     );
   });
 
-  it("lists published establishments for the customer marketplace", async () => {
+  it("lists published establishments for customer discovery", async () => {
     const response = await app.inject({
       method: "GET",
       url: "/v1/public/organizations",

@@ -45,7 +45,7 @@ export default function SystemAdminLoginPage() {
         <p className="mt-5 text-sm font-medium uppercase tracking-[0.18em] text-sky-300">Dono do sistema</p>
         <h1 className="mt-3 text-3xl font-semibold text-white">Entrar no painel interno</h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          Este acesso usa token separado do painel das clínicas e não compartilha sessão com administradores de tenant.
+          Este acesso usa token separado do painel dos negócios e não compartilha sessão com administradores de tenant.
         </p>
 
         <div className="mt-8 space-y-4">
@@ -63,7 +63,7 @@ export default function SystemAdminLoginPage() {
           <p className="text-center text-sm text-slate-400">
             Voltar para{" "}
             <Link className="text-sky-300 hover:text-sky-200" href="/login">
-              login da clínica
+              login do negócio
             </Link>
           </p>
         </div>

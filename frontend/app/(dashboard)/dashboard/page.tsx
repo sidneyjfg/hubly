@@ -55,7 +55,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Resumo do dia</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Operação da clínica em tempo real</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-white">Operação do negócio em tempo real</h1>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

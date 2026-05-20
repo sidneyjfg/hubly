@@ -39,6 +39,13 @@ type Env = {
   REDIS_CONNECT_TIMEOUT_MS: number;
   PUBLIC_API_BASE_URL: string;
   PUBLIC_WEB_APP_URL: string;
+  STRIPE_BILLING_MODE: "test" | "live";
+  STRIPE_TEST_SECRET_KEY: string;
+  STRIPE_LIVE_SECRET_KEY: string;
+  STRIPE_TEST_WEBHOOK_SECRET: string;
+  STRIPE_LIVE_WEBHOOK_SECRET: string;
+  STRIPE_TEST_PUBLISHABLE_KEY: string;
+  STRIPE_LIVE_PUBLISHABLE_KEY: string;
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   STRIPE_PUBLISHABLE_KEY: string;
@@ -77,6 +84,20 @@ const parseStringList = (value: string | undefined, fallback: string[]): string[
 
   return items.length > 0 ? items : fallback;
 };
+
+const parseStripeBillingMode = (value: string | undefined): Env["STRIPE_BILLING_MODE"] =>
+  value === "live" ? "live" : "test";
+
+const stripeBillingMode = parseStripeBillingMode(process.env.STRIPE_BILLING_MODE);
+const activeStripeSecretKey = stripeBillingMode === "live"
+  ? process.env.STRIPE_LIVE_SECRET_KEY
+  : process.env.STRIPE_TEST_SECRET_KEY;
+const activeStripeWebhookSecret = stripeBillingMode === "live"
+  ? process.env.STRIPE_LIVE_WEBHOOK_SECRET
+  : process.env.STRIPE_TEST_WEBHOOK_SECRET;
+const activeStripePublishableKey = stripeBillingMode === "live"
+  ? process.env.STRIPE_LIVE_PUBLISHABLE_KEY
+  : process.env.STRIPE_TEST_PUBLISHABLE_KEY;
 
 export const env: Env = {
   HTTP_HOST: process.env.HTTP_HOST ?? "0.0.0.0",
@@ -118,9 +139,16 @@ export const env: Env = {
   REDIS_CONNECT_TIMEOUT_MS: parsePort(process.env.REDIS_CONNECT_TIMEOUT_MS ?? "10000"),
   PUBLIC_API_BASE_URL: process.env.PUBLIC_API_BASE_URL ?? "http://localhost:3333",
   PUBLIC_WEB_APP_URL: process.env.PUBLIC_WEB_APP_URL ?? "http://localhost:3000",
-  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ?? "",
-  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ?? "",
-  STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY ?? "",
+  STRIPE_BILLING_MODE: stripeBillingMode,
+  STRIPE_TEST_SECRET_KEY: process.env.STRIPE_TEST_SECRET_KEY ?? "",
+  STRIPE_LIVE_SECRET_KEY: process.env.STRIPE_LIVE_SECRET_KEY ?? "",
+  STRIPE_TEST_WEBHOOK_SECRET: process.env.STRIPE_TEST_WEBHOOK_SECRET ?? "",
+  STRIPE_LIVE_WEBHOOK_SECRET: process.env.STRIPE_LIVE_WEBHOOK_SECRET ?? "",
+  STRIPE_TEST_PUBLISHABLE_KEY: process.env.STRIPE_TEST_PUBLISHABLE_KEY ?? "",
+  STRIPE_LIVE_PUBLISHABLE_KEY: process.env.STRIPE_LIVE_PUBLISHABLE_KEY ?? "",
+  STRIPE_SECRET_KEY: activeStripeSecretKey ?? process.env.STRIPE_SECRET_KEY ?? "",
+  STRIPE_WEBHOOK_SECRET: activeStripeWebhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET ?? "",
+  STRIPE_PUBLISHABLE_KEY: activeStripePublishableKey ?? process.env.STRIPE_PUBLISHABLE_KEY ?? "",
   STRIPE_CONNECT_RETURN_URL: process.env.STRIPE_CONNECT_RETURN_URL ?? `${process.env.PUBLIC_WEB_APP_URL ?? "http://localhost:3000"}/settings?payments=return`,
   STRIPE_CONNECT_REFRESH_URL: process.env.STRIPE_CONNECT_REFRESH_URL ?? `${process.env.PUBLIC_WEB_APP_URL ?? "http://localhost:3000"}/settings?payments=refresh`,
 };

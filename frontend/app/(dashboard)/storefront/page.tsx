@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { api } from "@/lib/api";
-import { useAppStore } from "@/store/app-store";
 
 type StorefrontForm = {
   tradeName: string;
@@ -75,8 +74,6 @@ type ReadinessItem = {
 
 export default function StorefrontPage() {
   const queryClient = useQueryClient();
-  const role = useAppStore((state) => state.currentUser?.role);
-  const isAdministrator = role === "administrator";
   const [form, setForm] = useState<StorefrontForm>(emptyForm);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
@@ -93,18 +90,6 @@ export default function StorefrontPage() {
   const servicesQuery = useQuery({
     queryKey: ["services-readiness"],
     queryFn: () => api.getServiceOfferings({ page: 1, limit: 100 })
-  });
-
-  const paymentSettingsQuery = useQuery({
-    queryKey: ["organization-payment-settings"],
-    queryFn: api.getOrganizationPaymentSettings,
-    enabled: isAdministrator
-  });
-
-  const paymentStatusQuery = useQuery({
-    queryKey: ["organization-stripe-status", paymentSettingsQuery.data?.stripeAccountId],
-    queryFn: api.getOrganizationStripeAccountStatus,
-    enabled: Boolean(isAdministrator && paymentSettingsQuery.data?.stripeAccountId)
   });
 
   const providerIds = useMemo(
@@ -160,13 +145,6 @@ export default function StorefrontPage() {
   const address = buildAddress(form);
   const activeProviders = providersQuery.data?.items.filter((provider) => provider.isActive) ?? [];
   const activePricedServices = servicesQuery.data?.items.filter((service) => service.isActive && (service.priceCents ?? 0) > 0) ?? [];
-  const hasPaymentAccountVerified = Boolean(
-    isAdministrator
-      && (paymentStatusQuery.data?.canReceivePayments
-      ?? (paymentSettingsQuery.data?.stripeAccountStatus === "verified"
-        && paymentSettingsQuery.data.stripeChargesEnabled
-        && paymentSettingsQuery.data.stripePayoutsEnabled))
-  );
   const schedulableProviderIds = new Set(
     (readinessQuery.data ?? [])
       .filter((item) => item.availability.some((availability) => availability.isActive))
@@ -176,7 +154,6 @@ export default function StorefrontPage() {
     activeProviders
       .filter((provider) =>
         activePricedServices.some((service) => service.providerId === provider.id)
-          && hasPaymentAccountVerified
           && schedulableProviderIds.has(provider.id)
       )
       .map((provider) => provider.id)
@@ -193,7 +170,6 @@ export default function StorefrontPage() {
   const canPublishStorefront = hasMinimumPublicProfile
     && activeProviders.length > 0
     && activePricedServices.length > 0
-    && hasPaymentAccountVerified
     && schedulableProviderIds.size > 0
     && readyProviderIds.size > 0;
   const checklist: ReadinessItem[] = [
@@ -221,18 +197,9 @@ export default function StorefrontPage() {
     {
       id: "services",
       label: "Serviço com preço",
-      description: "O serviço precisa estar ativo e ter preço para gerar pagamento.",
+      description: "O serviço precisa estar ativo e ter preço para aparecer no perfil público.",
       isComplete: activePricedServices.length > 0,
       href: "/providers"
-    },
-    {
-      id: "payments",
-      label: "Pagamentos online ativos",
-      description: isAdministrator
-        ? "Conclua a verificação de identidade da organização em Configurações."
-        : "Somente administradores podem validar a conta de pagamentos.",
-      isComplete: hasPaymentAccountVerified,
-      href: "/settings"
     },
     {
       id: "availability",
@@ -243,8 +210,8 @@ export default function StorefrontPage() {
     },
     {
       id: "ready",
-      label: "Conta pronta para venda",
-      description: "A conta precisa ter serviço com preço, agenda e pagamentos online ativos.",
+      label: "Perfil pronto para agendamento",
+      description: "O perfil precisa ter serviço com preço, profissional ativo e agenda disponível.",
       isComplete: readyProviderIds.size > 0,
       href: "/providers"
     }
@@ -314,7 +281,7 @@ export default function StorefrontPage() {
         </div>
         {!canPublishStorefront ? (
           <div className="rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100">
-            A vitrine fica bloqueada para clientes até perfil, profissionais, serviços, agenda e pagamentos online estarem configurados corretamente.
+            A vitrine fica bloqueada para clientes até perfil, profissionais, serviços e agenda estarem configurados corretamente.
           </div>
         ) : null}
 
@@ -324,7 +291,7 @@ export default function StorefrontPage() {
               <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Checklist de publicação</p>
               <h2 className="mt-2 text-xl font-semibold text-white">Pronto para aparecer para clientes</h2>
               <p className="mt-2 text-sm text-slate-300">
-                Só aparece em /clientes quando o negócio consegue receber pagamento e aceitar agendamentos.
+                Só aparece em /clientes quando o negócio consegue apresentar seus serviços e aceitar agendamentos.
               </p>
             </div>
             <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">

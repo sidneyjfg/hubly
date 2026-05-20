@@ -66,7 +66,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-slate-400">
             Ainda não tem conta?{" "}
             <Link className="text-sky-300 hover:text-sky-200" href="/signup">
-              Criar clínica
+              Criar negócio
             </Link>
           </p>
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">

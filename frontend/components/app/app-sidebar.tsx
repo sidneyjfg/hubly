@@ -8,15 +8,14 @@ import {
   BarChart3,
   Bot,
   CalendarDays,
+  CreditCard,
   Crown,
   Images,
   LayoutDashboard,
   PanelLeftClose,
   PanelLeftOpen,
-  Settings,
   UserRoundCog,
   UsersRound,
-  Wallet
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,7 +39,7 @@ const navigation: Array<{
   { href: "/bookings", label: "Agenda", icon: CalendarDays, roles: ["administrator", "reception", "provider"] },
   { href: "/automations", label: "Automações", icon: Bot, roles: ["administrator"] },
   { href: "/reports", label: "Relatórios", icon: BarChart3, roles: ["administrator", "reception"] },
-  { href: "/payments", label: "Pagamentos", icon: Wallet, roles: ["administrator"] }
+  { href: "/payments", label: "Assinatura", icon: CreditCard, roles: ["administrator"] }
 ];
 
 export function AppSidebar() {
@@ -49,26 +48,12 @@ export function AppSidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const ToggleIcon = isExpanded ? PanelLeftClose : PanelLeftOpen;
   const visibleNavigation = role ? navigation.filter((item) => item.roles.includes(role)) : navigation;
-  const isAdministrator = role === "administrator";
-
-  const paymentSettingsQuery = useQuery({
-    queryKey: ["organization-payment-settings"],
-    queryFn: api.getOrganizationPaymentSettings,
-    enabled: isAdministrator && isExpanded
+  const subscriptionQuery = useQuery({
+    queryKey: ["organization-subscription"],
+    queryFn: api.getOrganizationSubscription,
+    enabled: role === "administrator" && isExpanded
   });
-
-  const paymentStatusQuery = useQuery({
-    queryKey: ["organization-stripe-status", paymentSettingsQuery.data?.stripeAccountId],
-    queryFn: api.getOrganizationStripeAccountStatus,
-    enabled: Boolean(isAdministrator && isExpanded && paymentSettingsQuery.data?.stripeAccountId)
-  });
-
-  const accountPendingItems = getAccountPendingItems({
-    blockedReasons: paymentStatusQuery.data?.blockedReasons ?? [],
-    hasPaymentAccount: Boolean(paymentSettingsQuery.data?.stripeAccountId),
-    hasPaymentSettingsLoaded: paymentSettingsQuery.isSuccess,
-    hasPaymentStatusLoaded: paymentStatusQuery.isSuccess
-  });
+  const subscriptionPendingItems = getSubscriptionPendingItems(subscriptionQuery.data?.current);
 
   return (
     <aside
@@ -115,17 +100,17 @@ export function AppSidebar() {
           })}
         </nav>
 
-        {isExpanded && accountPendingItems.length > 0 ? (
+        {isExpanded && subscriptionPendingItems.length > 0 ? (
           <Link
             className="mt-5 block rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 transition hover:bg-amber-300/15"
-            href="/settings"
+            href="/payments"
           >
             <div className="flex items-center gap-2 text-sm font-medium text-amber-100">
-              <Settings className="h-4 w-4" />
-              Pendências da conta
+              <CreditCard className="h-4 w-4" />
+              Pendências da assinatura
             </div>
             <ul className="mt-3 space-y-2 text-sm text-amber-100/85">
-              {accountPendingItems.slice(0, 2).map((item) => (
+              {subscriptionPendingItems.slice(0, 2).map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -136,39 +121,10 @@ export function AppSidebar() {
   );
 }
 
-function getAccountPendingItems({
-  blockedReasons,
-  hasPaymentAccount,
-  hasPaymentSettingsLoaded,
-  hasPaymentStatusLoaded
-}: {
-  blockedReasons: string[];
-  hasPaymentAccount: boolean;
-  hasPaymentSettingsLoaded: boolean;
-  hasPaymentStatusLoaded: boolean;
-}): string[] {
-  if (!hasPaymentSettingsLoaded) {
-    return [];
-  }
-
-  if (!hasPaymentAccount) {
-    return ["Concluir verificação de identidade."];
-  }
-
-  if (!hasPaymentStatusLoaded) {
-    return [];
-  }
-
-  return blockedReasons.map(formatPendingReason);
-}
-
-function formatPendingReason(reason: string): string {
-  const labels: Record<string, string> = {
-    charges_not_enabled: "Recebimento por cartão ainda não liberado.",
-    kyc_details_missing: "Dados de identidade ou negócio incompletos.",
-    payouts_not_enabled: "Saques ainda não liberados.",
-    requirements_past_due: "Há informações obrigatórias vencidas."
-  };
-
-  return labels[reason] ?? reason;
+function getSubscriptionPendingItems(subscription?: { plan: { code: string }; status: string; stripePriceId: string | null } | null): string[] {
+  if (!subscription) return [];
+  return [
+    ...(subscription.plan.code !== "free" && !subscription.stripePriceId ? ["Plano indisponível para cobrança."] : []),
+    ...(["past_due", "unpaid"].includes(subscription.status) ? ["Regularizar status da assinatura."] : [])
+  ];
 }

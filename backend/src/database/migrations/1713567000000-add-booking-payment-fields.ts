@@ -8,7 +8,7 @@ export class AddMarketplacePayments1713567000000 implements MigrationInterface {
     await queryRunner.query(`ALTER TABLE bookings ADD originalAmountCents int NOT NULL DEFAULT 0`);
     await queryRunner.query(`ALTER TABLE bookings ADD discountedAmountCents int NOT NULL DEFAULT 0`);
     await queryRunner.query(`ALTER TABLE bookings ADD onlineDiscountCents int NOT NULL DEFAULT 0`);
-    await queryRunner.query(`ALTER TABLE bookings ADD platformCommissionRateBps int NOT NULL DEFAULT 1000`);
+    await queryRunner.query(`ALTER TABLE bookings ADD platformCommissionRateBps int NOT NULL DEFAULT 0`);
     await queryRunner.query(`ALTER TABLE bookings ADD platformCommissionCents int NOT NULL DEFAULT 0`);
     await queryRunner.query(`ALTER TABLE bookings ADD providerNetAmountCents int NOT NULL DEFAULT 0`);
     await queryRunner.query(`ALTER TABLE bookings ADD paymentStatus varchar(32) NOT NULL DEFAULT 'pending_local'`);
@@ -18,7 +18,7 @@ export class AddMarketplacePayments1713567000000 implements MigrationInterface {
       CREATE TABLE provider_payment_settings (
         providerId varchar(36) NOT NULL,
         organizationId varchar(36) NOT NULL,
-        commissionRateBps int NOT NULL DEFAULT 1000,
+        commissionRateBps int NOT NULL DEFAULT 0,
         onlineDiscountBps int NOT NULL DEFAULT 500,
         absorbsProcessingFee boolean NOT NULL DEFAULT true,
         mercadoPagoConnected boolean NOT NULL DEFAULT false,

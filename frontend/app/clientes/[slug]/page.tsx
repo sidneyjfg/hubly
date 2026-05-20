@@ -190,7 +190,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
               <h2 className="text-lg font-semibold text-white">Segurança do cliente</h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              A senha é enviada apenas no cadastro final e armazenada no backend como hash. Ela não aparece para a clínica nem retorna nas APIs públicas.
+              A senha é enviada apenas no cadastro final e armazenada no backend como hash. Ela não aparece para o negócio nem retorna nas APIs públicas.
             </p>
           </Card>
         </div>
@@ -201,7 +201,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
               <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-300" />
               <h2 className="mt-5 text-2xl font-semibold text-white">Agendamento criado</h2>
               <p className="mt-3 text-slate-300">
-                Seu horário foi registrado. A clínica poderá confirmar e enviar lembretes pelos canais disponíveis.
+                Seu horário foi registrado. O negócio poderá confirmar e enviar lembretes pelos canais disponíveis.
               </p>
               <Link className="mt-6 inline-flex text-sm font-medium text-sky-300 hover:text-sky-200" href="/clientes">
                 Ver outros estabelecimentos
@@ -313,7 +313,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
                     type="button"
                   >
                     <p className="text-sm font-semibold text-white">Pagar no local</p>
-                    <p className="mt-1 text-xs text-slate-400">A clínica confirma o pagamento presencialmente.</p>
+                    <p className="mt-1 text-xs text-slate-400">O negócio confirma o pagamento presencialmente.</p>
                   </button>
                   <button
                     className={`rounded-lg border p-4 text-left transition ${

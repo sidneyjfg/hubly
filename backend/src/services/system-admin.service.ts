@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { DataSource } from "typeorm";
 import { z } from "zod";
 
-import { AuditEventEntity, BookingEntity, CustomerEntity, OrganizationEntity, UserEntity } from "../database/entities";
+import { AuditEventEntity, BillingPlanEntity, BookingEntity, CustomerEntity, OrganizationEntity, UserEntity } from "../database/entities";
 import { AuditRepository } from "../repositories/audit.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
 import type { SystemAdminSession } from "../types/system-admin";
@@ -15,6 +15,18 @@ import { createSystemAdminAccessToken } from "../utils/system-admin-tokens";
 const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(120),
+});
+
+const billingPlanSchema = z.object({
+  name: z.string().trim().min(2).max(80).optional(),
+  description: z.string().trim().max(255).nullable().optional(),
+  amountCents: z.number().int().min(100).max(1_000_000).optional(),
+  currency: z.string().trim().length(3).optional(),
+  interval: z.enum(["month", "year"]).optional(),
+  stripeProductId: z.string().trim().max(120).nullable().optional(),
+  stripePriceId: z.string().trim().max(120).nullable().optional(),
+  isActive: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
 });
 
 export class SystemAdminService {
@@ -88,39 +100,153 @@ export class SystemAdminService {
     };
   }
 
-  public async getMarketplaceAudit() {
+  public async getSubscriptionReadiness() {
     const bookingsRepo = this.dataSource.getRepository(BookingEntity);
-    
-    // Total de receita e comissões por tipo de pagamento
+
+    // Operational adoption signals for the SaaS subscription model.
     const stats = await bookingsRepo
       .createQueryBuilder("booking")
       .select("booking.organizationId", "organizationId")
       .addSelect("org.tradeName", "organizationName")
       .addSelect("SUM(CASE WHEN booking.paymentType = 'online' AND booking.paymentStatus = 'approved' THEN booking.discountedAmountCents ELSE 0 END)", "onlineRevenueCents")
-      .addSelect("SUM(CASE WHEN booking.paymentType = 'online' AND booking.paymentStatus = 'approved' THEN booking.platformCommissionCents ELSE 0 END)", "onlineCommissionCents")
-      .addSelect("SUM(CASE WHEN booking.paymentType = 'presential' AND booking.status = 'attended' THEN booking.discountedAmountCents ELSE 0 END)", "presentialRevenueCents")
-      .addSelect("SUM(CASE WHEN booking.paymentType = 'presential' AND booking.status = 'attended' THEN booking.platformCommissionCents ELSE 0 END)", "presentialCommissionCents")
+      .addSelect("SUM(CASE WHEN booking.paymentType = 'presential' AND booking.status = 'attended' THEN booking.discountedAmountCents ELSE 0 END)", "localRevenueCents")
       .addSelect("COUNT(CASE WHEN booking.paymentType = 'online' THEN 1 END)", "onlineCount")
-      .addSelect("COUNT(CASE WHEN booking.paymentType = 'presential' THEN 1 END)", "presentialCount")
+      .addSelect("COUNT(CASE WHEN booking.paymentType = 'presential' THEN 1 END)", "localCount")
       .addSelect("COUNT(CASE WHEN booking.status = 'scheduled' AND booking.startsAt < CURRENT_TIMESTAMP THEN 1 END)", "pendingStatusCount")
       .innerJoin("booking.organization", "org")
       .groupBy("booking.organizationId")
       .addGroupBy("org.tradeName")
       .getRawMany();
 
-    return stats.map(row => ({
-      organizationId: row.organizationId,
-      organizationName: row.organizationName,
-      onlineRevenueCents: Number(row.onlineRevenueCents),
-      onlineCommissionCents: Number(row.onlineCommissionCents),
-      presentialRevenueCents: Number(row.presentialRevenueCents),
-      presentialCommissionCents: Number(row.presentialCommissionCents),
-      onlineCount: Number(row.onlineCount),
-      presentialCount: Number(row.presentialCount),
-      pendingStatusCount: Number(row.pendingStatusCount),
-      presentialRatio: row.onlineCount + row.presentialCount > 0 
-        ? (Number(row.presentialCount) / (Number(row.onlineCount) + Number(row.presentialCount))) 
-        : 0,
-    }));
+    return stats.map((row) => {
+      const onlineCount = Number(row.onlineCount);
+      const localCount = Number(row.localCount);
+
+      return {
+        organizationId: row.organizationId,
+        organizationName: row.organizationName,
+        onlineRevenueCents: Number(row.onlineRevenueCents),
+        localRevenueCents: Number(row.localRevenueCents),
+        onlineCount,
+        localCount,
+        pendingStatusCount: Number(row.pendingStatusCount),
+        localPaymentRatio: onlineCount + localCount > 0 ? localCount / (onlineCount + localCount) : 0,
+      };
+    });
+  }
+
+  public async listBillingPlans(): Promise<{
+    stripeBillingMode: "test" | "live";
+    items: Array<{
+      id: string;
+      code: string;
+      name: string;
+      description: string | null;
+      amountCents: number;
+      currency: string;
+      interval: string;
+      stripeMode: string;
+      stripeProductId: string | null;
+      stripePriceId: string | null;
+      isActive: boolean;
+      isDefault: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+  }> {
+    await this.ensureDefaultBillingPlans();
+    const plans = await this.dataSource.getRepository(BillingPlanEntity).find({
+      order: {
+        stripeMode: "ASC",
+        amountCents: "ASC",
+      },
+    });
+
+    return {
+      stripeBillingMode: env.STRIPE_BILLING_MODE,
+      items: plans.map((plan) => ({
+        id: plan.id,
+        code: plan.code,
+        name: plan.name,
+        description: plan.description,
+        amountCents: plan.amountCents,
+        currency: plan.currency,
+        interval: plan.interval,
+        stripeMode: plan.stripeMode,
+        stripeProductId: plan.stripeProductId,
+        stripePriceId: plan.stripePriceId,
+        isActive: plan.isActive,
+        isDefault: plan.isDefault,
+        createdAt: plan.createdAt.toISOString(),
+        updatedAt: plan.updatedAt.toISOString(),
+      })),
+    };
+  }
+
+  public async updateBillingPlan(id: string, input: unknown): Promise<BillingPlanEntity> {
+    const data = billingPlanSchema.parse(input);
+    const repository = this.dataSource.getRepository(BillingPlanEntity);
+    const plan = await repository.findOne({ where: { id } });
+    if (!plan) {
+      throw new AppError("billing_plans.not_found", "Plano de assinatura não encontrado.", 404);
+    }
+
+    plan.name = data.name ?? plan.name;
+    plan.description = data.description === undefined ? plan.description : data.description;
+    plan.amountCents = data.amountCents ?? plan.amountCents;
+    plan.currency = data.currency?.toLowerCase() ?? plan.currency;
+    plan.interval = data.interval ?? plan.interval;
+    plan.stripeProductId = data.stripeProductId === undefined ? plan.stripeProductId : data.stripeProductId;
+    plan.stripePriceId = data.stripePriceId === undefined ? plan.stripePriceId : data.stripePriceId;
+    plan.isActive = data.isActive ?? plan.isActive;
+    plan.isDefault = data.isDefault ?? plan.isDefault;
+
+    if (plan.isDefault) {
+      await repository.update({ stripeMode: plan.stripeMode, isDefault: true }, { isDefault: false });
+    }
+
+    return repository.save(plan);
+  }
+
+  private async ensureDefaultBillingPlans(): Promise<void> {
+    const repository = this.dataSource.getRepository(BillingPlanEntity);
+    const defaultPlans = [
+      this.createBillingPlan("plan_free_test", "free", "Gratuito", 0, "test", true),
+      this.createBillingPlan("plan_pro_test", "pro", "Pro", 6990, "test", false),
+      this.createBillingPlan("plan_premium_test", "premium", "Premium", 12990, "test", false),
+      this.createBillingPlan("plan_free_live", "free", "Gratuito", 0, "live", true),
+      this.createBillingPlan("plan_pro_live", "pro", "Pro", 6990, "live", false),
+      this.createBillingPlan("plan_premium_live", "premium", "Premium", 12990, "live", false),
+    ];
+    const existingIds = new Set((await repository.find({ select: { id: true } })).map((plan) => plan.id));
+    const missingPlans = defaultPlans.filter((plan) => !existingIds.has(plan.id));
+
+    if (missingPlans.length > 0) {
+      await repository.save(missingPlans);
+    }
+  }
+
+  private createBillingPlan(
+    id: string,
+    code: "free" | "pro" | "premium",
+    name: string,
+    amountCents: number,
+    stripeMode: "test" | "live",
+    isDefault: boolean,
+  ): BillingPlanEntity {
+    const plan = new BillingPlanEntity();
+    plan.id = id;
+    plan.code = code;
+    plan.name = name;
+    plan.description = `Plano ${name} Hubly`;
+    plan.amountCents = amountCents;
+    plan.currency = "brl";
+    plan.interval = "month";
+    plan.stripeMode = stripeMode;
+    plan.stripeProductId = null;
+    plan.stripePriceId = null;
+    plan.isActive = true;
+    plan.isDefault = isDefault;
+    return plan;
   }
 }

@@ -11,7 +11,7 @@ export class OrganizationPaymentSettingsEntity {
   @JoinColumn({ name: "organizationId" })
   public organization!: OrganizationEntity;
 
-  @Column({ type: "int", default: 1000 })
+  @Column({ type: "int", default: 0 })
   public commissionRateBps!: number;
 
   @Column({ type: "int", default: 500 })

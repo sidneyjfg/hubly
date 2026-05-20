@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { Account } from "stripe/cjs/resources/Accounts";
 import type { Balance } from "stripe/cjs/resources/Balance";
+import type { Session } from "stripe/cjs/resources/Checkout/Sessions";
 import type { Event } from "stripe/cjs/resources/Events";
+import type { Invoice } from "stripe/cjs/resources/Invoices";
 import type { PaymentIntent } from "stripe/cjs/resources/PaymentIntents";
 import type { Payout } from "stripe/cjs/resources/Payouts";
+import type { Subscription } from "stripe/cjs/resources/Subscriptions";
 import type { DataSource, EntityManager } from "typeorm";
 import { z } from "zod";
 
@@ -36,8 +39,9 @@ import { env } from "../utils/env";
 import { NotificationsService } from "./notifications.service";
 import { PaymentCalculatorService } from "./payment-calculator.service";
 import { StripeService } from "./stripe.service";
+import { BillingService } from "./billing.service";
 
-const STRIPE_PLATFORM_FEE_BPS = 1000;
+const PLATFORM_COMMISSION_BPS = 0;
 const MIN_PAYOUT_CENTS = 500;
 const MAX_PAYOUT_CENTS = 5_000_000;
 
@@ -108,6 +112,7 @@ export class PaymentsService {
     private readonly webhookEventsRepository: StripeWebhookEventsRepository,
     private readonly ledgerRepository: FinancialLedgerRepository,
     private readonly providerPayoutsRepository: ProviderPayoutsRepository,
+    private readonly billingService = new BillingService(dataSource),
   ) {}
 
   public async getOrganizationSettings(user: AuthenticatedRequestUser) {
@@ -464,7 +469,7 @@ export class PaymentsService {
     const amountCents = await this.resolveOfferingPrice(organizationId, providerId, offeringId, manager);
     const settings = await this.organizationPaymentSettingsRepository.getOrCreateDefault(organizationId, manager);
     return this.paymentCalculatorService.calculate(paymentType, amountCents, {
-      commissionRateBps: STRIPE_PLATFORM_FEE_BPS,
+      commissionRateBps: PLATFORM_COMMISSION_BPS,
       onlineDiscountBps: settings.onlineDiscountBps,
     });
   }
@@ -491,7 +496,7 @@ export class PaymentsService {
         originalAmountCents: input.booking.originalAmountCents,
         discountedAmountCents: input.booking.discountedAmountCents,
         onlineDiscountCents: input.booking.onlineDiscountCents,
-        platformCommissionRateBps: STRIPE_PLATFORM_FEE_BPS,
+        platformCommissionRateBps: PLATFORM_COMMISSION_BPS,
         platformCommissionCents: input.booking.platformCommissionCents,
         providerNetAmountCents: input.booking.providerNetAmountCents,
         paymentStatus: "pending",
@@ -516,9 +521,8 @@ export class PaymentsService {
       },
     }, input.manager);
 
-    const paymentIntent = await this.stripeService.createMarketplacePaymentIntent({
+    const paymentIntent = await this.stripeService.createConnectedAccountPaymentIntent({
       amountCents: input.booking.discountedAmountCents,
-      applicationFeeAmountCents: input.booking.platformCommissionCents,
       stripeAccountId,
       bookingId: input.booking.id,
       organizationId: input.booking.organizationId,
@@ -565,6 +569,17 @@ export class PaymentsService {
 
     if (event.type === "payment_intent.succeeded") await this.handlePaymentIntentSucceeded(event, event.data.object as PaymentIntent);
     if (event.type === "payment_intent.payment_failed") await this.handlePaymentIntentFailed(event, event.data.object as PaymentIntent);
+    if (event.type === "checkout.session.completed") await this.billingService.handleSubscriptionCheckoutCompleted(event.data.object as Session);
+    if (event.type === "checkout.session.expired") await this.billingService.handleSubscriptionCheckoutExpired(event.data.object as Session);
+    if (event.type === "customer.subscription.created") await this.billingService.handleSubscriptionChanged(event.data.object as Subscription);
+    if (event.type === "customer.subscription.updated") await this.billingService.handleSubscriptionChanged(event.data.object as Subscription);
+    if (event.type === "customer.subscription.paused") await this.billingService.handleSubscriptionChanged(event.data.object as Subscription);
+    if (event.type === "customer.subscription.resumed") await this.billingService.handleSubscriptionChanged(event.data.object as Subscription);
+    if (event.type === "customer.subscription.deleted") await this.billingService.handleSubscriptionDeleted(event.data.object as Subscription);
+    if (event.type === "invoice.paid") await this.billingService.handleSubscriptionInvoicePaid(event.data.object as Invoice);
+    if (event.type === "invoice.payment_failed") await this.billingService.handleSubscriptionInvoicePaymentFailed(event.data.object as Invoice);
+    if (event.type === "invoice.payment_action_required") await this.billingService.handleSubscriptionInvoicePaymentFailed(event.data.object as Invoice);
+    if (event.type === "invoice.finalization_failed") await this.billingService.handleSubscriptionInvoicePaymentFailed(event.data.object as Invoice);
     if (event.type === "account.updated") await this.handleAccountUpdated(event, event.data.object as Account);
     if (event.type === "payout.paid") await this.handlePayoutPaid(event);
     if (event.type === "payout.failed") await this.handlePayoutFailed(event);
@@ -609,7 +624,7 @@ export class PaymentsService {
         organizationId: transaction.organizationId,
         providerId: transaction.providerId,
         bookingId: transaction.bookingId,
-        stripeAccountId: String(paymentIntent.transfer_data?.destination ?? ""),
+        stripeAccountId: event.account ?? "",
         stripeObjectId: paymentIntent.id,
         stripeEventId: event.id,
         type: ledgerType,
@@ -712,14 +727,12 @@ export class PaymentsService {
     providerId: string;
     bookingId: string;
     discountedAmountCents: number;
-    platformCommissionCents: number;
   }): void {
     if (
       paymentIntent.metadata?.bookingId !== transaction.bookingId
       || paymentIntent.metadata?.providerId !== transaction.providerId
       || paymentIntent.metadata?.organizationId !== transaction.organizationId
       || paymentIntent.amount !== transaction.discountedAmountCents
-      || paymentIntent.application_fee_amount !== transaction.platformCommissionCents
     ) {
       throw new AppError("payments.invalid_webhook_metadata", "Os dados da confirmação de pagamento não correspondem à transação registrada.", 409);
     }

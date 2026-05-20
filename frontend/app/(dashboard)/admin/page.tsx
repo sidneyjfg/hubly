@@ -152,7 +152,7 @@ function AdminPageContent() {
                 </span>
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.2em] text-sky-300">Painel administrativo</p>
-                  <h1 className="mt-2 text-3xl font-semibold text-white">Admin da clínica</h1>
+                  <h1 className="mt-2 text-3xl font-semibold text-white">Admin do negócio</h1>
                 </div>
               </div>
               <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
@@ -267,7 +267,7 @@ function AdminPageContent() {
               Notificações e automações
             </ButtonLink>
             <ButtonLink className="w-full justify-start" href="/settings" variant="secondary">
-              Dados da clínica
+              Dados do negócio
             </ButtonLink>
           </div>
         </Card>

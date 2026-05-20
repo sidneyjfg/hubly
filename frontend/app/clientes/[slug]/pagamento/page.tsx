@@ -118,7 +118,7 @@ function PaymentReturnStatus({ clientSecret, stripe }: { clientSecret: string; s
     failed: {
       icon: XCircle,
       title: "Pagamento não concluído",
-      description: "O pagamento não foi aprovado. O agendamento continua pendente até uma nova tentativa ou contato com a clínica.",
+      description: "O pagamento não foi aprovado. O agendamento continua pendente até uma nova tentativa ou contato com o negócio.",
       tone: "text-rose-300"
     },
     processing: {
@@ -209,7 +209,7 @@ export default function StripePaymentPage({ params, searchParams }: PageProps) {
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink href={`/clientes/${slug}`} variant="secondary">
-              Voltar para a página da clínica
+              Voltar para a página do negócio
             </ButtonLink>
             <Link className="inline-flex items-center justify-center text-sm font-medium text-sky-300 hover:text-sky-200" href="/clientes">
               Ver outros estabelecimentos

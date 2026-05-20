@@ -5,6 +5,7 @@ import { authMiddleware } from "../middlewares/auth";
 import { registerErrorHandler } from "../middlewares/error-handler";
 import { tenantMiddleware } from "../middlewares/tenant";
 import { bookingsRoutes } from "./bookings.routes";
+import { billingRoutes } from "./billing.routes";
 import { auditRoutes } from "./audit.routes";
 import { authRoutes } from "./auth.routes";
 import { organizationsRoutes } from "./organizations.routes";
@@ -29,6 +30,7 @@ const routeRegistry = [
   providerServicesRoutes,
   customersRoutes,
   bookingsRoutes,
+  billingRoutes,
   paymentsRoutes,
   notificationsRoutes,
   integrationsRoutes,

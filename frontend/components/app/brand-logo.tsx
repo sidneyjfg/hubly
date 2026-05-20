@@ -49,7 +49,7 @@ export function BrandLogo({ compact = false, showSlogan = false, size = "md", cl
     return (
       <div className={cn("flex items-center", className)}>
         <Image
-          alt="Hubly - Marketplace de serviços"
+          alt="Hubly - Plataforma para negócios locais"
           className="h-auto w-auto max-w-full object-contain"
           height={210}
           priority

@@ -57,10 +57,26 @@ export const systemAdminRoutes = async (
   );
 
   app.get(
-    "/system-admin/marketplace-audit",
+    "/system-admin/subscription-readiness",
     {
       preHandler: systemAdminAuthMiddleware,
     },
-    controller.getMarketplaceAudit,
+    controller.getSubscriptionReadiness,
+  );
+
+  app.get(
+    "/system-admin/billing/plans",
+    {
+      preHandler: systemAdminAuthMiddleware,
+    },
+    controller.listBillingPlans,
+  );
+
+  app.patch(
+    "/system-admin/billing/plans/:id",
+    {
+      preHandler: systemAdminAuthMiddleware,
+    },
+    controller.updateBillingPlan,
   );
 };

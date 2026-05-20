@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hubly Motion - Reels/TikTok</title>
+  <style>
+    :root {
+      --purple: #6F3FF5;
+      --blue: #3A8CFF;
+      --dark: #0B0F23;
+      --dark2: #111827;
+      --light: #F1EEFF;
+      --gray: #A1A1AA;
+      --green: #14B8A6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #050713;
+      font-family: Inter, Poppins, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      width: min(92vw, 150vh);
+      aspect-ratio: 16 / 9;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(111,63,245,.28), transparent 32%),
+        radial-gradient(circle at 80% 70%, rgba(58,140,255,.16), transparent 30%),
+        linear-gradient(180deg, #080B1C 0%, var(--dark) 100%);
+      overflow: hidden;
+      color: var(--light);
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      padding: 72px 44px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .scene.active { opacity: 1; }
+
+    .brand-mini {
+      position: absolute;
+      top: 28px;
+      left: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 20;
+      opacity: .95;
+    }
+
+    .brand-mini span {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .hubly-mark {
+      position: relative;
+      width: 38px;
+      height: 38px;
+    }
+
+    .hbar {
+      position: absolute;
+      top: 3px;
+      width: 12px;
+      height: 32px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--purple), var(--blue));
+    }
+
+    .hbar.left { left: 4px; }
+    .hbar.right { right: 4px; }
+
+    .eye {
+      position: absolute;
+      left: 6px;
+      top: 12px;
+      width: 26px;
+      height: 14px;
+      background: white;
+      border-radius: 70% 70% 70% 70% / 80% 80% 80% 80%;
+      display: grid;
+      place-items: center;
+      transform-origin: center;
+    }
+
+    .pupil {
+      width: 7px;
+      height: 7px;
+      background: var(--purple);
+      border-radius: 50%;
+    }
+
+    .headline {
+      position: absolute;
+      left: 44px;
+      right: 44px;
+      bottom: 92px;
+      font-size: 39px;
+      line-height: 1.05;
+      font-weight: 850;
+      letter-spacing: -.055em;
+    }
+
+    .subline {
+      margin-top: 16px;
+      color: var(--gray);
+      font-size: 18px;
+      line-height: 1.45;
+      font-weight: 500;
+      letter-spacing: -.02em;
+    }
+
+    .accent { color: var(--purple); }
+
+    /* Scene 1 */
+    .search-box {
+      position: absolute;
+      top: 190px;
+      left: 36px;
+      right: 36px;
+      height: 68px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.96);
+      color: #151827;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 22px;
+      font-size: 21px;
+      font-weight: 600;
+      box-shadow: 0 20px 80px rgba(0,0,0,.28);
+      transform: translateY(25px);
+      opacity: 0;
+      animation: popUp .7s .2s forwards cubic-bezier(.2,.8,.2,1);
+    }
+
+    .typed::after {
+      content: "";
+      display: inline-block;
+      width: 2px;
+      height: 22px;
+      margin-left: 4px;
+      background: #111827;
+      vertical-align: -4px;
+      animation: blink .8s infinite;
+    }
+
+    .floating-icon {
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(17,24,39,.82);
+      border: 1px solid rgba(255,255,255,.08);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 26px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.28);
+      opacity: 0;
+      animation: floatIn 1s forwards, float 4s infinite ease-in-out;
+    }
+
+    .icon-1 { left: 65px; top: 330px; animation-delay: 1s, 2s; }
+    .icon-2 { right: 62px; top: 365px; animation-delay: 1.15s, 2s; }
+    .icon-3 { left: 95px; top: 510px; animation-delay: 1.3s, 2s; }
+    .icon-4 { right: 105px; top: 540px; animation-delay: 1.45s, 2s; }
+    .icon-5 { left: 230px; top: 430px; animation-delay: 1.6s, 2s; }
+
+    .grid-lines {
+      position: absolute;
+      inset: 280px -80px 250px -80px;
+      background-image:
+        linear-gradient(rgba(111,63,245,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(111,63,245,.08) 1px, transparent 1px);
+      background-size: 46px 46px;
+      transform: perspective(400px) rotateX(58deg);
+      opacity: .35;
+    }
+
+    /* Scene 2 */
+    .results-wrap {
+      position: absolute;
+      top: 150px;
+      left: 38px;
+      right: 38px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .results-wrap.chaotic .result-card:nth-child(1) {
+      transform: rotate(-7deg) translateX(-120px) translateY(-20px) scale(.92);
+    }
+
+    .results-wrap.chaotic .result-card:nth-child(2) {
+      transform: rotate(6deg) translateX(80px) translateY(30px) scale(.94);
+    }
+
+    .results-wrap.chaotic .result-card:nth-child(3) {
+      transform: rotate(-4deg) translateX(-60px) translateY(40px) scale(.93);
+    }
+
+    .results-wrap.chaotic .result-card:nth-child(4) {
+      transform: rotate(8deg) translateX(110px) translateY(-15px) scale(.9);
+    }
+
+    .results-wrap.chaotic .result-card {
+      position: relative;
+    }
+
+    .results-wrap {
+      position: absolute;
+      top: 150px;
+      left: 38px;
+      right: 38px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .result-card {
+      display: grid;
+      grid-template-columns: 62px 1fr;
+      gap: 14px;
+      align-items: center;
+      min-height: 96px;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(17,24,39,.82);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 18px 70px rgba(0,0,0,.24);
+      transform: translateX(-60px) scale(.96);
+      opacity: 0;
+      animation: slideCard .7s forwards cubic-bezier(.2,.8,.2,1);
+    }
+
+    .result-card:nth-child(2) { animation-delay: .18s; transform: translateX(60px) scale(.96); }
+    .result-card:nth-child(3) { animation-delay: .35s; }
+    .result-card:nth-child(4) { animation-delay: .52s; transform: translateX(70px) scale(.96); }
+
+    .thumb {
+      width: 62px;
+      height: 62px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(111,63,245,.95), rgba(58,140,255,.9));
+    }
+
+    .card-title { font-size: 18px; font-weight: 800; }
+    .rating { font-size: 14px; color: #FFD54A; margin-top: 4px; }
+    .meta { font-size: 13px; color: var(--gray); margin-top: 4px; }
+
+    .chaos-mark {
+      position: absolute;
+      font-size: 42px;
+      color: rgba(241,238,255,.8);
+      opacity: 0;
+      animation: popChaos .8s forwards;
+    }
+    .q1 { top: 260px; left: 42px; animation-delay: .4s; }
+    .q2 { top: 330px; right: 38px; animation-delay: .7s; }
+    .x1 { top: 470px; left: 58px; animation-delay: .9s; }
+
+    /* Scene 3 */
+    .organize-center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .big-logo {
+      width: 210px;
+      height: 210px;
+      position: relative;
+      filter: drop-shadow(0 0 38px rgba(111,63,245,.45));
+      transform: scale(.75);
+      opacity: 0;
+      animation: logoReveal .9s .2s forwards cubic-bezier(.2,.8,.2,1);
+    }
+
+    .big-logo .hbar { width: 44px; height: 180px; top: 15px; }
+    .big-logo .hbar.left { left: 30px; }
+    .big-logo .hbar.right { right: 30px; }
+    .big-logo .eye { width: 150px; height: 78px; left: 30px; top: 66px; }
+    .big-logo .pupil { width: 36px; height: 36px; }
+
+    .orbit-icon {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 22px;
+      background: rgba(17,24,39,.9);
+      border: 1px solid rgba(255,255,255,.08);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      box-shadow: 0 0 30px rgba(111,63,245,.18);
+      opacity: 0;
+      animation: orbitIn .8s .8s forwards;
+    }
+    .o1 { left: 80px; top: 230px; }
+    .o2 { right: 80px; top: 230px; }
+    .o3 { left: 80px; bottom: 250px; }
+    .o4 { right: 80px; bottom: 250px; }
+
+    .connector {
+      position: absolute;
+      width: 290px;
+      height: 290px;
+      border: 1px dashed rgba(111,63,245,.45);
+      border-radius: 50%;
+      opacity: 0;
+      animation: fadeIn .9s .9s forwards;
+    }
+
+    /* Scene 4 */
+    .desktop-ui {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 125px;
+      height: 540px;
+      border-radius: 28px;
+      background: rgba(10,14,32,.92);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: 0 28px 100px rgba(0,0,0,.35);
+      overflow: hidden;
+      transform: translateY(45px) scale(.94);
+      opacity: 0;
+      animation: uiIn .8s .2s forwards cubic-bezier(.2,.8,.2,1);
+    }
+
+    .sidebar {
+      transform: translateY(60px);
+      opacity: 0;
+      animation: sidebarBuild .8s .3s forwards cubic-bezier(.2,.8,.2,1);
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 88px;
+      background: rgba(255,255,255,.035);
+      border-right: 1px solid rgba(255,255,255,.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 28px;
+      gap: 22px;
+    }
+
+    .side-dot {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(111,63,245,.18);
+      display: grid;
+      place-items: center;
+      color: white;
+    }
+
+    .ui-content { margin-left: 88px; padding: 28px; }
+    .ui-title { font-size: 24px; font-weight: 850; margin-bottom: 18px; }
+    .ui-search {
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      margin-bottom: 20px;
+    }
+
+    .service-card {
+      overflow: hidden;
+      border-radius: 22px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 14px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 14px;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: popUp .55s .8s forwards;
+    }
+    .service-card:nth-of-type(2) { animation-delay: 1s; }
+
+    .photo {
+      height: 90px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #2B1F54, #1F3B72);
+      position: relative;
+      overflow: hidden;
+    }
+    .photo::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.22), transparent 60%);
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .time {
+      padding: 8px;
+      text-align: center;
+      border-radius: 10px;
+      background: rgba(255,255,255,.07);
+      font-size: 12px;
+      color: var(--gray);
+    }
+    .time.active { background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; }
+
+    /* Scene 5 */
+    .dashboard {
+      position: absolute;
+      left: 30px;
+      right: 30px;
+      top: 132px;
+      border-radius: 28px;
+      padding: 26px;
+      background: rgba(17,24,39,.82);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 28px 100px rgba(0,0,0,.28);
+      transform: scale(.94);
+      opacity: 0;
+      animation: uiIn .8s .2s forwards;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 22px 0;
+    }
+    .stat {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.055);
+    }
+    .stat small { color: var(--gray); font-size: 12px; }
+    .stat strong { display: block; font-size: 28px; margin-top: 8px; }
+    .stat em { color: var(--green); font-style: normal; font-size: 12px; }
+
+    .appointment {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+      margin-top: 10px;
+      opacity: 0;
+      animation: slideCard .55s forwards;
+    }
+    .appointment:nth-child(2) { animation-delay: .7s; }
+    .appointment:nth-child(3) { animation-delay: .9s; }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+    }
+
+    /* Scene 6 */
+    .final-logo-wrap {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+    .final-logo { position: relative; width: 210px; height: 210px; margin: 0 auto 24px; }
+    .final-logo .hbar { width: 44px; height: 180px; top: 15px; animation: hReact 5s infinite; }
+    .final-logo .hbar.left { left: 30px; animation-delay: 1.2s; }
+    .final-logo .hbar.right { right: 30px; animation-delay: 2.3s; }
+    .final-logo .eye { width: 150px; height: 78px; left: 30px; top: 66px; animation: eyeBlink 5s infinite; }
+    .final-logo .pupil { width: 36px; height: 36px; animation: lookAround 5s infinite; }
+    .wordmark { font-size: 58px; font-weight: 900; letter-spacing: -.06em; }
+    .tagline { font-size: 21px; color: var(--light); margin-top: 12px; }
+
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes popUp { to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes floatIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes float { 50% { transform: translateY(-14px); } }
+    @keyframes slideCard { to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes popChaos { to { opacity: 1; transform: scale(1.05) rotate(4deg); } }
+    @keyframes logoReveal { to { opacity: 1; transform: scale(1); } }
+    @keyframes orbitIn { to { opacity: 1; transform: scale(1); } }
+    @keyframes uiIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes sidebarBuild {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    @keyframes eyeBlink {
+      0%, 18%, 24%, 100% { transform: scaleY(1); }
+      21% { transform: scaleY(.08); }
+    }
+    @keyframes lookAround {
+      0%, 28%, 100% { transform: translateX(0); }
+      42% { transform: translateX(-24px); }
+      62% { transform: translateX(24px); }
+      78% { transform: translateX(0); }
+    }
+    @keyframes buildUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes hReact {
+      0%, 35%, 100% { transform: scale(1); filter: none; }
+      48% { transform: scale(1.06); filter: drop-shadow(0 0 16px rgba(111,63,245,.75)); }
+    }
+
+    .controls {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      display: flex;
+      gap: 8px;
+      z-index: 50;
+    }
+    .controls button {
+      background: rgba(255,255,255,.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage">
+    <div class="brand-mini">
+      <div class="hubly-mark">
+        <div class="hbar left"></div>
+        <div class="hbar right"></div>
+        <div class="eye"><div class="pupil"></div></div>
+      </div>
+      <span>Hubly</span>
+    </div>
+
+    <section class="scene active" data-duration="4200">
+      <div class="grid-lines"></div>
+      <div class="search-box"><span>🔎</span><span class="typed" id="typeText"></span></div>
+      <div class="floating-icon icon-1">⌖</div>
+      <div class="floating-icon icon-2">?</div>
+      <div class="floating-icon icon-3">★</div>
+      <div class="floating-icon icon-4">⌕</div>
+      <div class="floating-icon icon-5">✂</div>
+      <div class="headline">Encontrar o serviço certo <span class="accent">nem sempre é simples.</span></div>
+    </section>
+
+    <section class="scene" data-duration="4200">
+      <div class="results-wrap chaotic">
+        <div class="result-card">
+          <div class="thumb"></div><div><div class="card-title">Barbearia Prime</div><div class="rating">★★★★★ 4,8</div><div class="meta">Aberto • 8 min de você</div></div>
+        </div>
+        <div class="result-card">
+          <div class="thumb"></div><div><div class="card-title">Studio 13</div><div class="rating">★★★★☆ 4,6</div><div class="meta">Aberto • 5 min de você</div></div>
+        </div>
+        <div class="result-card">
+          <div class="thumb"></div><div><div class="card-title">Barbearia Top</div><div class="rating">★★★★★ 4,5</div><div class="meta">12 min de você</div></div>
+        </div>
+        <div class="result-card">
+          <div class="thumb"></div><div><div class="card-title">Salão Bella</div><div class="rating">★★★★☆ 4,7</div><div class="meta">Sem horários visíveis</div></div>
+        </div>
+      </div>
+      <div class="chaos-mark q1">?</div><div class="chaos-mark q2">?</div><div class="chaos-mark x1">×</div>
+      <div class="headline">Muitas opções. <span class="accent">Pouca confiança.</span></div>
+    </section>
+
+    <section class="scene" data-duration="4300">
+      <div class="organize-center">
+        <div class="connector"></div>
+        <div class="orbit-icon o1">⌖</div><div class="orbit-icon o2">★</div><div class="orbit-icon o3">◫</div><div class="orbit-icon o4">✉</div>
+        <div class="big-logo">
+          <div class="hbar left"></div><div class="hbar right"></div><div class="eye"><div class="pupil"></div></div>
+        </div>
+      </div>
+      <div class="headline">O Hubly <span class="accent">organiza tudo</span> em um só lugar.</div>
+    </section>
+
+    <section class="scene" data-duration="5600">
+      <video autoplay muted playsinline class="scene-video" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.22;mix-blend-mode:screen;" src="~/Downloads/Scene-1.mp4"></video>
+      <div class="desktop-ui">
+        <div class="sidebar"><div class="side-dot">◉</div><div class="side-dot">⌕</div><div class="side-dot">★</div><div class="side-dot">◫</div></div>
+        <div class="ui-content">
+          <div class="ui-title">Encontre os melhores serviços</div>
+          <div class="ui-search">🔎 Buscar barbearias, clínicas, salões...</div>
+          <div class="service-card" style="animation-delay:.9s;">
+            <div class="photo"></div>
+            <div><div class="card-title">Barbearia Prime</div><div class="rating">★★★★★ 4,8</div><div class="meta">Serviços e horários disponíveis</div><div class="time-grid"><div class="time">09:00</div><div class="time active">10:00</div><div class="time">11:00</div></div></div>
+          </div>
+          <div class="service-card" style="animation-delay:.9s;">
+            <div class="photo"></div>
+            <div><div class="card-title">Clínica Vida</div><div class="rating">★★★★★ 4,9</div><div class="meta">Perfil completo e avaliações</div><div class="time-grid"><div class="time">14:00</div><div class="time">15:00</div><div class="time active">16:00</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="headline">Perfil, avaliações e horários. <span class="accent">Tudo claro.</span></div>
+    </section>
+
+    <section class="scene" data-duration="5200">
+      <div class="dashboard">
+        <div class="ui-title">Olá, João! 👋</div>
+        <div class="subline">Resumo do seu negócio hoje.</div>
+        <div class="stats">
+          <div class="stat"><small>Agendamentos</small><strong>28</strong><em>+18%</em></div>
+          <div class="stat"><small>Novos clientes</small><strong>12</strong><em>+30%</em></div>
+        </div>
+        <div class="appointment" style="transform:translateY(40px);animation:buildUp .7s forwards;"><div class="avatar"></div><div><div class="card-title">Pedro Silva</div><div class="meta">09:00 • Corte masculino</div></div></div>
+        <div class="appointment" style="transform:translateY(40px);animation:buildUp .7s forwards;"><div class="avatar"></div><div><div class="card-title">Lucas Souza</div><div class="meta">10:00 • Barba</div></div></div>
+        <div class="appointment" style="transform:translateY(40px);animation:buildUp .7s forwards;"><div class="avatar"></div><div><div class="card-title">Rafael Lima</div><div class="meta">11:00 • Corte + Barba</div></div></div>
+      </div>
+      <div class="headline">Mais presença digital. <span class="accent">Mais organização.</span></div>
+    </section>
+
+    <section class="scene" data-duration="5200">
+      <div class="final-logo-wrap">
+        <div>
+          <div class="final-logo"><div class="hbar left"></div><div class="hbar right"></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="wordmark">Hubly</div>
+          <div class="tagline">Seu negócio mais fácil de <span class="accent">encontrar.</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="controls">
+    <button onclick="restartMotion()">Reiniciar</button>
+    <button onclick="nextScene()">Próxima cena</button>
+  </div>
+
+  <script>
+    const scenes = [...document.querySelectorAll('.scene')];
+    const typeText = document.getElementById('typeText');
+    let current = 0;
+    let timer;
+
+    function typeWriter(text, el, speed = 58) {
+      el.textContent = '';
+      let i = 0;
+      const interval = setInterval(() => {
+        el.textContent += text[i];
+        i++;
+        if (i >= text.length) clearInterval(interval);
+      }, speed);
+    }
+
+    function showScene(index) {
+      clearTimeout(timer);
+      scenes.forEach((scene, i) => {
+        scene.classList.toggle('active', i === index);
+      });
+      current = index;
+      if (index === 0) typeWriter('barbearias perto de mim', typeText);
+      const duration = Number(scenes[index].dataset.duration || 4000);
+      timer = setTimeout(() => {
+        showScene((index + 1) % scenes.length);
+      }, duration);
+    }
+
+    function nextScene() {
+      showScene((current + 1) % scenes.length);
+    }
+
+    function restartMotion() {
+      showScene(0);
+    }
+
+    showScene(0);
+  </script>
+</body>
+</html>

@@ -53,8 +53,8 @@ describe("Payments routes", () => {
   let dataSource: DataSource;
 
   beforeEach(async () => {
-    env.STRIPE_SECRET_KEY = "sk_test_marketplace";
-    env.STRIPE_WEBHOOK_SECRET = "whsec_marketplace";
+    env.STRIPE_SECRET_KEY = "sk_test_subscription";
+    env.STRIPE_WEBHOOK_SECRET = "whsec_subscription";
 
     stripeMocks.accountsCreate.mockResolvedValue(verifiedStripeAccount);
     stripeMocks.accountsRetrieve.mockResolvedValue(verifiedStripeAccount);
@@ -62,12 +62,12 @@ describe("Payments routes", () => {
       url: "https://connect.stripe.test/onboarding/acct_provider_001",
     });
     stripeMocks.paymentIntentsCreate.mockImplementation(async (payload, options) => ({
-      id: "pi_marketplace_booking_001",
-      client_secret: "pi_marketplace_booking_001_secret_test",
+      id: "pi_booking_001",
+      client_secret: "pi_booking_001_secret_test",
       amount: payload.amount,
       currency: payload.currency,
-      application_fee_amount: payload.application_fee_amount,
-      transfer_data: payload.transfer_data,
+      application_fee_amount: null,
+      transfer_data: null,
       metadata: payload.metadata,
       latest_charge: null,
       status: "requires_payment_method",
@@ -95,7 +95,7 @@ describe("Payments routes", () => {
     vi.clearAllMocks();
   });
 
-  it("lets admin configure online discount but enforces fixed platform commission", async () => {
+  it("lets admin configure online discount without platform commission", async () => {
     const headers = await signInAsAdmin(app);
 
     const updateResponse = await app.inject({
@@ -114,7 +114,7 @@ describe("Payments routes", () => {
       expect.objectContaining({
         providerId: "pro_001",
         organizationId: "cln_main_001",
-        commissionRateBps: 1000, // Enforced 10%
+        commissionRateBps: 0,
         onlineDiscountBps: 700,
         absorbsProcessingFee: true,
         stripeAccountId: null,
@@ -131,7 +131,7 @@ describe("Payments routes", () => {
     });
 
     expect(getResponse.statusCode).toBe(200);
-    expect(getResponse.json().commissionRateBps).toBe(1000);
+    expect(getResponse.json().commissionRateBps).toBe(0);
   });
 
   it("prevents providers from accessing another provider's financial data", async () => {
@@ -181,7 +181,7 @@ describe("Payments routes", () => {
     expect(response.statusCode).toBe(401);
   });
 
-  it("simulates Stripe setup, online booking payment, platform commission and provider net amount", async () => {
+  it("simulates Stripe setup and online booking payment without platform commission", async () => {
     const headers = await signInAsAdmin(app);
 
     const settingsResponse = await app.inject({
@@ -269,10 +269,10 @@ describe("Payments routes", () => {
         paymentStatus: "pending",
         originalAmountCents: 18000,
         discountedAmountCents: 18000,
-        platformCommissionRateBps: 1000,
-        platformCommissionCents: 1800,
-        providerNetAmountCents: 16200,
-        paymentClientSecret: "pi_marketplace_booking_001_secret_test",
+        platformCommissionRateBps: 0,
+        platformCommissionCents: 0,
+        providerNetAmountCents: 18000,
+        paymentClientSecret: "pi_booking_001_secret_test",
       }),
     );
 
@@ -282,10 +282,6 @@ describe("Payments routes", () => {
       expect.objectContaining({
         amount: 18000,
         currency: "brl",
-        application_fee_amount: 1800,
-        transfer_data: {
-          destination: "acct_provider_001",
-        },
         metadata: expect.objectContaining({
           bookingId: bookingResponse.json().id,
           organizationId: "cln_main_001",
@@ -295,6 +291,7 @@ describe("Payments routes", () => {
     );
     expect(createdPaymentIntentOptions).toEqual({
       idempotencyKey: `payment_intent:${bookingResponse.json().id}`,
+      stripeAccount: "acct_provider_001",
     });
 
     stripeMocks.webhooksConstructEvent.mockReturnValue({
@@ -302,22 +299,21 @@ describe("Payments routes", () => {
       type: "payment_intent.succeeded",
       data: {
         object: {
-          id: "pi_marketplace_booking_001",
+          id: "pi_booking_001",
           amount: 18000,
           currency: "brl",
-          application_fee_amount: 1800,
-          transfer_data: {
-            destination: "acct_provider_001",
-          },
+          application_fee_amount: null,
+          transfer_data: null,
           metadata: {
             bookingId: bookingResponse.json().id,
             organizationId: "cln_main_001",
             providerId: "pro_001",
           },
-          latest_charge: "ch_marketplace_booking_001",
+          latest_charge: "ch_booking_001",
           status: "succeeded",
         },
       },
+      account: "acct_provider_001",
     });
 
     const webhookResponse = await app.inject({
@@ -341,11 +337,11 @@ describe("Payments routes", () => {
     expect(booking.paymentStatus).toBe("approved");
 
     const paymentTransaction = await dataSource.getRepository(PaymentTransactionEntity).findOneByOrFail({
-      stripePaymentIntentId: "pi_marketplace_booking_001",
+      stripePaymentIntentId: "pi_booking_001",
     });
     expect(paymentTransaction.status).toBe("approved");
-    expect(paymentTransaction.platformCommissionCents).toBe(1800);
-    expect(paymentTransaction.providerNetAmountCents).toBe(16200);
+    expect(paymentTransaction.platformCommissionCents).toBe(0);
+    expect(paymentTransaction.providerNetAmountCents).toBe(18000);
 
     const ledger = await dataSource.getRepository(FinancialLedgerEntity).find({
       where: {
@@ -360,7 +356,7 @@ describe("Payments routes", () => {
       expect.objectContaining({
         providerId: "pro_001",
         stripeAccountId: "acct_provider_001",
-        stripeObjectId: "pi_marketplace_booking_001",
+        stripeObjectId: "pi_booking_001",
         stripeEventId: "evt_payment_succeeded_001",
         amountCents: 18000,
         currency: "brl",

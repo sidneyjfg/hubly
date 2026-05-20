@@ -50,7 +50,7 @@ export default function CustomersPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Pacientes</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Base ativa da clínica</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Base ativa do negócio</h1>
         </div>
         <Button onClick={() => {
           setEditingCustomer(null);

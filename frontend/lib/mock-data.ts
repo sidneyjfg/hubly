@@ -1,6 +1,6 @@
-import type { MarketplaceComparison, MonetizationHighlight, Testimonial } from "@/lib/types";
+import type { MonetizationHighlight, PricingComparison, Testimonial } from "@/lib/types";
 
-export const clientLogos = ["Vitta Prime", "Oriz", "Pulse Care", "Harmonie", "Clarear"];
+export const clientLogos = ["Vitta Prime", "Barbearia Oriz", "Studio Pulse", "Harmonie", "Clarear"];
 
 export const testimonials: Testimonial[] = [
   {
@@ -12,47 +12,47 @@ export const testimonials: Testimonial[] = [
   {
     name: "Eduardo Martins",
     role: "Gestor de operações",
-    organization: "Vitta Prime",
-    quote: "Conseguimos reagendar rápido, preencher lacunas e ter uma visão clara do que está impactando o faturamento."
+    organization: "Barbearia Oriz",
+    quote: "Publicamos serviços, fotos e horários em poucos minutos. O perfil virou nosso principal link de agendamento."
   },
   {
     name: "Carolina Nery",
     role: "Head de atendimento",
-    organization: "Pulse Care",
-    quote: "A equipe deixou de correr atrás manualmente de pacientes e passou a operar a agenda com muito mais controle."
+    organization: "Studio Pulse",
+    quote: "A equipe deixou de correr atrás manualmente de clientes e passou a operar a agenda com muito mais controle."
   }
 ];
 
 export const monetizationHighlights: MonetizationHighlight[] = [
   {
     title: "Comece sem risco",
-    description: "Periodo inicial gratuito para validar a plataforma antes de pagar qualquer coisa."
+    description: "Periodo inicial gratuito ou primeiro mes com desconto para validar a plataforma antes da assinatura."
   },
   {
-    title: "10% sobre clientes gerados",
-    description: "Depois do periodo gratuito, a taxa incide apenas quando o Hubly traz um novo cliente."
+    title: "R$69,90 por mes",
+    description: "Plano principal com assinatura mensal fixa para manter agenda, perfil publico e gestao basica."
   },
   {
-    title: "Clientes próprios ficam fora",
-    description: "Nenhuma cobrança sobre clientes que já eram seus ou chegaram por canais próprios."
+    title: "Sem taxa por venda",
+    description: "O negocio paga assinatura previsivel e mantem o controle integral dos agendamentos e vendas."
   }
 ];
 
-export const marketplaceComparison: MarketplaceComparison[] = [
+export const pricingComparison: PricingComparison[] = [
   {
-    name: "Marketplaces tradicionais",
-    rate: "15% a 30%",
-    description: "Comissões comuns em plataformas com intermediação, visibilidade e demanda."
+    name: "Teste grátis",
+    rate: "0",
+    description: "Entrada simples para configurar perfil, agenda e primeiros agendamentos."
   },
   {
-    name: "iFood",
-    rate: "12% a 23%",
-    description: "Pode variar conforme modelo, categoria, serviços e entrega."
+    name: "Plano principal",
+    rate: "R$69,90",
+    description: "Assinatura mensal fixa para negócios locais em operação."
   },
   {
     name: "Hubly",
-    rate: "10%",
-    description: "Foco em crescimento sustentável para o profissional parceiro.",
+    rate: "Fixo",
+    description: "O valor mensal nao varia por cliente, agendamento ou venda.",
     highlighted: true
   }
 ];

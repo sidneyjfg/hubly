@@ -62,7 +62,7 @@ export class ProviderPaymentSettingsRepository {
     const settings = await repository.save({
       providerId,
       organizationId,
-      commissionRateBps: 1000,
+      commissionRateBps: 0,
       onlineDiscountBps: 500,
       absorbsProcessingFee: true,
       stripeChargesEnabled: false,

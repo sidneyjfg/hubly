@@ -1,151 +1,58 @@
-# Teste manual do fluxo Stripe Connect pela interface
+# Fluxo manual de pagamentos online
 
-Este roteiro valida o fluxo Stripe usando a UI do Hubly. A conta Stripe Connect é uma configuração da organização, acessível em `Configurações`, e não uma configuração por profissional.
+Este roteiro cobre apenas o recebimento online opcional dentro do produto. O modelo comercial do Hubly continua sendo assinatura mensal fixa para negócios locais.
 
-## Premissas
+## 1. Configurar ambiente
 
-- Backend rodando em `http://localhost:3333`.
-- Frontend rodando em `http://localhost:3000`.
-- Banco com seed carregada.
-- Conta Stripe em modo teste.
-- Variáveis Stripe configuradas nos arquivos `.env`.
-- Stripe CLI rodando o forward de webhook:
+1. Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_RETURN_URL` e `STRIPE_CONNECT_REFRESH_URL`.
+2. Suba backend e frontend locais.
+3. Entre no painel como administrador da organização.
 
-```bash
-stripe listen --forward-to localhost:3333/v1/public/payments/stripe/webhooks
-```
+## 2. Validar conta da organização
 
-Use o `whsec_...` exibido pelo listener em `STRIPE_WEBHOOK_SECRET` e reinicie o backend.
-
-## Dados padrão do seed
-
-| Item | Valor |
-| --- | --- |
-| Admin | `admin@organization.test` |
-| Senha | `password123` |
-| Slug público | `organizationa-exemplo` |
-| Serviço | `Consulta inicial` |
-| Preço do serviço | `R$ 180,00` |
-| Taxa da plataforma | `10%` |
-| Taxa esperada | `R$ 18,00` |
-| Líquido esperado | `R$ 162,00` |
-
-## 1. Login
-
-1. Acesse `http://localhost:3000/login`.
-2. Entre com `admin@organization.test` e `password123`.
-
-## 2. Configurar pagamentos da organização
-
-1. Acesse `http://localhost:3000/settings`.
-2. Na área `Verificação de identidade`, confira se a identidade está `Não iniciada`, `Pendente`, `Com pendências` ou `Verificada`.
-
-## 3. Verificar identidade
-
-1. Ainda em `Configurações`, clique em `Verificar identidade`.
-2. Complete o onboarding da Stripe em modo teste.
+1. Acesse `Configurações`.
+2. Inicie a verificação de identidade.
 3. Ao retornar para o Hubly, clique em `Atualizar status`.
+4. Confirme que a conta aparece como verificada.
+
+## 3. Preparar perfil público
+
+1. Cadastre profissional ativo.
+2. Cadastre serviço com preço.
+3. Cadastre disponibilidade.
+4. Publique o perfil público da empresa.
+
+## 4. Criar agendamento público
+
+1. Acesse `/clientes`.
+2. Abra o perfil da organização.
+3. Escolha profissional, serviço e horário.
+4. Selecione pagamento online.
+5. Confirme o agendamento.
 
 Resultado esperado:
 
-- `Status` fica `verified`;
-- `Pagamentos online` fica `Ativos`;
-- sem pendências bloqueantes na área de Stripe.
+- agendamento criado como `payment_pending`;
+- tela de pagamento aberta;
+- valor do serviço exibido sem retenção percentual do Hubly.
 
-## 4. Validar vitrine, serviço e agenda
+## 5. Confirmar pagamento
 
-1. Acesse `http://localhost:3000/dashboard/storefront`.
-2. Confirme no checklist:
-   - perfil público completo;
-   - vitrine publicada;
-   - profissional ativo;
-   - serviço com preço;
-   - Stripe Connect ativo;
-   - agenda disponível;
-   - conta pronta para venda.
-3. Acesse `http://localhost:3000/dashboard/providers`.
-4. Confirme que o serviço `Consulta inicial` tem preço `R$ 180,00`.
-
-## 5. Criar agendamento público com pagamento online
-
-1. Acesse `http://localhost:3000/clientes/organizationa-exemplo`.
-2. Escolha o profissional `Dra. Ana Souza`.
-3. Escolha o serviço `Consulta inicial`.
-4. Escolha uma data futura com disponibilidade.
-5. Selecione um horário livre.
-6. Selecione `Pagar online`.
-7. Preencha:
-   - nome: `Cliente Stripe Manual`;
-   - e-mail: `cliente-stripe-manual@test.local`;
-   - telefone: `+5511999999999`;
-   - senha: `password123`.
-8. Clique em `Confirmar e ir para pagamento`.
+1. Use um cartão de teste da Stripe.
+2. Confirme o pagamento.
+3. Aguarde o webhook atualizar o backend.
 
 Resultado esperado:
 
-- redirecionamento para `/clientes/organizationa-exemplo/pagamento?bookingId=...`;
-- Payment Element da Stripe visível.
+- pagamento aprovado;
+- agendamento confirmado;
+- histórico financeiro mostrando valor do serviço e valor do negócio.
 
-## 6. Pagar com cartão de teste
+## Checklist
 
-Na tela de pagamento:
-
-1. Use `4242 4242 4242 4242`.
-2. Use validade futura, CVC de 3 dígitos, nome e CEP aceitos pela tela.
-3. Clique em `Pagar com segurança`.
-
-Resultado esperado:
-
-- a Stripe confirma o pagamento;
-- a tela mostra pagamento recebido ou em processamento enquanto o webhook atualiza o backend.
-
-## 7. Conferir confirmação no dashboard
-
-1. Acesse `http://localhost:3000/dashboard/bookings`.
-2. Localize o agendamento criado.
-3. Confirme:
-   - status `confirmed`;
-   - etiqueta `Pagamento aprovado`.
-
-## 8. Conferir split, taxa e histórico
-
-1. Acesse `http://localhost:3000/settings`.
-2. Na área `Histórico financeiro`, confirme uma entrada de pagamento.
-3. Para o pagamento de `R$ 180,00`, confirme:
-   - taxa: `R$ 18,00`;
-   - líquido: `R$ 162,00`.
-4. Na área `Saldo Stripe`, confirme saldo `pendente` ou `disponível` em BRL.
-
-## 9. Testar saque
-
-Execute apenas quando houver saldo disponível suficiente.
-
-1. Acesse `http://localhost:3000/settings`.
-2. Na área `Saldo Stripe`, informe o valor do saque.
-3. Clique em `Sacar`.
-4. Confirme no `Histórico financeiro` uma entrada de saque solicitado.
-
-## 10. Teste negativo rápido
-
-1. Em `Configurações`, use uma organização sem conta Stripe Connect verificada ou deixe o onboarding incompleto.
-2. Tente criar um agendamento público com `Pagar online`.
-
-Resultado esperado:
-
-- o frontend exibe erro de conta Stripe obrigatória ou não verificada;
-- nenhum pagamento aprovado é criado.
-
-## Checklist final de aceite
-
-- [ ] Admin iniciou verificação de identidade em `Configurações`.
-- [ ] Organização recebeu conta Stripe durante a verificação.
-- [ ] Onboarding Express foi finalizado.
-- [ ] Status da conta ficou `verified`.
-- [ ] Cliente escolheu `Pagar online`.
-- [ ] Payment Element carregou.
-- [ ] Pagamento com cartão de teste foi aprovado.
-- [ ] Agendamento ficou `confirmed`.
-- [ ] Dashboard mostrou `Pagamento aprovado`.
-- [ ] Histórico financeiro mostrou taxa de `R$ 18,00` e líquido de `R$ 162,00`.
-- [ ] Saldo Stripe apareceu em `Configurações`.
-- [ ] Saque pôde ser solicitado pela interface quando havia saldo disponível.
+- [ ] Conta da organização verificada.
+- [ ] Perfil público publicado.
+- [ ] Agendamento online criado.
+- [ ] Pagamento aprovado.
+- [ ] Agendamento confirmado por webhook.
+- [ ] Histórico financeiro sem cobrança percentual do Hubly por agendamento.

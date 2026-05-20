@@ -8,13 +8,16 @@ import { AddUserPhoneColumn1713563000000 } from "./migrations/1713563000000-add-
 import { AddIntegrationPhoneNumber1713564000000 } from "./migrations/1713564000000-add-integration-phone-number";
 import { AddCustomerStatusAndServiceOfferings1713565000000 } from "./migrations/1713565000000-add-customer-status-and-service-offerings";
 import { AddPublicBookingAndProviderAvailability1713566000000 } from "./migrations/1713566000000-add-public-booking-and-provider-availability";
-import { AddMarketplacePayments1713567000000 } from "./migrations/1713567000000-add-marketplace-payments";
+import { AddMarketplacePayments1713567000000 } from "./migrations/1713567000000-add-booking-payment-fields";
 import { AddOrganizationStorefront1713568000000 } from "./migrations/1713568000000-add-organization-storefront";
 import { AddCustomerPasswordHash1713569000000 } from "./migrations/1713569000000-add-customer-password-hash";
 import { AddOrganizationPaymentSettings1713570000000 } from "./migrations/1713570000000-add-organization-payment-settings";
 import {AddServiceOfferingOnlineRequirement1713571000000} from "./migrations/1713571000000-add-service-offering-online-requirement";
 import { ReplaceMercadoPagoWithStripeConnect1713572000000 } from "./migrations/1713572000000-replace-mercado-pago-with-stripe-connect";
 import { MoveStripeConnectToOrganization1713573000000 } from "./migrations/1713573000000-move-stripe-connect-to-organization";
+import { CreateBillingPlans1713574000000 } from "./migrations/1713574000000-create-billing-plans";
+import { CreateOrganizationSubscriptions1713575000000 } from "./migrations/1713575000000-create-organization-subscriptions";
+import { AddFreeBillingPlanAndSeedSubscriptions1713576000000 } from "./migrations/1713576000000-add-free-billing-plan-and-seed-subscriptions";
 import { databaseEntities } from "./entities";
 
 export type DatabaseDriver = "mysql" | "sqljs";
@@ -53,6 +56,9 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
         AddServiceOfferingOnlineRequirement1713571000000,
         ReplaceMercadoPagoWithStripeConnect1713572000000,
         MoveStripeConnectToOrganization1713573000000,
+        CreateBillingPlans1713574000000,
+        CreateOrganizationSubscriptions1713575000000,
+        AddFreeBillingPlanAndSeedSubscriptions1713576000000,
       ],
     };
   }
@@ -83,6 +89,9 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
       AddServiceOfferingOnlineRequirement1713571000000,
       ReplaceMercadoPagoWithStripeConnect1713572000000,
       MoveStripeConnectToOrganization1713573000000,
+      CreateBillingPlans1713574000000,
+      CreateOrganizationSubscriptions1713575000000,
+      AddFreeBillingPlanAndSeedSubscriptions1713576000000,
     ],
   };
 };

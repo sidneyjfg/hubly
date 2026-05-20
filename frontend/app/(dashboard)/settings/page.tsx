@@ -93,7 +93,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Configurações</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Dados da clínica</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-white">Dados do negócio</h1>
       </div>
 
       <Card>
@@ -101,7 +101,7 @@ export default function SettingsPage() {
           <Input
             disabled={!isAdministrator}
             onChange={(event) => setTradeName(event.target.value)}
-            placeholder="Nome da clínica"
+            placeholder="Nome do negócio"
             value={tradeName}
           />
           <Input

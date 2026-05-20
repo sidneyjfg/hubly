@@ -7,13 +7,14 @@ import {
   type AuthSessionDTO,
   type OrganizationDTO,
   type IntegrationSummaryDTO,
-  type MarketplaceAuditDTO,
+  type SubscriptionReadinessDTO,
   type MeResponseDTO,
   type NoShowOverviewDTO,
   type CustomerDTO,
   type CustomerWriteDTO,
   type FinancialHistoryItemDTO,
   type OrganizationPaymentSettingsDTO,
+  type OrganizationSubscriptionOverviewDTO,
   type ProviderPaymentSettingsDTO,
   type ProviderPaymentSettingsUpdateDTO,
   type ProviderAvailabilityDTO,
@@ -145,6 +146,35 @@ export const api = {
       method: "PUT",
       auth: true,
       body: input
+    });
+  },
+
+  getOrganizationSubscription() {
+    return apiRequest<OrganizationSubscriptionOverviewDTO>(apiRoutes.organizations.subscription, {
+      auth: true
+    });
+  },
+
+  changeOrganizationPlan(input: { planCode: "free" | "pro" | "premium" }) {
+    return apiRequest<OrganizationSubscriptionOverviewDTO["current"]>(apiRoutes.organizations.subscription, {
+      method: "PATCH",
+      auth: true,
+      body: input
+    });
+  },
+
+  createSubscriptionCheckout(input: { planCode: "free" | "pro" | "premium" }) {
+    return apiRequest<{ checkoutUrl: string }>(apiRoutes.organizations.subscriptionCheckout, {
+      method: "POST",
+      auth: true,
+      body: input
+    });
+  },
+
+  cancelOrganizationSubscription() {
+    return apiRequest<OrganizationSubscriptionOverviewDTO["current"]>(apiRoutes.organizations.subscriptionCancel, {
+      method: "POST",
+      auth: true
     });
   },
 
@@ -539,8 +569,8 @@ export const api = {
     });
   },
 
-  getMarketplaceAudit() {
-    return apiRequest<MarketplaceAuditDTO[]>(apiRoutes.systemAdmin.marketplaceAudit, {
+  getSubscriptionReadiness() {
+    return apiRequest<SubscriptionReadinessDTO[]>(apiRoutes.systemAdmin.subscriptionReadiness, {
       auth: true
     });
   }

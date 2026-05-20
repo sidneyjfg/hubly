@@ -205,7 +205,7 @@ export class BookingsRepository {
       originalAmountCents: input.originalAmountCents ?? 0,
       discountedAmountCents: input.discountedAmountCents ?? input.originalAmountCents ?? 0,
       onlineDiscountCents: input.onlineDiscountCents ?? 0,
-      platformCommissionRateBps: input.platformCommissionRateBps ?? 1000,
+      platformCommissionRateBps: input.platformCommissionRateBps ?? 0,
       platformCommissionCents: input.platformCommissionCents ?? 0,
       providerNetAmountCents: input.providerNetAmountCents ?? 0,
       paymentStatus: input.paymentStatus ?? "pending_local",

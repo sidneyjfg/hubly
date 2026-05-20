@@ -7,7 +7,7 @@ export class AddOrganizationPaymentSettings1713570000000 implements MigrationInt
     await queryRunner.query(`
       CREATE TABLE organization_payment_settings (
         organizationId varchar(36) NOT NULL,
-        commissionRateBps int NOT NULL DEFAULT 1000,
+        commissionRateBps int NOT NULL DEFAULT 0,
         onlineDiscountBps int NOT NULL DEFAULT 500,
         absorbsProcessingFee boolean NOT NULL DEFAULT true,
         mercadoPagoConnected boolean NOT NULL DEFAULT false,

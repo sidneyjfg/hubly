@@ -1,13 +1,17 @@
-# SaaS de Agendamento para Clínicas
+# SaaS de Agendamento para Negócios Locais
 
 ## Contexto do projeto
 
-Este projeto é um SaaS de agendamento para clínicas em geral, incluindo:
+Este projeto é uma plataforma SaaS de agendamento, gestão e presença digital para negócios locais, incluindo:
 
+- barbearias;
 - clínicas médicas;
 - consultórios odontológicos;
+- salões;
 - clínicas de estética;
+- studios;
 - psicologia e terapias;
+- profissionais de serviços;
 - outros serviços com agenda.
 
 O objetivo principal é:
@@ -15,8 +19,42 @@ O objetivo principal é:
 - organizar agendas;
 - reduzir no-show;
 - facilitar confirmação, cancelamento e reagendamento;
-- melhorar a operação da recepção;
+- melhorar a operação da equipe;
+- publicar perfil público com fotos, serviços, avaliações e botão de agendamento;
+- facilitar descoberta/localização de serviços na região;
 - permitir evolução futura com módulos adicionais.
+
+## Posicionamento
+
+O Hubly deve ser posicionado como:
+
+> Uma plataforma moderna de agendamento, gestão e presença digital para negócios locais.
+
+Usar linguagem de:
+
+- plataforma;
+- gestão;
+- crescimento do negócio;
+- presença digital;
+- descoberta local;
+- assinatura mensal.
+
+Evitar linguagem de marketplace transacional, comissão, taxa por atendimento ou retenção percentual.
+
+## Modelo de negócio
+
+O Hubly funciona por assinatura mensal fixa.
+
+- plano principal: R$69,90/mês;
+- teste grátis, primeiro mês gratuito ou primeiro mês com desconto;
+- onboarding simples para reduzir barreira de entrada.
+
+Não usar como modelo de monetização:
+
+- comissão por agendamento;
+- split de pagamento;
+- retenção percentual sobre vendas;
+- taxa por atendimento.
 
 ## Stack obrigatória
 
@@ -51,15 +89,19 @@ Não propor outras integrações nesta fase.
 O MVP deve conter:
 
 - autenticação;
-- cadastro de clínicas, profissionais e pacientes;
+- cadastro de organizações, profissionais e clientes;
 - agenda diária e semanal;
 - criação, cancelamento e reagendamento;
-- status de consulta;
+- status de agendamento;
 - confirmação e lembretes;
 - registro de comparecimento e falta;
 - indicadores básicos de no-show;
 - integração básica com Google Calendar;
 - notificações por WhatsApp e e-mail.
+- perfil público da empresa;
+- fotos, serviços, avaliações e botão de agendamento;
+- descoberta/localização de serviços;
+- gestão básica de clientes, histórico, serviços, horários e métricas simples.
 
 ## Segurança obrigatória
 
@@ -113,9 +155,9 @@ A segurança deve ser considerada desde o início.
 ## Domínios principais
 
 - autenticação e autorização;
-- clínicas e unidades;
+- organizações e unidades;
 - profissionais e especialidades;
-- pacientes;
+- clientes;
 - agenda e agendamentos;
 - notificações;
 - integrações;
@@ -163,7 +205,7 @@ A segurança deve ser considerada desde o início.
 
 ## Evoluções futuras permitidas
 
-- portal do paciente;
+- portal do cliente;
 - check-in digital;
 - lista de espera automática;
 - dashboards avançados;

@@ -115,17 +115,53 @@ export type ServiceOffering = {
   isActive: boolean;
 };
 
-export type SystemAdminMarketplaceAudit = {
+export type BillingPlan = {
+  id: string;
+  code: "free" | "pro" | "premium";
+  name: string;
+  description: string | null;
+  amountCents: number;
+  currency: string;
+  interval: string;
+  stripeMode: "test" | "live";
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  isActive: boolean;
+  isDefault: boolean;
+};
+
+export type OrganizationSubscription = {
+  id: string;
+  organizationId: string;
+  billingPlanId: string;
+  status: "trialing" | "active" | "past_due" | "canceled" | "unpaid" | "paused" | "incomplete" | "incomplete_expired";
+  stripeMode: "test" | "live";
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  stripeCheckoutSessionId: string | null;
+  stripePriceId: string | null;
+  trialEndsAt: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  plan: BillingPlan;
+};
+
+export type OrganizationSubscriptionOverview = {
+  stripeBillingMode: "test" | "live";
+  current: OrganizationSubscription;
+  plans: BillingPlan[];
+};
+
+export type SystemAdminSubscriptionReadiness = {
   organizationId: string;
   organizationName: string;
   onlineRevenueCents: number;
-  onlineCommissionCents: number;
-  presentialRevenueCents: number;
-  presentialCommissionCents: number;
+  localRevenueCents: number;
   onlineCount: number;
-  presentialCount: number;
+  localCount: number;
   pendingStatusCount: number;
-  presentialRatio: number;
+  localPaymentRatio: number;
 };
 
 export type Booking = {
@@ -304,7 +340,7 @@ export type MonetizationHighlight = {
   description: string;
 };
 
-export type MarketplaceComparison = {
+export type PricingComparison = {
   name: string;
   rate: string;
   description: string;

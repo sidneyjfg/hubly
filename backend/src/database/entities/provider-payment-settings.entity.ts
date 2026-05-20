@@ -15,7 +15,7 @@ export class ProviderPaymentSettingsEntity {
   @Column({ type: "varchar", length: 36 })
   public organizationId!: string;
 
-  @Column({ type: "int", default: 1000 })
+  @Column({ type: "int", default: 0 })
   public commissionRateBps!: number;
 
   @Column({ type: "int", default: 500 })

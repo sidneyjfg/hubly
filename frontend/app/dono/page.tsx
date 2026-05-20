@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Activity, Building2, ClipboardList, LogOut, Search, ShieldCheck, UsersRound, Wallet, AlertTriangle, ArrowUpRight } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Activity, Building2, ClipboardList, LogOut, Search, UsersRound, Wallet, AlertTriangle, ArrowUpRight, CreditCard } from "lucide-react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
@@ -14,16 +13,16 @@ import { Table, TableBody, TableCell, TableHead, TableRoot, TableRow } from "@/c
 import { systemAdminApi } from "@/lib/system-admin-api";
 import { formatDateTimeLabel, formatPrice } from "@/lib/utils";
 import { useSystemAdminStore } from "@/store/system-admin-store";
+import type { SystemAdminBillingPlan } from "@/lib/system-admin-api";
 
 type MetricCardProps = {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | number;
   subValue?: string;
-  trend?: "up" | "down" | "neutral";
 };
 
-function MetricCard({ icon: Icon, label, value, subValue, trend }: MetricCardProps) {
+function MetricCard({ icon: Icon, label, value, subValue }: MetricCardProps) {
   return (
     <Card>
       <div className="flex items-center justify-between gap-4">
@@ -41,14 +40,16 @@ function MetricCard({ icon: Icon, label, value, subValue, trend }: MetricCardPro
 }
 
 export default function SystemAdminDashboardPage() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const hasHydrated = useSystemAdminStore((state) => state.hasHydrated);
   const isAuthenticated = useSystemAdminStore((state) => state.isAuthenticated);
   const session = useSystemAdminStore((state) => state.session);
   const logout = useSystemAdminStore((state) => state.logout);
-  const [activeTab, setActiveTab] = useState<"overview" | "audit">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "audit" | "plans">("overview");
   const [organizationIdFilter, setOrganizationIdFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("");
+  const [planDrafts, setPlanDrafts] = useState<Record<string, { stripePriceId: string; stripeProductId: string }>>({});
 
   useEffect(() => {
     if (hasHydrated && !isAuthenticated) {
@@ -81,10 +82,27 @@ export default function SystemAdminDashboardPage() {
     enabled
   });
 
-  const marketplaceAuditQuery = useQuery({
-    queryKey: ["system-admin-marketplace-audit"],
-    queryFn: () => systemAdminApi.getMarketplaceAudit(session!),
+  const subscriptionReadinessQuery = useQuery({
+    queryKey: ["system-admin-subscription-readiness"],
+    queryFn: () => systemAdminApi.getSubscriptionReadiness(session!),
     enabled: enabled && activeTab === "audit"
+  });
+
+  const billingPlansQuery = useQuery({
+    queryKey: ["system-admin-billing-plans"],
+    queryFn: () => systemAdminApi.getBillingPlans(session!),
+    enabled: enabled && activeTab === "plans"
+  });
+
+  const updateBillingPlanMutation = useMutation({
+    mutationFn: (input: { id: string; stripePriceId: string; stripeProductId: string }) =>
+      systemAdminApi.updateBillingPlan(session!, input.id, {
+        stripePriceId: input.stripePriceId.trim() || null,
+        stripeProductId: input.stripeProductId.trim() || null
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["system-admin-billing-plans"] });
+    }
   });
 
   if (!hasHydrated || !isAuthenticated || !session) {
@@ -98,11 +116,12 @@ export default function SystemAdminDashboardPage() {
   const summary = summaryQuery.data;
   const tenants = tenantsQuery.data?.items ?? [];
   const auditEvents = auditQuery.data?.items ?? [];
-  const marketplaceAudit = marketplaceAuditQuery.data ?? [];
-  const panelError = summaryQuery.error ?? tenantsQuery.error ?? auditQuery.error ?? marketplaceAuditQuery.error;
+  const subscriptionReadiness = subscriptionReadinessQuery.data ?? [];
+  const billingPlans = billingPlansQuery.data?.items ?? [];
+  const panelError = summaryQuery.error ?? tenantsQuery.error ?? auditQuery.error ?? subscriptionReadinessQuery.error ?? billingPlansQuery.error ?? updateBillingPlanMutation.error;
 
-  const totalCommissionCents = marketplaceAudit.reduce((acc, curr) => acc + curr.onlineCommissionCents + curr.presentialCommissionCents, 0);
-  const totalPresentialDebtCents = marketplaceAudit.reduce((acc, curr) => acc + curr.presentialCommissionCents, 0);
+  const totalTrackedRevenueCents = subscriptionReadiness.reduce((acc, curr) => acc + curr.onlineRevenueCents + curr.localRevenueCents, 0);
+  const totalOnlineBookings = subscriptionReadiness.reduce((acc, curr) => acc + curr.onlineCount, 0);
 
   return (
     <main className="min-h-screen bg-background">
@@ -146,6 +165,14 @@ export default function SystemAdminDashboardPage() {
               }`}
             >
               Auditoria & Receita
+            </button>
+            <button
+              onClick={() => setActiveTab("plans")}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "plans" ? "bg-sky-500 text-white" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Planos
             </button>
           </div>
           
@@ -258,20 +285,20 @@ export default function SystemAdminDashboardPage() {
             <section className="grid gap-4 md:grid-cols-3">
               <MetricCard 
                 icon={Wallet} 
-                label="Comissão Total (Acumulada)" 
-                value={formatPrice(totalCommissionCents)} 
-                subValue="Online + Presencial Atendido"
+                label="Receita acompanhada" 
+                value={formatPrice(totalTrackedRevenueCents)} 
+                subValue="Online + local atendido"
               />
               <MetricCard 
                 icon={AlertTriangle} 
-                label="Dívida Presencial" 
-                value={formatPrice(totalPresentialDebtCents)} 
-                subValue="A cobrar manualmente"
+                label="Agendamentos online" 
+                value={totalOnlineBookings} 
+                subValue="Sinal de adoção digital"
               />
               <MetricCard 
                 icon={Activity} 
-                label="Taxa de Pagto. Local" 
-                value={`${(marketplaceAudit.reduce((acc, curr) => acc + curr.presentialRatio, 0) / (marketplaceAudit.length || 1) * 100).toFixed(1)}%`} 
+                label="Taxa de pagto. local" 
+                value={`${(subscriptionReadiness.reduce((acc, curr) => acc + curr.localPaymentRatio, 0) / (subscriptionReadiness.length || 1) * 100).toFixed(1)}%`} 
                 subValue="Média entre organizações"
               />
             </section>
@@ -279,8 +306,8 @@ export default function SystemAdminDashboardPage() {
             <Card>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-sky-300">Marketplace</p>
-                  <h2 className="mt-2 text-xl font-semibold text-white">Auditoria de Receita por Organização</h2>
+                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-sky-300">Assinatura</p>
+                  <h2 className="mt-2 text-xl font-semibold text-white">Sinais de adoção por organização</h2>
                 </div>
                 <ArrowUpRight className="h-5 w-5 text-sky-300" />
               </div>
@@ -290,31 +317,31 @@ export default function SystemAdminDashboardPage() {
                     <TableHead>
                       <TableRow>
                         <TableHead>Organização</TableHead>
-                        <TableHead>Comissão Online</TableHead>
-                        <TableHead>Dívida Presencial</TableHead>
-                        <TableHead>Vol. Presencial</TableHead>
+                        <TableHead>Receita online</TableHead>
+                        <TableHead>Receita local</TableHead>
+                        <TableHead>Pagto. local</TableHead>
                         <TableHead>Pendências Status</TableHead>
                         <TableHead>Risco</TableHead>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {marketplaceAudit.map((row) => (
+                      {subscriptionReadiness.map((row) => (
                         <TableRow key={row.organizationId}>
                           <TableCell className="font-medium text-white">{row.organizationName}</TableCell>
-                          <TableCell className="text-emerald-400">{formatPrice(row.onlineCommissionCents)}</TableCell>
-                          <TableCell className="text-amber-400">{formatPrice(row.presentialCommissionCents)}</TableCell>
-                          <TableCell>{(row.presentialRatio * 100).toFixed(1)}%</TableCell>
+                          <TableCell className="text-emerald-400">{formatPrice(row.onlineRevenueCents)}</TableCell>
+                          <TableCell className="text-amber-400">{formatPrice(row.localRevenueCents)}</TableCell>
+                          <TableCell>{(row.localPaymentRatio * 100).toFixed(1)}%</TableCell>
                           <TableCell>
                             <span className={row.pendingStatusCount > 5 ? "text-rose-400 font-bold" : ""}>
                               {row.pendingStatusCount}
                             </span>
                           </TableCell>
                           <TableCell>
-                            {row.presentialRatio > 0.7 || row.pendingStatusCount > 10 ? (
+                            {row.localPaymentRatio > 0.7 || row.pendingStatusCount > 10 ? (
                               <span className="inline-flex items-center rounded-full bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-400 ring-1 ring-inset ring-rose-500/20">
                                 Alto
                               </span>
-                            ) : row.presentialRatio > 0.4 ? (
+                            ) : row.localPaymentRatio > 0.4 ? (
                               <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-400 ring-1 ring-inset ring-amber-500/20">
                                 Médio
                               </span>
@@ -329,11 +356,95 @@ export default function SystemAdminDashboardPage() {
                     </TableBody>
                   </TableRoot>
                 </Table>
-                {marketplaceAudit.length === 0 && !marketplaceAuditQuery.isLoading && (
+                {subscriptionReadiness.length === 0 && !subscriptionReadinessQuery.isLoading && (
                   <p className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-                    Nenhum dado de marketplace disponível ainda.
+                    Nenhum sinal de adoção disponível ainda.
                   </p>
                 )}
+              </div>
+            </Card>
+          </>
+        )}
+
+        {activeTab === "plans" && (
+          <>
+            <section className="grid gap-4 md:grid-cols-3">
+              <MetricCard icon={CreditCard} label="Modo Stripe ativo" value={billingPlansQuery.data?.stripeBillingMode ?? "..."} />
+              <MetricCard icon={Wallet} label="Plano Pro" value="R$ 69,90" subValue="mensal" />
+              <MetricCard icon={Wallet} label="Plano Premium" value="R$ 129,90" subValue="mensal" />
+            </section>
+
+            <Card>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-sky-300">Stripe Billing</p>
+                  <h2 className="mt-2 text-xl font-semibold text-white">IDs dos planos de assinatura</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                    Configure os IDs de produto e preço por ambiente. A flag `STRIPE_BILLING_MODE` no backend define se o checkout usará os IDs de teste ou produção.
+                  </p>
+                </div>
+                <CreditCard className="h-5 w-5 text-sky-300" />
+              </div>
+
+              <div className="mt-6 grid gap-4 xl:grid-cols-2">
+                {billingPlans.map((plan) => {
+                  const draft = planDrafts[plan.id] ?? {
+                    stripePriceId: plan.stripePriceId ?? "",
+                    stripeProductId: plan.stripeProductId ?? ""
+                  };
+
+                  return (
+                    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5" key={plan.id}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-lg font-semibold text-white">
+                            {plan.name} · {plan.stripeMode}
+                          </p>
+                          <p className="mt-1 text-sm text-slate-400">
+                            {plan.code} · {formatPrice(plan.amountCents)}/{plan.interval === "month" ? "mês" : plan.interval}
+                          </p>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          billingPlansQuery.data?.stripeBillingMode === plan.stripeMode
+                            ? "bg-emerald-400/10 text-emerald-300"
+                            : "bg-white/10 text-slate-300"
+                        }`}
+                        >
+                          {billingPlansQuery.data?.stripeBillingMode === plan.stripeMode ? "Ativo" : "Inativo"}
+                        </span>
+                      </div>
+
+                      {plan.code === "free" ? (
+                        <div className="mt-5 rounded-lg border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+                          Plano gratuito sem cobrança Stripe.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mt-5 grid gap-3">
+                            <Input
+                              onChange={(event) => updatePlanDraft(plan, "stripeProductId", event.target.value)}
+                              placeholder="prod_..."
+                              value={draft.stripeProductId}
+                            />
+                            <Input
+                              onChange={(event) => updatePlanDraft(plan, "stripePriceId", event.target.value)}
+                              placeholder="price_..."
+                              value={draft.stripePriceId}
+                            />
+                          </div>
+
+                          <Button
+                            className="mt-5 w-full"
+                            disabled={updateBillingPlanMutation.isPending}
+                            onClick={() => updateBillingPlanMutation.mutate({ id: plan.id, ...draft })}
+                          >
+                            Salvar IDs
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </Card>
           </>
@@ -341,4 +452,15 @@ export default function SystemAdminDashboardPage() {
       </section>
     </main>
   );
+
+  function updatePlanDraft(plan: SystemAdminBillingPlan, field: "stripePriceId" | "stripeProductId", value: string) {
+    setPlanDrafts((current) => ({
+      ...current,
+      [plan.id]: {
+        stripePriceId: current[plan.id]?.stripePriceId ?? plan.stripePriceId ?? "",
+        stripeProductId: current[plan.id]?.stripeProductId ?? plan.stripeProductId ?? "",
+        [field]: value
+      }
+    }));
+  }
 }

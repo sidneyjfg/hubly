@@ -517,7 +517,7 @@ export class PublicBookingsService {
           originalAmountCents: 0,
           discountedAmountCents: 0,
           onlineDiscountCents: 0,
-          platformCommissionRateBps: 1000,
+          platformCommissionRateBps: 0,
           platformCommissionCents: 0,
           providerNetAmountCents: 0,
           paymentStatus: data.paymentType === "online" ? "pending" as const : "pending_local" as const,

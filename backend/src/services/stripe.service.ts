@@ -5,6 +5,7 @@ import type { Balance } from "stripe/cjs/resources/Balance";
 import type { Event } from "stripe/cjs/resources/Events";
 import type { PaymentIntent } from "stripe/cjs/resources/PaymentIntents";
 import type { Payout } from "stripe/cjs/resources/Payouts";
+import type { Subscription } from "stripe/cjs/resources/Subscriptions";
 
 import { AppError } from "../utils/app-error";
 import { env } from "../utils/env";
@@ -137,9 +138,8 @@ export class StripeService {
     return link.url;
   }
 
-  public async createMarketplacePaymentIntent(input: {
+  public async createConnectedAccountPaymentIntent(input: {
     amountCents: number;
-    applicationFeeAmountCents: number;
     stripeAccountId: string;
     bookingId: string;
     organizationId: string;
@@ -153,10 +153,6 @@ export class StripeService {
         amount: input.amountCents,
         currency: "brl",
         payment_method_types: ["card"],
-        application_fee_amount: input.applicationFeeAmountCents,
-        transfer_data: {
-          destination: input.stripeAccountId,
-        },
         description: input.serviceName ?? "Agendamento Hubly",
         metadata: {
           bookingId: input.bookingId,
@@ -167,8 +163,84 @@ export class StripeService {
       },
       {
         idempotencyKey: input.idempotencyKey,
+        stripeAccount: input.stripeAccountId,
       },
     );
+  }
+
+  public async createSubscriptionCheckoutSession(input: {
+    organizationId: string;
+    billingPlanId: string;
+    planCode: string;
+    priceId: string;
+    customerId?: string | null;
+    successUrl: string;
+    cancelUrl: string;
+  }): Promise<{ id: string; url: string }> {
+    const session = await this.getClient().checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: input.priceId,
+          quantity: 1,
+        },
+      ],
+      ...(input.customerId ? { customer: input.customerId } : {}),
+      success_url: input.successUrl,
+      cancel_url: input.cancelUrl,
+      client_reference_id: input.organizationId,
+      metadata: {
+        kind: "hubly_subscription",
+        organizationId: input.organizationId,
+        billingPlanId: input.billingPlanId,
+        planCode: input.planCode,
+      },
+      subscription_data: {
+        metadata: {
+          kind: "hubly_subscription",
+          organizationId: input.organizationId,
+          billingPlanId: input.billingPlanId,
+          planCode: input.planCode,
+        },
+      },
+    });
+
+    if (!session.url) {
+      throw new AppError("billing.checkout_url_missing", "Checkout de assinatura não retornou uma URL válida.", 502);
+    }
+
+    return {
+      id: session.id,
+      url: session.url,
+    };
+  }
+
+  public async createBillingPortalSession(input: {
+    customerId: string;
+    returnUrl: string;
+  }): Promise<{ url: string }> {
+    const session = await this.getClient().billingPortal.sessions.create({
+      customer: input.customerId,
+      return_url: input.returnUrl,
+    });
+
+    return {
+      url: session.url,
+    };
+  }
+
+  public async scheduleSubscriptionCancellation(stripeSubscriptionId: string): Promise<Subscription> {
+    return this.getClient().subscriptions.update(stripeSubscriptionId, {
+      cancel_at_period_end: true,
+    });
+  }
+
+  public async cancelSubscriptionImmediately(stripeSubscriptionId: string): Promise<Subscription> {
+    return this.getClient().subscriptions.cancel(stripeSubscriptionId, {
+      invoice_now: false,
+      prorate: false,
+    });
   }
 
   public async retrieveBalance(stripeAccountId: string): Promise<Balance> {

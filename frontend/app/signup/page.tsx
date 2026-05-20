@@ -39,7 +39,7 @@ export default function SignUpPage() {
       }),
     meta: {
       errorMessage: "Cadastro não concluído",
-      successMessage: "Clínica criada com sucesso"
+      successMessage: "Negócio criado com sucesso"
     },
     onSuccess: (session) => {
       login(session, email);
@@ -61,9 +61,9 @@ export default function SignUpPage() {
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <Card className="w-full max-w-2xl">
         <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Cadastro completo</p>
-        <h1 className="mt-4 text-3xl font-semibold text-white">Criar conta e clínica</h1>
+        <h1 className="mt-4 text-3xl font-semibold text-white">Criar conta do negócio</h1>
         <p className="mt-3 text-slate-300">
-          O cadastro já cria a clínica, o primeiro administrador e a sessão autenticada.
+          O cadastro já cria o negócio local, o primeiro administrador e a sessão autenticada.
         </p>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
@@ -75,7 +75,7 @@ export default function SignUpPage() {
             type="password"
             value={password}
           />
-          <Input onChange={(event) => setTradeName(event.target.value)} placeholder="Nome da clínica" value={tradeName} />
+          <Input onChange={(event) => setTradeName(event.target.value)} placeholder="Nome do negócio" value={tradeName} />
           <Input onChange={(event) => setLegalName(event.target.value)} placeholder="Razão social" value={legalName} />
           <Input
             className="md:col-span-2"
@@ -90,7 +90,7 @@ export default function SignUpPage() {
             disabled={!fullName || !email || !phone || !password || !tradeName || !legalName || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            Criar clínica
+            Criar negócio
           </Button>
           <p className="text-center text-sm text-slate-400">
             Já possui acesso?{" "}

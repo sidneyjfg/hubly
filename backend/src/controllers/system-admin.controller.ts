@@ -50,7 +50,16 @@ export class SystemAdminController {
     reply.status(200).send(await this.systemAdminService.getOperationalSummary());
   };
 
-  public getMarketplaceAudit = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    reply.status(200).send(await this.systemAdminService.getMarketplaceAudit());
+  public getSubscriptionReadiness = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.systemAdminService.getSubscriptionReadiness());
+  };
+
+  public listBillingPlans = async (_request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.systemAdminService.listBillingPlans());
+  };
+
+  public updateBillingPlan = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const params = request.params as { id?: string };
+    reply.status(200).send(await this.systemAdminService.updateBillingPlan(params.id ?? "", request.body));
   };
 }

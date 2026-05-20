@@ -3,7 +3,7 @@
   "info": {
     "title": "Hubly API",
     "version": "0.1.0",
-    "description": "API do MVP de agendamento para clínicas.\n\nDownloads úteis para teste local:\n- Collection Postman: `/docs/postman/collection.json`\n- Environment Postman: `/docs/postman/environment.json`\n\nCredenciais seed locais:\n- `admin@organization.test` / `password123`"
+    "description": "API do MVP de agendamento, gestão e presença digital para negócios locais.\n\nDownloads úteis para teste local:\n- Collection Postman: `/docs/postman/collection.json`\n- Environment Postman: `/docs/postman/environment.json`\n\nCredenciais seed locais:\n- `admin@organization.test` / `password123`"
   },
   "servers": [
     {
