@@ -1,5 +1,5 @@
 import type { Booking, DashboardInsight, Customer, CustomerRow, Provider, RevenuePoint } from "@/lib/types";
-import { addDays, endOfDayIso, formatDateInput, startOfDayIso } from "@/lib/utils";
+import { addDays, endOfDayIso, formatDateInput, formatDateLabel, formatTimeLabel, startOfDayIso } from "@/lib/utils";
 
 const activeBookingStatuses = ["scheduled", "confirmed", "rescheduled"] as string[];
 
@@ -95,6 +95,11 @@ export function buildCustomerRows(customers: Customer[], bookings: Booking[]): C
     const latestFinished = relatedBookings.find((booking) =>
       ["attended", "missed"].includes(booking.status)
     );
+    const latestBooking = relatedBookings[0];
+    const nextBooking = relatedBookings
+      .slice()
+      .reverse()
+      .find((booking) => new Date(booking.startsAt).getTime() >= now && booking.status !== "cancelled");
 
     return {
       id: customer.id,
@@ -103,7 +108,20 @@ export function buildCustomerRows(customers: Customer[], bookings: Booking[]): C
       phone: customer.phone,
       isActive: customer.isActive,
       status: hasUpcoming ? "active" : latestFinished ? "returning" : "pending",
-      lastVisit: latestFinished ? latestFinished.startsAt.slice(0, 10) : "Sem histórico"
+      lastVisit: latestFinished ? latestFinished.startsAt.slice(0, 10) : "Sem histórico",
+      lastBookingLabel: latestBooking ? `${formatDateLabel(latestBooking.startsAt)} às ${formatTimeLabel(latestBooking.startsAt)}` : "Sem agendamentos",
+      nextBookingLabel: nextBooking ? `${formatDateLabel(nextBooking.startsAt)} às ${formatTimeLabel(nextBooking.startsAt)}` : "Sem retorno marcado",
+      rescheduleCount: relatedBookings.filter((booking) => booking.status === "rescheduled").length,
+      totalBookings: relatedBookings.length,
+      history: relatedBookings.slice(0, 6).map((booking) => ({
+        id: booking.id,
+        date: formatDateLabel(booking.startsAt),
+        time: formatTimeLabel(booking.startsAt),
+        providerName: booking.providerName,
+        serviceName: booking.serviceName ?? "Serviço não informado",
+        status: booking.status,
+        notes: booking.notes
+      }))
     };
   });
 }

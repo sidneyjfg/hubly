@@ -28,10 +28,12 @@ export function TableRow({
 
 export function TableCell({
   className,
-  children
+  children,
+  colSpan
 }: {
   className?: string;
   children: React.ReactNode;
+  colSpan?: number;
 }) {
-  return <td className={cn("px-5 py-4 text-sm text-slate-200", className)}>{children}</td>;
+  return <td className={cn("px-5 py-4 text-sm text-slate-200", className)} colSpan={colSpan}>{children}</td>;
 }

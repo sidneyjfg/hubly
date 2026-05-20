@@ -18,6 +18,10 @@ export class BillingController {
     reply.status(200).send(await this.billingService.createSubscriptionCheckout(getAuthUser(request), request.body));
   };
 
+  public createSubscriptionCustomerPortal = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.billingService.createSubscriptionCustomerPortal(getAuthUser(request)));
+  };
+
   public cancelOrganizationSubscription = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     reply.status(200).send(await this.billingService.cancelOrganizationSubscription(getAuthUser(request)));
   };

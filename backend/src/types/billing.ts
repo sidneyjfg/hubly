@@ -35,3 +35,7 @@ export type OrganizationSubscription = {
 export type SubscriptionCheckout = {
   checkoutUrl: string;
 };
+
+export type SubscriptionCustomerPortal = {
+  portalUrl: string;
+};

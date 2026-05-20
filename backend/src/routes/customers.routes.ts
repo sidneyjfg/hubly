@@ -12,6 +12,7 @@ import { criticalRouteRateLimitMiddleware } from "../middlewares/request-protect
 import { allowRoles } from "../middlewares/rbac";
 import { CustomersRepository } from "../repositories/customers.repository";
 import { CustomersService } from "../services/customers.service";
+import { PlanEntitlementsService } from "../services/plan-entitlements.service";
 
 type CustomersRouteOptions = {
   dataSource: DataSource;
@@ -22,7 +23,10 @@ export const customersRoutes = async (
   options: CustomersRouteOptions,
 ): Promise<void> => {
   const customersController = new CustomersController(
-    new CustomersService(new CustomersRepository(options.dataSource)),
+    new CustomersService(
+      new CustomersRepository(options.dataSource),
+      new PlanEntitlementsService(options.dataSource),
+    ),
   );
 
   app.get(

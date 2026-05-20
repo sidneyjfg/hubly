@@ -6,6 +6,7 @@ import type { AuthenticatedRequestUser } from "../types/auth";
 import type { Provider, ProviderAvailability, ProviderAvailabilityWriteInput, ProviderWriteInput } from "../types/provider";
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult, type PaginationInput } from "../utils/pagination";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const providerWriteSchema = z.object({
   fullName: z.string().min(3).max(120),
@@ -36,6 +37,7 @@ export class ProvidersService {
   public constructor(
     private readonly providersRepository: ProvidersRepository,
     private readonly providerAvailabilitiesRepository: ProviderAvailabilitiesRepository,
+    private readonly planEntitlementsService: PlanEntitlementsService,
   ) {}
 
   public async list(
@@ -47,6 +49,7 @@ export class ProvidersService {
 
   public async create(user: AuthenticatedRequestUser, input: ProviderWriteInput): Promise<Provider> {
     const data = providerWriteSchema.parse(input);
+    await this.planEntitlementsService.assertCanCreateProvider(user.organizationId);
     return this.providersRepository.create(user.organizationId, {
       fullName: data.fullName,
       specialty: data.specialty,
@@ -70,6 +73,13 @@ export class ProvidersService {
   }
 
   public async setStatus(user: AuthenticatedRequestUser, id: string, isActive: boolean): Promise<Provider> {
+    if (isActive) {
+      const currentProvider = await this.providersRepository.findByIdInOrganization(user.organizationId, id);
+      if (currentProvider && !currentProvider.isActive) {
+        await this.planEntitlementsService.assertCanCreateProvider(user.organizationId);
+      }
+    }
+
     const provider = await this.providersRepository.setActiveInOrganization(user.organizationId, id, isActive);
 
     if (!provider) {

@@ -145,7 +145,13 @@ function translateApiErrorMessage(code: string | undefined, message: string): st
     "payments.insufficient_balance": "Saldo disponível insuficiente para solicitar saque.",
     "payments.stripe_account_required": "A organização precisa concluir a verificação de identidade antes.",
     "payments.provider_not_eligible": "A conta de pagamentos ainda não está apta para receber pagamentos online.",
-    "payments.payout_account_not_verified": "A conta de pagamentos precisa estar verificada antes de solicitar saques."
+    "payments.payout_account_not_verified": "A conta de pagamentos precisa estar verificada antes de solicitar saques.",
+    "billing.plan_limit.providers": "Seu plano atingiu o limite de profissionais ativos.",
+    "billing.plan_limit.customers": "Seu plano atingiu o limite de clientes ativos.",
+    "billing.plan_limit.bookings": "Seu plano atingiu o limite mensal de agendamentos.",
+    "billing.plan_limit.gallery": "Seu plano atingiu o limite de fotos na vitrine.",
+    "billing.plan_feature.whatsapp": "Lembretes por WhatsApp estão disponíveis a partir do plano Pro.",
+    "billing.plan_feature.relationship": "Automações de relacionamento estão disponíveis no plano Premium."
   };
 
   if (code && paymentMessages[code]) {

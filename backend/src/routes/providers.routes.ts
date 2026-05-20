@@ -14,6 +14,7 @@ import { criticalRouteRateLimitMiddleware } from "../middlewares/request-protect
 import { allowRoles } from "../middlewares/rbac";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
+import { PlanEntitlementsService } from "../services/plan-entitlements.service";
 import { ProvidersService } from "../services/providers.service";
 
 type ProvidersRouteOptions = {
@@ -28,6 +29,7 @@ export const providersRoutes = async (
     new ProvidersService(
       new ProvidersRepository(options.dataSource),
       new ProviderAvailabilitiesRepository(options.dataSource),
+      new PlanEntitlementsService(options.dataSource),
     ),
   );
 

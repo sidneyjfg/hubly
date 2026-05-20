@@ -18,6 +18,7 @@ import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult } from "../utils/pagination";
 import { isWithinProviderAvailability } from "../utils/provider-availability";
 import { NotificationsService } from "./notifications.service";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const bookingWriteSchema = z.object({
   customerId: z.string().min(3),
@@ -113,6 +114,7 @@ export class BookingsService {
     private readonly auditRepository: AuditRepository,
     private readonly notificationsService: NotificationsService,
     private readonly providerServicesRepository?: ServiceOfferingsRepository,
+    private readonly planEntitlementsService?: PlanEntitlementsService,
   ) {}
 
   public async list(
@@ -151,6 +153,7 @@ export class BookingsService {
     const { startsAt, endsAt } = parseBookingWindow(data.startsAt, data.endsAt);
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+      await this.planEntitlementsService?.assertCanCreateBooking(user.organizationId, startsAt, manager);
       await this.ensureBookingRelations(user, data.customerId, data.providerId, data.offeringId ?? null, manager);
       await this.assertWithinProviderAvailability(user.organizationId, data.providerId, startsAt, endsAt, manager);
       await this.assertNoConflict(user.organizationId, data.providerId, startsAt, endsAt, manager);

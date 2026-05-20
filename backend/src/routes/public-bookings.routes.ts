@@ -20,6 +20,7 @@ import { ProvidersRepository } from "../repositories/providers.repository";
 import { ServiceOfferingsRepository } from "../repositories/service-offerings.repository";
 import { EvolutionWhatsAppService } from "../services/evolution-whatsapp.service";
 import { NotificationsService } from "../services/notifications.service";
+import { PlanEntitlementsService } from "../services/plan-entitlements.service";
 import { PublicBookingsService } from "../services/public-bookings.service";
 
 type PublicBookingsRouteOptions = {
@@ -40,6 +41,7 @@ export const publicBookingsRoutes = async (
     new OrganizationIntegrationsRepository(options.dataSource),
     new AuditRepository(options.dataSource),
     new EvolutionWhatsAppService(),
+    new PlanEntitlementsService(options.dataSource),
   );
 
   const controller = new PublicBookingsController(
@@ -53,6 +55,7 @@ export const publicBookingsRoutes = async (
       new BookingsRepository(options.dataSource),
       notificationsService,
       new AuditRepository(options.dataSource),
+      new PlanEntitlementsService(options.dataSource),
     ),
   );
 

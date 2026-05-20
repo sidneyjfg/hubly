@@ -5,6 +5,8 @@ import { NotificationsController } from "../controllers/notifications.controller
 import {
   notificationsChannelsRouteSchema,
   notificationsProcessDueWhatsAppRouteSchema,
+  notificationsRelationshipSettingsGetRouteSchema,
+  notificationsRelationshipSettingsUpdateRouteSchema,
   notificationsWhatsAppSettingsGetRouteSchema,
   notificationsWhatsAppSettingsUpdateRouteSchema,
 } from "../docs/route-schemas";
@@ -50,6 +52,27 @@ export const notificationsRoutes = async (
       schema: notificationsWhatsAppSettingsUpdateRouteSchema,
     },
     notificationsController.updateWhatsAppSettings,
+  );
+
+  app.get(
+    "/notifications/relationship/settings",
+    {
+      preHandler: allowRoles(["administrator", "reception"]),
+      schema: notificationsRelationshipSettingsGetRouteSchema,
+    },
+    notificationsController.getRelationshipSettings,
+  );
+
+  app.put(
+    "/notifications/relationship/settings",
+    {
+      preHandler: [
+        allowRoles(["administrator"]),
+        criticalRouteRateLimitMiddleware("notifications:relationship:settings"),
+      ],
+      schema: notificationsRelationshipSettingsUpdateRouteSchema,
+    },
+    notificationsController.updateRelationshipSettings,
   );
 
   app.post(

@@ -15,6 +15,7 @@ import { hashPassword, verifyPassword } from "../utils/password";
 import { buildAvailableSlots, isWithinProviderAvailability, resolveWeekday } from "../utils/provider-availability";
 import { createCustomerAccessToken, verifyCustomerAccessToken } from "../utils/customer-tokens";
 import { NotificationsService } from "./notifications.service";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const publicBookingRequestSchema = z.object({
   fullName: z.string().min(3).max(120),
@@ -69,6 +70,7 @@ export class PublicBookingsService {
     private readonly bookingsRepository: BookingsRepository,
     private readonly notificationsService: NotificationsService,
     private readonly auditRepository: AuditRepository,
+    private readonly planEntitlementsService: PlanEntitlementsService,
   ) {}
 
   public async getBookingPage(slug: string): Promise<PublicBookingPage> {
@@ -279,6 +281,8 @@ export class PublicBookingsService {
         return existingCustomer;
       }
 
+      await this.planEntitlementsService.assertCanCreateCustomer(organization.id, manager);
+
       return this.customersRepository.create(
         organization.id,
         {
@@ -425,6 +429,8 @@ export class PublicBookingsService {
     }
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+      await this.planEntitlementsService.assertCanCreateBooking(organization.id, startsAt, manager);
+
       const provider = await this.providersRepository.findByIdInOrganization(organization.id, data.providerId, manager);
       if (!provider || !provider.isActive) {
         throw new AppError("providers.not_found", "Provider not found.", 404);
@@ -467,6 +473,10 @@ export class PublicBookingsService {
         { email: data.email ?? null, phone: data.phone },
         manager,
       );
+      if (!existingCustomer) {
+        await this.planEntitlementsService.assertCanCreateCustomer(organization.id, manager);
+      }
+
       const customer = existingCustomer ?? await this.customersRepository.create(
         organization.id,
         {

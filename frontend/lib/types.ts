@@ -280,6 +280,21 @@ export type CustomerRow = {
   isActive: boolean;
   status: CustomerStatus;
   lastVisit: string;
+  lastBookingLabel: string;
+  nextBookingLabel: string;
+  rescheduleCount: number;
+  totalBookings: number;
+  history: CustomerHistoryItem[];
+};
+
+export type CustomerHistoryItem = {
+  id: string;
+  date: string;
+  time: string;
+  providerName: string;
+  serviceName: string;
+  status: BookingStatus;
+  notes?: string | null;
 };
 
 export type WhatsAppReminderRule = {
@@ -291,6 +306,27 @@ export type WhatsAppReminderSettings = {
   channel: "whatsapp";
   isEnabled: boolean;
   reminders: WhatsAppReminderRule[];
+};
+
+export type RelationshipCampaignType = "promotion" | "loyalty";
+export type RelationshipCampaignChannel = "whatsapp";
+
+export type RelationshipCampaign = {
+  id: string;
+  title: string;
+  type: RelationshipCampaignType;
+  audience: string;
+  triggerDaysAfterLastBooking: number;
+  message: string;
+  channels: RelationshipCampaignChannel[];
+  isEnabled: boolean;
+};
+
+export type RelationshipAutomationSettings = {
+  organizationId: string;
+  channel: "relationship";
+  isEnabled: boolean;
+  campaigns: RelationshipCampaign[];
 };
 
 export type IntegrationSummary = {

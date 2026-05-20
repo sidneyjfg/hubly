@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Power } from "lucide-react";
+import { CalendarClock, ChevronDown, History, Pencil, Plus, Power } from "lucide-react";
 
 import { CreateCustomerModal } from "@/components/customers/create-customer-modal";
 import { StatusBadge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import type { CustomerRow } from "@/lib/types";
 export default function CustomersPage() {
   const [open, setOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerRow | null>(null);
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const limit = 10;
   const queryClient = useQueryClient();
@@ -70,12 +71,15 @@ export default function CustomersPage() {
                 <TableCell>Telefone</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Última visita</TableCell>
+                <TableCell>Retorno</TableCell>
+                <TableCell>Histórico</TableCell>
                 <TableCell>Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {customers.map((customer) => (
-                <TableRow key={customer.id}>
+                <Fragment key={customer.id}>
+                <TableRow>
                   <TableCell>
                     <div>
                       <p className="font-medium text-white">{customer.fullName}</p>
@@ -87,8 +91,25 @@ export default function CustomersPage() {
                     <StatusBadge status={customer.isActive ? customer.status : "cancelled"} />
                   </TableCell>
                   <TableCell>{customer.lastVisit}</TableCell>
+                  <TableCell>{customer.nextBookingLabel}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="text-sm text-white">{customer.totalBookings} agendamentos</p>
+                      <p className="text-xs text-slate-400">{customer.rescheduleCount} reagendamentos</p>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() =>
+                          setExpandedCustomerId((current) => current === customer.id ? null : customer.id)
+                        }
+                        size="sm"
+                        variant="secondary"
+                      >
+                        <ChevronDown className={`mr-2 h-4 w-4 transition ${expandedCustomerId === customer.id ? "rotate-180" : ""}`} />
+                        Histórico
+                      </Button>
                       <Button
                         onClick={() => {
                           setEditingCustomer(customer);
@@ -112,6 +133,14 @@ export default function CustomersPage() {
                     </div>
                   </TableCell>
                 </TableRow>
+                {expandedCustomerId === customer.id ? (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <CustomerHistoryPanel customer={customer} />
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+                </Fragment>
               ))}
             </TableBody>
           </TableRoot>
@@ -144,6 +173,59 @@ export default function CustomersPage() {
         open={open}
         customer={editingCustomer}
       />
+    </div>
+  );
+}
+
+function CustomerHistoryPanel({ customer }: { customer: CustomerRow }) {
+  return (
+    <div className="grid gap-4 rounded-lg border border-white/10 bg-slate-950/50 p-4 lg:grid-cols-[0.8fr_1.2fr]">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-white">
+          <CalendarClock className="h-4 w-4 text-sky-300" />
+          Último agendamento
+        </div>
+        <p className="text-sm text-slate-300">{customer.lastBookingLabel}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <HistoryTile label="Total" value={customer.totalBookings.toString()} />
+          <HistoryTile label="Reagendamentos" value={customer.rescheduleCount.toString()} />
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-white">
+          <History className="h-4 w-4 text-sky-300" />
+          Linha do tempo
+        </div>
+        <div className="space-y-2">
+          {customer.history.map((item) => (
+            <div className="rounded-lg border border-white/10 bg-white/5 p-3" key={item.id}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">{item.date} às {item.time}</p>
+                  <p className="mt-1 text-xs text-slate-400">{item.providerName} - {item.serviceName}</p>
+                </div>
+                <StatusBadge status={item.status} />
+              </div>
+              {item.notes ? <p className="mt-2 text-xs text-slate-400">{item.notes}</p> : null}
+            </div>
+          ))}
+          {customer.history.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-white/10 p-4 text-sm text-slate-400">
+              Cliente ainda sem histórico de agendamentos.
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HistoryTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
     </div>
   );
 }

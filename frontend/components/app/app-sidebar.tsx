@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
@@ -20,7 +19,6 @@ import {
 import { useState } from "react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
-import { api } from "@/lib/api";
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -48,12 +46,6 @@ export function AppSidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const ToggleIcon = isExpanded ? PanelLeftClose : PanelLeftOpen;
   const visibleNavigation = role ? navigation.filter((item) => item.roles.includes(role)) : navigation;
-  const subscriptionQuery = useQuery({
-    queryKey: ["organization-subscription"],
-    queryFn: api.getOrganizationSubscription,
-    enabled: role === "administrator" && isExpanded
-  });
-  const subscriptionPendingItems = getSubscriptionPendingItems(subscriptionQuery.data?.current);
 
   return (
     <aside
@@ -99,32 +91,7 @@ export function AppSidebar() {
             );
           })}
         </nav>
-
-        {isExpanded && subscriptionPendingItems.length > 0 ? (
-          <Link
-            className="mt-5 block rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 transition hover:bg-amber-300/15"
-            href="/payments"
-          >
-            <div className="flex items-center gap-2 text-sm font-medium text-amber-100">
-              <CreditCard className="h-4 w-4" />
-              Pendências da assinatura
-            </div>
-            <ul className="mt-3 space-y-2 text-sm text-amber-100/85">
-              {subscriptionPendingItems.slice(0, 2).map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </Link>
-        ) : null}
       </div>
     </aside>
   );
-}
-
-function getSubscriptionPendingItems(subscription?: { plan: { code: string }; status: string; stripePriceId: string | null } | null): string[] {
-  if (!subscription) return [];
-  return [
-    ...(subscription.plan.code !== "free" && !subscription.stripePriceId ? ["Plano indisponível para cobrança."] : []),
-    ...(["past_due", "unpaid"].includes(subscription.status) ? ["Regularizar status da assinatura."] : [])
-  ];
 }

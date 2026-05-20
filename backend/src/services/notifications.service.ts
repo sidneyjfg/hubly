@@ -13,11 +13,14 @@ import type { AuthenticatedRequestUser } from "../types/auth";
 import type {
   BookingNotification,
   ProcessDueNotificationsResult,
+  RelationshipAutomationSettings,
+  RelationshipAutomationSettingsInput,
   WhatsAppReminderSettings,
   WhatsAppReminderSettingsInput,
 } from "../types/notification";
 import { AppError } from "../utils/app-error";
 import { EvolutionWhatsAppService } from "./evolution-whatsapp.service";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const whatsappReminderRuleSchema = z.object({
   hoursBefore: z.number().int().min(1).max(24 * 30),
@@ -49,6 +52,30 @@ const whatsappReminderSettingsSchema = z.object({
       path: ["reminders"],
     });
   }
+});
+
+const relationshipCampaignSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().trim().min(3).max(120),
+  type: z.enum(["promotion", "loyalty"]),
+  audience: z.string().trim().min(3).max(160),
+  triggerDaysAfterLastBooking: z.number().int().min(1).max(365),
+  message: z.string().trim().min(10).max(600),
+  channels: z.array(z.literal("whatsapp")).min(1).max(1),
+  isEnabled: z.boolean(),
+}).superRefine((value, context) => {
+  if (new Set(value.channels).size !== value.channels.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Campaign channels must be unique.",
+      path: ["channels"],
+    });
+  }
+});
+
+const relationshipAutomationSettingsSchema = z.object({
+  isEnabled: z.boolean(),
+  campaigns: z.array(relationshipCampaignSchema).max(20),
 });
 
 const processDueSchema = z.object({
@@ -92,16 +119,21 @@ export class NotificationsService {
     private readonly organizationIntegrationsRepository: OrganizationIntegrationsRepository,
     private readonly auditRepository: AuditRepository,
     private readonly evolutionWhatsAppService: EvolutionWhatsAppService,
+    private readonly planEntitlementsService: PlanEntitlementsService,
   ) {}
 
   public async listChannels(): Promise<{ items: readonly string[] }> {
     return {
-      items: ["whatsapp", "email"] as const,
+      items: ["whatsapp"] as const,
     };
   }
 
   public async getWhatsAppSettings(user: AuthenticatedRequestUser): Promise<WhatsAppReminderSettings> {
     return this.organizationNotificationSettingsRepository.findWhatsAppByOrganization(user.organizationId);
+  }
+
+  public async getRelationshipSettings(user: AuthenticatedRequestUser): Promise<RelationshipAutomationSettings> {
+    return this.organizationNotificationSettingsRepository.findRelationshipByOrganization(user.organizationId);
   }
 
   public async updateWhatsAppSettings(
@@ -111,6 +143,10 @@ export class NotificationsService {
     const data = whatsappReminderSettingsSchema.parse(input);
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+      if (data.isEnabled) {
+        await this.planEntitlementsService.assertCanUseWhatsAppReminders(user.organizationId, manager);
+      }
+
       const settings = await this.organizationNotificationSettingsRepository.upsertWhatsAppSettings(
         {
           organizationId: user.organizationId,
@@ -129,6 +165,41 @@ export class NotificationsService {
           action: "notification.whatsapp.settings_updated",
           targetType: "notification_setting",
           targetId: "whatsapp",
+        },
+        manager,
+      );
+
+      return settings;
+    });
+  }
+
+  public async updateRelationshipSettings(
+    user: AuthenticatedRequestUser,
+    input: RelationshipAutomationSettingsInput,
+  ): Promise<RelationshipAutomationSettings> {
+    const data = relationshipAutomationSettingsSchema.parse(input);
+
+    return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+      if (data.isEnabled || data.campaigns.some((campaign) => campaign.isEnabled)) {
+        await this.planEntitlementsService.assertCanUseRelationshipAutomations(user.organizationId, manager);
+      }
+
+      const settings = await this.organizationNotificationSettingsRepository.upsertRelationshipSettings(
+        {
+          organizationId: user.organizationId,
+          isEnabled: data.isEnabled,
+          campaigns: data.campaigns,
+        },
+        manager,
+      );
+
+      await this.auditRepository.create(
+        {
+          organizationId: user.organizationId,
+          actorId: user.id,
+          action: "notification.relationship.settings_updated",
+          targetType: "notification_setting",
+          targetId: "relationship",
         },
         manager,
       );

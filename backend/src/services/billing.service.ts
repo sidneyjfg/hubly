@@ -7,7 +7,7 @@ import type { Subscription } from "stripe/cjs/resources/Subscriptions";
 
 import { BillingPlanEntity, OrganizationSubscriptionEntity } from "../database/entities";
 import type { AuthenticatedRequestUser } from "../types/auth";
-import type { BillingPlan, OrganizationSubscription, SubscriptionCheckout } from "../types/billing";
+import type { BillingPlan, OrganizationSubscription, SubscriptionCheckout, SubscriptionCustomerPortal } from "../types/billing";
 import { AppError } from "../utils/app-error";
 import { env } from "../utils/env";
 import { StripeService } from "./stripe.service";
@@ -205,6 +205,37 @@ export class BillingService {
 
     const freeSubscription = await this.moveSubscriptionToFree(current);
     return this.mapSubscription(freeSubscription);
+  }
+
+  public async createSubscriptionCustomerPortal(
+    user: AuthenticatedRequestUser,
+  ): Promise<SubscriptionCustomerPortal> {
+    const repository = this.dataSource.getRepository(OrganizationSubscriptionEntity);
+    const current = await repository.findOne({
+      where: {
+        organizationId: user.organizationId,
+        stripeMode: env.STRIPE_BILLING_MODE,
+      },
+      relations: {
+        billingPlan: true,
+      },
+      order: {
+        createdAt: "DESC",
+      },
+    });
+
+    if (!current?.stripeCustomerId) {
+      throw new AppError("billing.customer_portal_unavailable", "Portal de assinatura indisponível para esta organização.", 409);
+    }
+
+    const session = await this.stripeService.createBillingPortalSession({
+      customerId: current.stripeCustomerId,
+      returnUrl: `${env.PUBLIC_WEB_APP_URL}/payments?portal=return`,
+    });
+
+    return {
+      portalUrl: session.url,
+    };
   }
 
   public async handleSubscriptionCheckoutCompleted(session: Session): Promise<void> {

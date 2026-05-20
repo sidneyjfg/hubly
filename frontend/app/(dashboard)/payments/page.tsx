@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CreditCard, Crown, Sparkles } from "lucide-react";
+import { CheckCircle2, CreditCard, Crown, ExternalLink, Sparkles } from "lucide-react";
 
 import { api } from "@/lib/api";
 import type { BillingPlan, OrganizationSubscription } from "@/lib/types";
@@ -10,22 +10,27 @@ import { Card } from "@/components/ui/card";
 
 const planFeatures: Record<BillingPlan["code"], string[]> = {
   free: [
-    "Agenda e presença digital em modo inicial",
+    "1 profissional ativo",
+    "50 clientes ativos",
+    "30 agendamentos por mês",
     "Perfil público básico",
-    "Cadastro de clientes e serviços",
+    "1 foto na vitrine",
     "Ideal para testar o Hubly antes de assinar"
   ],
   pro: [
-    "Agenda online moderna",
-    "Perfil público com fotos e serviços",
-    "Confirmações e lembretes por WhatsApp",
+    "Até 5 profissionais ativos",
+    "Até 1.000 clientes ativos",
+    "Agendamentos sem limite mensal",
+    "Perfil público completo com galeria",
+    "Lembretes por WhatsApp",
     "Clientes, histórico e métricas simples"
   ],
   premium: [
     "Tudo do Pro",
-    "Mais automações de relacionamento",
-    "Prioridade para múltiplos profissionais",
-    "Recursos avançados de presença digital"
+    "Até 15 profissionais ativos",
+    "Clientes sem limite prático",
+    "Configuração de promoções",
+    "Programa de fidelidade por WhatsApp"
   ]
 };
 
@@ -63,9 +68,21 @@ export default function PaymentsPage() {
     }
   });
 
+  const customerPortalMutation = useMutation({
+    mutationFn: api.createSubscriptionCustomerPortal,
+    meta: {
+      errorMessage: "Portal de assinatura não aberto",
+      successMessage: "Redirecionando para o portal da assinatura"
+    },
+    onSuccess: (response) => {
+      window.location.assign(response.portalUrl);
+    }
+  });
+
   const current = subscriptionQuery.data?.current ?? null;
   const plans = subscriptionQuery.data?.plans ?? [];
-  const isMutatingSubscription = checkoutMutation.isPending || cancelMutation.isPending;
+  const canUseCustomerPortal = Boolean(current?.stripeCustomerId);
+  const isMutatingSubscription = checkoutMutation.isPending || cancelMutation.isPending || customerPortalMutation.isPending;
   const cancellationDate = current?.cancelAtPeriodEnd && current.currentPeriodEnd
     ? formatDate(current.currentPeriodEnd)
     : null;
@@ -105,6 +122,12 @@ export default function PaymentsPage() {
             <span className="rounded-full bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-300">
               {formatSubscriptionStatus(current.status)}
             </span>
+            {canUseCustomerPortal ? (
+              <Button disabled={customerPortalMutation.isPending} onClick={() => customerPortalMutation.mutate()} variant="secondary">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Gerenciar assinatura
+              </Button>
+            ) : null}
           </div>
         </Card>
       ) : null}
@@ -148,6 +171,11 @@ export default function PaymentsPage() {
                 disabled={isCurrent || isScheduledFreeDowngrade || isMutatingSubscription}
                 onClick={() => {
                   if (plan.code === "free" && current?.plan.code !== "free") {
+                    if (canUseCustomerPortal) {
+                      customerPortalMutation.mutate();
+                      return;
+                    }
+
                     cancelMutation.mutate();
                     return;
                   }
@@ -156,8 +184,8 @@ export default function PaymentsPage() {
                 }}
                 variant={isCurrent ? "secondary" : "primary"}
               >
-                {isCurrent ? "Plano atual" : isScheduledFreeDowngrade ? "Cancelamento agendado" : plan.code === "free" ? "Cancelar no fim do ciclo" : isUpgrade ? "Assinar e evoluir" : "Alterar assinatura"}
-                {!isCurrent ? <Sparkles className="ml-2 h-4 w-4" /> : null}
+                {isCurrent ? "Plano atual" : isScheduledFreeDowngrade ? "Cancelamento agendado" : plan.code === "free" ? "Cancelar no portal" : isUpgrade ? "Assinar e evoluir" : "Alterar assinatura"}
+                {!isCurrent ? plan.code === "free" && canUseCustomerPortal ? <ExternalLink className="ml-2 h-4 w-4" /> : <Sparkles className="ml-2 h-4 w-4" /> : null}
               </Button>
             </Card>
           );
@@ -167,6 +195,7 @@ export default function PaymentsPage() {
       {subscriptionQuery.error ? <p className="text-sm text-rose-300">{subscriptionQuery.error.message}</p> : null}
       {checkoutMutation.error ? <p className="text-sm text-rose-300">{checkoutMutation.error.message}</p> : null}
       {cancelMutation.error ? <p className="text-sm text-rose-300">{cancelMutation.error.message}</p> : null}
+      {customerPortalMutation.error ? <p className="text-sm text-rose-300">{customerPortalMutation.error.message}</p> : null}
     </div>
   );
 }

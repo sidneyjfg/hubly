@@ -26,6 +26,8 @@ import {
   type PublicBookingWriteDTO,
   type PublicCustomerPortalDTO,
   type PublicCustomerSessionDTO,
+  type RelationshipAutomationSettingsDTO,
+  type RelationshipCampaignDTO,
   type SignInInputDTO,
   type SignUpInputDTO,
   type StripeAccountStatusDTO,
@@ -168,6 +170,13 @@ export const api = {
       method: "POST",
       auth: true,
       body: input
+    });
+  },
+
+  createSubscriptionCustomerPortal() {
+    return apiRequest<{ portalUrl: string }>(apiRoutes.organizations.subscriptionCustomerPortal, {
+      method: "POST",
+      auth: true
     });
   },
 
@@ -473,6 +482,20 @@ export const api = {
 
   updateWhatsAppSettings(input: { isEnabled: boolean; reminders: WhatsAppReminderRule[] }) {
     return apiRequest<WhatsAppReminderSettingsDTO>(apiRoutes.notifications.whatsappSettings, {
+      method: "PUT",
+      auth: true,
+      body: input
+    });
+  },
+
+  getRelationshipSettings() {
+    return apiRequest<RelationshipAutomationSettingsDTO>(apiRoutes.notifications.relationshipSettings, {
+      auth: true
+    });
+  },
+
+  updateRelationshipSettings(input: { isEnabled: boolean; campaigns: RelationshipCampaignDTO[] }) {
+    return apiRequest<RelationshipAutomationSettingsDTO>(apiRoutes.notifications.relationshipSettings, {
       method: "PUT",
       auth: true,
       body: input

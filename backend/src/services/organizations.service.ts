@@ -6,6 +6,7 @@ import type { Organization, OrganizationStorefrontInput, OrganizationWriteInput 
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult, type PaginationInput } from "../utils/pagination";
 import { slugify } from "../utils/slug";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const organizationWriteSchema = z.object({
   legalName: z.string().min(3).max(160),
@@ -35,7 +36,10 @@ const organizationStorefrontSchema = z.object({
 });
 
 export class OrganizationsService {
-  public constructor(private readonly organizationsRepository: OrganizationsRepository) {}
+  public constructor(
+    private readonly organizationsRepository: OrganizationsRepository,
+    private readonly planEntitlementsService: PlanEntitlementsService,
+  ) {}
 
   public async list(user: AuthenticatedRequestUser, paginationInput: PaginationInput = {}): Promise<PaginatedResult<Organization>> {
     return this.organizationsRepository.findAll(parsePagination(paginationInput), user.organizationId);
@@ -75,6 +79,7 @@ export class OrganizationsService {
 
   public async updateStorefront(user: AuthenticatedRequestUser, input: OrganizationStorefrontInput): Promise<Organization> {
     const data = organizationStorefrontSchema.parse(input);
+    await this.planEntitlementsService.assertCanUseGallerySize(user.organizationId, data.galleryImageUrls?.length ?? 0);
     const organization = await this.organizationsRepository.updateStorefrontInOrganization(user.organizationId, {
       ...data,
       bookingPageSlug: slugify(data.bookingPageSlug ?? data.tradeName),

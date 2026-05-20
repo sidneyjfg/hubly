@@ -41,6 +41,14 @@ export const billingRoutes = async (
   );
 
   app.post(
+    "/organization/subscription/customer-portal",
+    {
+      preHandler: [allowRoles(["administrator"]), criticalRouteRateLimitMiddleware("billing:customer-portal")],
+    },
+    controller.createSubscriptionCustomerPortal,
+  );
+
+  app.post(
     "/organization/subscription/cancel",
     {
       preHandler: [allowRoles(["administrator"]), criticalRouteRateLimitMiddleware("billing:cancel")],

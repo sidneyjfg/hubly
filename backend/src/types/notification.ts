@@ -1,4 +1,4 @@
-export const notificationChannels = ["whatsapp", "email"] as const;
+export const notificationChannels = ["whatsapp"] as const;
 export type NotificationChannel = (typeof notificationChannels)[number];
 
 export const notificationLeadTimeUnits = ["hours"] as const;
@@ -18,6 +18,32 @@ export type WhatsAppReminderSettings = {
 export type WhatsAppReminderSettingsInput = {
   isEnabled: boolean;
   reminders: WhatsAppReminderRule[];
+};
+
+export type RelationshipCampaignType = "promotion" | "loyalty";
+export type RelationshipCampaignChannel = "whatsapp";
+
+export type RelationshipCampaign = {
+  id: string;
+  title: string;
+  type: RelationshipCampaignType;
+  audience: string;
+  triggerDaysAfterLastBooking: number;
+  message: string;
+  channels: RelationshipCampaignChannel[];
+  isEnabled: boolean;
+};
+
+export type RelationshipAutomationSettings = {
+  organizationId: string;
+  channel: "relationship";
+  isEnabled: boolean;
+  campaigns: RelationshipCampaign[];
+};
+
+export type RelationshipAutomationSettingsInput = {
+  isEnabled: boolean;
+  campaigns: RelationshipCampaign[];
 };
 
 export const bookingNotificationStatuses = [

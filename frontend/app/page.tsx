@@ -16,7 +16,7 @@ import { SectionHeading } from "@/components/app/section-heading";
 import { AppVersion } from "@/components/app/app-version";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { clientLogos, monetizationHighlights, pricingComparison, testimonials } from "@/lib/mock-data";
+import { clientLogos, monetizationHighlights, testimonials } from "@/lib/mock-data";
 
 const problemPoints = [
   "Negócios locais dependem de mensagens soltas, redes sociais e indicação para manter a agenda previsível.",
@@ -28,7 +28,7 @@ const problemPoints = [
 const solutionItems = [
   {
     title: "Perfil público para negócios locais",
-    description: "Barbearias, clínicas, salões, estética e studios ganham página com fotos, serviços, avaliações e botão de agendamento."
+    description: "Barbearias, clínicas, salões, estética e studios ganham página com fotos, serviços e botão de agendamento."
   },
   {
     title: "Descoberta com agendamento",
@@ -36,7 +36,7 @@ const solutionItems = [
   },
   {
     title: "Gestão simples para crescer",
-    description: "Agenda, clientes, serviços, horários, lembretes e métricas ficam em um só painel para operar melhor."
+    description: "Agenda, clientes, serviços, horários, lembretes por WhatsApp e métricas ficam em um só painel para operar melhor."
   }
 ];
 
@@ -64,10 +64,11 @@ const benefits = [
 ];
 
 const comparisons = [
-  { feature: "Perfil público com serviços e avaliações", hubly: true, common: false },
+  { feature: "Perfil público com serviços e fotos", hubly: true, common: false },
   { feature: "Descoberta local", hubly: true, common: false },
   { feature: "Agendamento direto pelo cliente", hubly: true, common: false },
-  { feature: "Confirmação e lembretes", hubly: true, common: false },
+  { feature: "Lembretes por WhatsApp", hubly: true, common: false },
+  { feature: "Histórico do cliente e último agendamento", hubly: true, common: false },
   { feature: "Indicadores simples de operação", hubly: true, common: false },
   { feature: "Assinatura mensal fixa", hubly: true, common: false },
   { feature: "Apenas organização interna de horários", hubly: false, common: true }
@@ -91,6 +92,49 @@ const faqs = [
   {
     question: "Existe teste grátis?",
     answer: "Sim. A entrada pode ser feita com teste grátis, primeiro mês gratuito ou desconto inicial para reduzir a barreira de adoção."
+  }
+];
+
+const planCards = [
+  {
+    name: "Gratuito",
+    price: "R$0",
+    description: "Para testar o Hubly com limites operacionais.",
+    features: [
+      "1 profissional ativo",
+      "50 clientes ativos",
+      "30 agendamentos por mês",
+      "Perfil público básico",
+      "1 foto na vitrine",
+      "Relatórios básicos"
+    ]
+  },
+  {
+    name: "Pro",
+    price: "R$69,90",
+    description: "Plano principal para operação diária do negócio.",
+    highlighted: true,
+    features: [
+      "Até 5 profissionais ativos",
+      "Até 1.000 clientes ativos",
+      "Agendamentos sem limite mensal",
+      "Perfil público completo com galeria",
+      "Lembretes por WhatsApp",
+      "Histórico completo do cliente"
+    ]
+  },
+  {
+    name: "Premium",
+    price: "Sob consulta",
+    description: "Para negócios que querem mais equipe e relacionamento.",
+    features: [
+      "Até 15 profissionais ativos",
+      "Clientes sem limite prático",
+      "Agendamentos sem limite mensal",
+      "Tudo do Pro",
+      "Configuração de promoções",
+      "Programa de fidelidade por WhatsApp"
+    ]
   }
 ];
 
@@ -138,11 +182,11 @@ export default function MarketingPage() {
               <div className="mt-10 flex flex-wrap gap-6 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <MessageSquareMore className="h-4 w-4 text-sky-300" />
-                  WhatsApp e e-mail para confirmação
+                  Lembretes por WhatsApp
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarCheck2 className="h-4 w-4 text-sky-300" />
-                  Agendamentos com Google Calendar
+                  Agenda, clientes e vitrine pública
                 </div>
               </div>
             </div>
@@ -301,7 +345,7 @@ export default function MarketingPage() {
             <p className="mt-8 text-5xl font-semibold text-white">R$69,90</p>
             <p className="mt-4 text-xl font-semibold text-white">por mês no plano principal</p>
             <p className="mt-4 leading-7 text-slate-200">
-              Assinatura recorrente e previsível para agendamento online, perfil público, WhatsApp, clientes, serviços e métricas simples.
+              Assinatura recorrente e previsível para agendamento online, perfil público, clientes, serviços, WhatsApp e métricas simples.
             </p>
             <p className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-300">
               O valor mensal não varia por cliente, agendamento ou venda realizada pelo negócio.
@@ -322,12 +366,12 @@ export default function MarketingPage() {
             </div>
 
             <Card>
-              <p className="text-xl font-semibold text-white">Preço simples para retenção e adoção</p>
+              <p className="text-xl font-semibold text-white">Planos de acordo com o uso real do Hubly</p>
               <p className="mt-4 leading-7 text-slate-300">
-                O Hubly mantém descoberta e localização como diferencial, mas monetiza pelo valor recorrente entregue ao negócio: agenda, gestão, presença digital e automações de relacionamento.
+                Os bloqueios seguem os recursos já disponíveis: profissionais, clientes, agendamentos, vitrine, WhatsApp e automações de relacionamento.
               </p>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {pricingComparison.map((item) => (
+                {planCards.map((item) => (
                   <div
                     className={`rounded-lg border p-5 ${
                       item.highlighted
@@ -337,8 +381,13 @@ export default function MarketingPage() {
                     key={item.name}
                   >
                     <p className="text-sm font-medium text-slate-300">{item.name}</p>
-                    <p className="mt-3 text-3xl font-semibold text-white">{item.rate}</p>
+                    <p className="mt-3 text-3xl font-semibold text-white">{item.price}</p>
                     <p className="mt-3 text-sm leading-6 text-slate-400">{item.description}</p>
+                    <ul className="mt-5 space-y-2 text-sm text-slate-300">
+                      {item.features.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>

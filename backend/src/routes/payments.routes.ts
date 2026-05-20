@@ -23,6 +23,7 @@ import { EvolutionWhatsAppService } from "../services/evolution-whatsapp.service
 import { NotificationsService } from "../services/notifications.service";
 import { PaymentCalculatorService } from "../services/payment-calculator.service";
 import { PaymentsService } from "../services/payments.service";
+import { PlanEntitlementsService } from "../services/plan-entitlements.service";
 import { StripeService } from "../services/stripe.service";
 
 type PaymentsRouteOptions = {
@@ -42,6 +43,7 @@ export const buildPaymentsService = (dataSource: DataSource): PaymentsService =>
     new OrganizationIntegrationsRepository(dataSource),
     auditRepository,
     new EvolutionWhatsAppService(),
+    new PlanEntitlementsService(dataSource),
   );
 
   return new PaymentsService(

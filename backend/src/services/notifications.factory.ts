@@ -9,6 +9,7 @@ import { OrganizationsRepository } from "../repositories/organizations.repositor
 import { CustomersRepository } from "../repositories/customers.repository";
 import { EvolutionWhatsAppService } from "./evolution-whatsapp.service";
 import { NotificationsService } from "./notifications.service";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 export function createNotificationsService(dataSource: DataSource): NotificationsService {
   return new NotificationsService(
@@ -21,5 +22,6 @@ export function createNotificationsService(dataSource: DataSource): Notification
     new OrganizationIntegrationsRepository(dataSource),
     new AuditRepository(dataSource),
     new EvolutionWhatsAppService(),
+    new PlanEntitlementsService(dataSource),
   );
 }

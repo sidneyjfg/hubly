@@ -17,6 +17,8 @@ import type {
   OrganizationPaymentSettings,
   OrganizationSubscriptionOverview,
   ProviderPaymentSettings,
+  RelationshipAutomationSettings,
+  RelationshipCampaign,
   WhatsAppConnectionStatus,
   WhatsAppDisconnectResult,
   WhatsAppReminderSettings,
@@ -44,6 +46,7 @@ export const apiRoutes = {
     storefront: "/v1/organizations/storefront",
     subscription: "/v1/organization/subscription",
     subscriptionCheckout: "/v1/organization/subscription/checkout",
+    subscriptionCustomerPortal: "/v1/organization/subscription/customer-portal",
     subscriptionCancel: "/v1/organization/subscription/cancel",
     paymentSettings: "/v1/organization/payment-settings",
     stripeAccount: "/v1/organization/stripe/accounts",
@@ -96,6 +99,7 @@ export const apiRoutes = {
   notifications: {
     channels: "/v1/notifications/channels",
     whatsappSettings: "/v1/notifications/whatsapp/settings",
+    relationshipSettings: "/v1/notifications/relationship/settings",
     process: "/v1/notifications/whatsapp/process"
   },
   integrations: {
@@ -153,6 +157,9 @@ export type ProviderPaymentSettingsUpdateDTO = {
   onlineDiscountBps?: number;
   absorbsProcessingFee?: boolean;
 };
+
+export type RelationshipCampaignDTO = RelationshipCampaign;
+export type RelationshipAutomationSettingsDTO = RelationshipAutomationSettings;
 
 export type StripeOnboardingLinkDTO = StripeOnboardingLink;
 export type StripeConnectAccountDTO = StripeConnectAccount;

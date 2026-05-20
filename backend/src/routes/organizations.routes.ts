@@ -7,6 +7,7 @@ import { criticalRouteRateLimitMiddleware } from "../middlewares/request-protect
 import { allowRoles } from "../middlewares/rbac";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
 import { OrganizationsService } from "../services/organizations.service";
+import { PlanEntitlementsService } from "../services/plan-entitlements.service";
 
 type OrganizationsRouteOptions = {
   dataSource: DataSource;
@@ -17,7 +18,10 @@ export const organizationsRoutes = async (
   options: OrganizationsRouteOptions,
 ): Promise<void> => {
   const organizationsController = new OrganizationsController(
-    new OrganizationsService(new OrganizationsRepository(options.dataSource)),
+    new OrganizationsService(
+      new OrganizationsRepository(options.dataSource),
+      new PlanEntitlementsService(options.dataSource),
+    ),
   );
 
   app.get(

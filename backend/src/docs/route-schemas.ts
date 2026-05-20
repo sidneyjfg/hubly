@@ -546,6 +546,57 @@ const whatsappReminderSettingsWriteSchema = {
   },
 } as const;
 
+const relationshipCampaignSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["id", "title", "type", "audience", "triggerDaysAfterLastBooking", "message", "channels", "isEnabled"],
+  properties: {
+    id: { type: "string", format: "uuid" },
+    title: { type: "string", minLength: 3, maxLength: 120 },
+    type: { type: "string", enum: ["promotion", "loyalty"] },
+    audience: { type: "string", minLength: 3, maxLength: 160 },
+    triggerDaysAfterLastBooking: { type: "integer", minimum: 1, maximum: 365 },
+    message: { type: "string", minLength: 10, maxLength: 600 },
+    channels: {
+      type: "array",
+      items: { type: "string", enum: ["whatsapp"] },
+      minItems: 1,
+      maxItems: 1,
+    },
+    isEnabled: { type: "boolean" },
+  },
+} as const;
+
+const relationshipAutomationSettingsSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["organizationId", "channel", "isEnabled", "campaigns"],
+  properties: {
+    organizationId: { type: "string" },
+    channel: { type: "string", const: "relationship" },
+    isEnabled: { type: "boolean" },
+    campaigns: {
+      type: "array",
+      items: relationshipCampaignSchema,
+      maxItems: 20,
+    },
+  },
+} as const;
+
+const relationshipAutomationSettingsWriteSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["isEnabled", "campaigns"],
+  properties: {
+    isEnabled: { type: "boolean" },
+    campaigns: {
+      type: "array",
+      items: relationshipCampaignSchema,
+      maxItems: 20,
+    },
+  },
+} as const;
+
 const bookingNotificationSchema = {
   type: "object",
   additionalProperties: false,
@@ -1183,6 +1234,31 @@ export const notificationsWhatsAppSettingsUpdateRouteSchema = {
   response: {
     ...protectedRouteSchemaBase.response,
     200: whatsappReminderSettingsSchema,
+    400: errorResponseSchema,
+    409: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
+export const notificationsRelationshipSettingsGetRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Notifications"],
+  summary: "Get relationship automation settings",
+  description: "Returns promotion, loyalty, and rebooking reminder automation settings for the current organization.",
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: relationshipAutomationSettingsSchema,
+  },
+} satisfies FastifySchema;
+
+export const notificationsRelationshipSettingsUpdateRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Notifications"],
+  summary: "Update relationship automation settings",
+  description: "Configures promotion, loyalty, and rebooking reminder automations for WhatsApp.",
+  body: relationshipAutomationSettingsWriteSchema,
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: relationshipAutomationSettingsSchema,
     400: errorResponseSchema,
     409: errorResponseSchema,
   },

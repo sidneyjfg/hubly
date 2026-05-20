@@ -14,6 +14,10 @@ export class NotificationsController {
     reply.status(200).send(await this.notificationsService.getWhatsAppSettings(getAuthUser(request)));
   };
 
+  public getRelationshipSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.notificationsService.getRelationshipSettings(getAuthUser(request)));
+  };
+
   public updateWhatsAppSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const body = request.body as {
       isEnabled?: boolean;
@@ -25,6 +29,38 @@ export class NotificationsController {
         isEnabled: body.isEnabled ?? false,
         reminders: (body.reminders ?? []).map((item) => ({
           hoursBefore: item.hoursBefore ?? 0,
+        })),
+      }),
+    );
+  };
+
+  public updateRelationshipSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const body = request.body as {
+      isEnabled?: boolean;
+      campaigns?: Array<{
+        id?: string;
+        title?: string;
+        type?: "promotion" | "loyalty";
+        audience?: string;
+        triggerDaysAfterLastBooking?: number;
+        message?: string;
+        channels?: Array<"whatsapp">;
+        isEnabled?: boolean;
+      }>;
+    };
+
+    reply.status(200).send(
+      await this.notificationsService.updateRelationshipSettings(getAuthUser(request), {
+        isEnabled: body.isEnabled ?? false,
+        campaigns: (body.campaigns ?? []).map((item) => ({
+          id: item.id ?? "",
+          title: item.title ?? "",
+          type: item.type ?? "promotion",
+          audience: item.audience ?? "",
+          triggerDaysAfterLastBooking: item.triggerDaysAfterLastBooking ?? 0,
+          message: item.message ?? "",
+          channels: item.channels ?? [],
+          isEnabled: item.isEnabled ?? false,
         })),
       }),
     );

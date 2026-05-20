@@ -6,6 +6,7 @@ import type { Customer } from "../types/customer";
 import type { CustomerWriteInput } from "../types/customer";
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult, type PaginationInput } from "../utils/pagination";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const customerWriteSchema = z.object({
   fullName: z.string().min(3).max(120),
@@ -14,7 +15,10 @@ const customerWriteSchema = z.object({
 });
 
 export class CustomersService {
-  public constructor(private readonly customersRepository: CustomersRepository) {}
+  public constructor(
+    private readonly customersRepository: CustomersRepository,
+    private readonly planEntitlementsService: PlanEntitlementsService,
+  ) {}
 
   public async list(user: AuthenticatedRequestUser, paginationInput: PaginationInput = {}): Promise<PaginatedResult<Customer>> {
     return this.customersRepository.findAll(user.organizationId, parsePagination(paginationInput));
@@ -25,6 +29,7 @@ export class CustomersService {
       ...input,
       email: input.email ?? null,
     });
+    await this.planEntitlementsService.assertCanCreateCustomer(user.organizationId);
     return this.customersRepository.create(user.organizationId, {
       fullName: data.fullName,
       phone: data.phone,
@@ -51,6 +56,13 @@ export class CustomersService {
   }
 
   public async setStatus(user: AuthenticatedRequestUser, id: string, isActive: boolean): Promise<Customer> {
+    if (isActive) {
+      const currentCustomer = await this.customersRepository.findByIdInOrganization(user.organizationId, id);
+      if (currentCustomer && !currentCustomer.isActive) {
+        await this.planEntitlementsService.assertCanCreateCustomer(user.organizationId);
+      }
+    }
+
     const customer = await this.customersRepository.setActiveInOrganization(user.organizationId, id, isActive);
     if (!customer) {
       throw new AppError("customers.not_found", "Paciente não encontrado.", 404);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Gift, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { Toggle } from "@/components/ui/toggle";
@@ -16,6 +16,25 @@ type WhatsAppStatusView = {
   description: string;
   isConnected: boolean;
 };
+
+type AutomationTab = "reminders" | "relationship";
+
+type CampaignType = "promotion" | "loyalty";
+
+type CampaignChannel = "whatsapp";
+
+type RelationshipCampaign = {
+  id: string;
+  title: string;
+  type: CampaignType;
+  audience: string;
+  triggerDaysAfterLastBooking: number;
+  message: string;
+  channels: CampaignChannel[];
+  isEnabled: boolean;
+};
+
+type CampaignDraft = Omit<RelationshipCampaign, "id" | "isEnabled">;
 
 function getWhatsAppStatusView(input: {
   backendEnabled?: boolean;
@@ -90,8 +109,30 @@ function getStatusClasses(tone: WhatsAppStatusView["tone"]): string {
 
 export default function AutomationsPage() {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<AutomationTab>("reminders");
   const [phoneNumber, setPhoneNumber] = useState("5511999999999");
   const [newReminderHours, setNewReminderHours] = useState("24");
+  const [campaignDraft, setCampaignDraft] = useState<CampaignDraft>({
+    title: "Retorno de consulta",
+    type: "promotion",
+    audience: "Todos os clientes ativos",
+    triggerDaysAfterLastBooking: 30,
+    message: "Ola, faz um tempo desde seu ultimo atendimento. Temos horarios disponiveis para remarcar sua consulta.",
+    channels: ["whatsapp"]
+  });
+  const [relationshipEnabled, setRelationshipEnabled] = useState(true);
+  const [campaigns, setCampaigns] = useState<RelationshipCampaign[]>([
+    {
+      id: crypto.randomUUID(),
+      title: "Lembrete de retorno",
+      type: "promotion",
+      audience: "Clientes sem retorno marcado",
+      triggerDaysAfterLastBooking: 30,
+      message: "Ola, podemos te ajudar a remarcar seu proximo atendimento?",
+      channels: ["whatsapp"],
+      isEnabled: true
+    }
+  ]);
   const [localState, setLocalState] = useState({
     isEnabled: false,
     reminders: [] as number[]
@@ -100,14 +141,16 @@ export default function AutomationsPage() {
   const { data, refetch: refetchAutomationSettings, isFetching: isFetchingAutomationSettings } = useQuery({
     queryKey: ["automation-settings"],
     queryFn: async () => {
-      const [settings, integrations, status] = await Promise.all([
+      const [settings, relationshipSettings, integrations, status] = await Promise.all([
         api.getWhatsAppSettings(),
+        api.getRelationshipSettings(),
         api.listIntegrations(),
         api.getWhatsAppStatus().catch(() => null)
       ]);
 
       return {
         settings,
+        relationshipSettings,
         integrations: integrations.items,
         status
       };
@@ -163,6 +206,20 @@ export default function AutomationsPage() {
     }
   });
 
+  const saveRelationshipMutation = useMutation({
+    mutationFn: () => api.updateRelationshipSettings({
+      isEnabled: relationshipEnabled,
+      campaigns
+    }),
+    meta: {
+      errorMessage: "Automações de relacionamento não salvas",
+      successMessage: "Automações de relacionamento salvas com sucesso"
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["automation-settings"] });
+    }
+  });
+
   const disconnectMutation = useMutation({
     mutationFn: api.disconnectWhatsApp,
     meta: {
@@ -184,6 +241,10 @@ export default function AutomationsPage() {
       isEnabled: data.settings.isEnabled,
       reminders: Array.from(reminderHours).sort((left, right) => right - left)
     });
+    setRelationshipEnabled(data.relationshipSettings.isEnabled);
+    if (data.relationshipSettings.campaigns.length > 0) {
+      setCampaigns(data.relationshipSettings.campaigns);
+    }
   }, [data]);
 
   function addReminderRule(): void {
@@ -207,6 +268,46 @@ export default function AutomationsPage() {
     }));
   }
 
+  function createCampaign(): void {
+    if (!campaignDraft.title.trim() || !campaignDraft.message.trim() || campaignDraft.channels.length === 0) {
+      return;
+    }
+
+    setCampaigns((items) => [
+      {
+        ...campaignDraft,
+        id: crypto.randomUUID(),
+        isEnabled: true,
+        title: campaignDraft.title.trim(),
+        message: campaignDraft.message.trim()
+      },
+      ...items
+    ]);
+  }
+
+  function toggleCampaignChannel(channel: CampaignChannel): void {
+    setCampaignDraft((draft) => {
+      const channels = draft.channels.includes(channel)
+        ? draft.channels.filter((item) => item !== channel)
+        : [...draft.channels, channel];
+
+      return {
+        ...draft,
+        channels
+      };
+    });
+  }
+
+  function toggleCampaignStatus(campaignId: string): void {
+    setCampaigns((items) =>
+      items.map((item) => item.id === campaignId ? { ...item, isEnabled: !item.isEnabled } : item)
+    );
+  }
+
+  function removeCampaign(campaignId: string): void {
+    setCampaigns((items) => items.filter((item) => item.id !== campaignId));
+  }
+
   const integration = data?.integrations[0];
   const latestSessionResult = regenerateCodeMutation.data ?? sessionMutation.data;
   const isCodeRequestPending = sessionMutation.isPending || regenerateCodeMutation.isPending;
@@ -224,6 +325,26 @@ export default function AutomationsPage() {
         <h1 className="mt-2 text-3xl font-semibold text-white">Playbooks operacionais</h1>
       </div>
 
+      <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+        {[
+          { label: "Lembretes", value: "reminders" },
+          { label: "Relacionamento", value: "relationship" }
+        ].map((item) => (
+          <button
+            className={`rounded-lg px-4 py-2 text-sm transition ${
+              activeTab === item.value ? "bg-primary text-white" : "text-slate-300 hover:bg-white/8"
+            }`}
+            key={item.value}
+            onClick={() => setActiveTab(item.value as AutomationTab)}
+            type="button"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "reminders" ? (
+        <>
       <Card>
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
@@ -377,6 +498,180 @@ export default function AutomationsPage() {
           </p>
         </Card>
       ) : null}
+        </>
+      ) : (
+        <RelationshipAutomationPanel
+          campaignDraft={campaignDraft}
+          campaigns={campaigns}
+          isEnabled={relationshipEnabled}
+          onCreateCampaign={createCampaign}
+          onRemoveCampaign={removeCampaign}
+          onSaveSettings={() => saveRelationshipMutation.mutate()}
+          onToggleCampaignChannel={toggleCampaignChannel}
+          onToggleCampaignStatus={toggleCampaignStatus}
+          saveError={saveRelationshipMutation.error?.message}
+          savePending={saveRelationshipMutation.isPending}
+          setCampaignDraft={setCampaignDraft}
+          setIsEnabled={setRelationshipEnabled}
+        />
+      )}
     </div>
   );
+}
+
+function RelationshipAutomationPanel({
+  campaignDraft,
+  campaigns,
+  isEnabled,
+  onCreateCampaign,
+  onRemoveCampaign,
+  onSaveSettings,
+  onToggleCampaignChannel,
+  onToggleCampaignStatus,
+  saveError,
+  savePending,
+  setIsEnabled,
+  setCampaignDraft
+}: {
+  campaignDraft: CampaignDraft;
+  campaigns: RelationshipCampaign[];
+  isEnabled: boolean;
+  onCreateCampaign: () => void;
+  onRemoveCampaign: (campaignId: string) => void;
+  onSaveSettings: () => void;
+  onToggleCampaignChannel: (channel: CampaignChannel) => void;
+  onToggleCampaignStatus: (campaignId: string) => void;
+  saveError?: string;
+  savePending: boolean;
+  setCampaignDraft: React.Dispatch<React.SetStateAction<CampaignDraft>>;
+  setIsEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xl font-semibold text-white">Promoções e fidelidade</p>
+            <p className="mt-3 text-slate-300">
+              Configure campanhas automáticas para clientes finais por WhatsApp, incluindo lembretes para remarcar depois do último atendimento.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-sm text-sky-100">
+            <Send className="h-4 w-4" />
+            Envio automático
+          </div>
+          <Toggle checked={isEnabled} onChange={() => setIsEnabled((current) => !current)} />
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <Input
+            onChange={(event) => setCampaignDraft((draft) => ({ ...draft, title: event.target.value }))}
+            placeholder="Nome da campanha"
+            value={campaignDraft.title}
+          />
+          <select
+            className="h-11 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition focus:border-sky-300"
+            onChange={(event) =>
+              setCampaignDraft((draft) => ({ ...draft, type: event.target.value as CampaignType }))
+            }
+            value={campaignDraft.type}
+          >
+            <option className="bg-slate-950" value="promotion">Promoção</option>
+            <option className="bg-slate-950" value="loyalty">Programa de fidelidade</option>
+          </select>
+          <Input
+            onChange={(event) => setCampaignDraft((draft) => ({ ...draft, audience: event.target.value }))}
+            placeholder="Público"
+            value={campaignDraft.audience}
+          />
+          <Input
+            min={1}
+            max={365}
+            onChange={(event) =>
+              setCampaignDraft((draft) => ({
+                ...draft,
+                triggerDaysAfterLastBooking: Number(event.target.value)
+              }))
+            }
+            placeholder="Dias após último agendamento"
+            type="number"
+            value={campaignDraft.triggerDaysAfterLastBooking}
+          />
+          <textarea
+            className="min-h-28 rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-300 lg:col-span-2"
+            onChange={(event) => setCampaignDraft((draft) => ({ ...draft, message: event.target.value }))}
+            placeholder="Mensagem"
+            value={campaignDraft.message}
+          />
+        </div>
+
+        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-3">
+            {(["whatsapp"] as const).map((channel) => (
+              <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200" key={channel}>
+                <input
+                  checked={campaignDraft.channels.includes(channel)}
+                  onChange={() => onToggleCampaignChannel(channel)}
+                  type="checkbox"
+                />
+                WhatsApp
+              </label>
+            ))}
+          </div>
+          <Button onClick={onCreateCampaign} type="button">
+            <Plus className="mr-2 h-4 w-4" />
+            Criar automação
+          </Button>
+        </div>
+      </Card>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {campaigns.map((campaign) => (
+          <Card className="bg-panelAlt/80" key={campaign.id}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-sky-200">
+                  <Gift className="h-4 w-4" />
+                  {campaign.type === "promotion" ? "Promoção" : "Fidelidade"}
+                </div>
+                <p className="text-lg font-semibold text-white">{campaign.title}</p>
+                <p className="mt-2 text-sm text-slate-300">{campaign.message}</p>
+              </div>
+              <Toggle checked={campaign.isEnabled} onChange={() => onToggleCampaignStatus(campaign.id)} />
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <CampaignInfo label="Público" value={campaign.audience} />
+              <CampaignInfo label="Disparo" value={`${campaign.triggerDaysAfterLastBooking} dias`} />
+              <CampaignInfo label="Canais" value={campaign.channels.map(formatCampaignChannel).join(" + ")} />
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button onClick={() => onRemoveCampaign(campaign.id)} size="sm" variant="ghost">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remover
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button disabled={savePending} onClick={onSaveSettings} type="button">
+          Salvar relacionamento
+        </Button>
+        {saveError ? <p className="text-sm text-rose-300">{saveError}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+function CampaignInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-2 text-sm font-medium text-white">{value}</p>
+    </div>
+  );
+}
+
+function formatCampaignChannel(channel: CampaignChannel): string {
+  return channel === "whatsapp" ? "WhatsApp" : channel;
 }
