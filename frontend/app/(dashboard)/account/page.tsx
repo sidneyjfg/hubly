@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
 import { useAppStore } from "@/store/app-store";
 
 export default function AccountPage() {
@@ -32,7 +33,7 @@ export default function AccountPage() {
 
     setFullName(data.user.fullName);
     setEmail(data.user.email);
-    setPhone(data.user.phone);
+    setPhone(formatBrazilianWhatsAppPhone(data.user.phone));
   }, [data]);
 
   const accountMutation = useMutation({
@@ -79,11 +80,17 @@ export default function AccountPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
           <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
-          <Input onChange={(event) => setPhone(event.target.value)} placeholder="Telefone" value={phone} />
+          <Input
+            inputMode="tel"
+            maxLength={19}
+            onChange={(event) => setPhone(formatBrazilianWhatsAppPhone(event.target.value))}
+            placeholder="+55 (11) 90000-0000"
+            value={phone}
+          />
           <Input disabled placeholder="Perfil" value={data?.user.role ?? ""} />
         </div>
         <div className="mt-6 flex items-center gap-3">
-          <Button disabled={accountMutation.isPending} onClick={() => accountMutation.mutate()}>
+          <Button disabled={!isValidBrazilianWhatsAppPhone(phone) || accountMutation.isPending} onClick={() => accountMutation.mutate()}>
             Salvar conta
           </Button>
           {accountMutation.error ? <p className="text-sm text-rose-300">{accountMutation.error.message}</p> : null}

@@ -12,6 +12,7 @@ import { hashPassword, hashTokenValue, verifyPassword, verifyTokenValue } from "
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from "../utils/tokens";
 import type { UserAccountWriteInput } from "../types/user";
 import { slugify } from "../utils/slug";
+import { brazilianWhatsAppPhoneSchema } from "../utils/phone";
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -34,7 +35,7 @@ const forgotPasswordSchema = z.object({
 const signUpSchema = z.object({
   fullName: z.string().min(3).max(120),
   email: z.string().email(),
-  phone: z.string().min(10).max(30),
+  phone: brazilianWhatsAppPhoneSchema,
   password: z.string().min(8).max(120),
       organization: z.object({
         legalName: z.string().min(3).max(160),
@@ -47,7 +48,7 @@ const signUpSchema = z.object({
 const accountUpdateSchema = z.object({
   fullName: z.string().min(3).max(120),
   email: z.string().email(),
-  phone: z.string().min(10).max(30),
+  phone: brazilianWhatsAppPhoneSchema,
 });
 
 const passwordUpdateSchema = z.object({

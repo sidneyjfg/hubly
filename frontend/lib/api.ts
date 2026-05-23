@@ -351,6 +351,24 @@ export const api = {
     });
   },
 
+  replaceProviderAvailability(
+    providerId: string,
+    input: Array<{
+      weekday: number;
+      workStart: string;
+      workEnd: string;
+      lunchStart?: string | null;
+      lunchEnd?: string | null;
+      isActive?: boolean;
+    }>
+  ) {
+    return apiRequest<ProviderAvailabilityDTO[]>(apiRoutes.providers.availability(providerId), {
+      method: "PUT",
+      auth: true,
+      body: input
+    });
+  },
+
   getServiceOfferings(query: PaginationQuery & { providerId?: string } = {}) {
     return apiRequest<PaginatedResponse<ServiceOfferingDTO>>(apiRoutes.serviceOfferings.list, {
       auth: true,

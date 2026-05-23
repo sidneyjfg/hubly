@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 const planFeatures: Record<BillingPlan["code"], string[]> = {
   free: [
     "1 profissional ativo",
+    "3 serviços ativos",
     "50 clientes ativos",
     "30 agendamentos por mês",
     "Perfil público básico",
@@ -19,6 +20,7 @@ const planFeatures: Record<BillingPlan["code"], string[]> = {
   ],
   pro: [
     "Até 5 profissionais ativos",
+    "Até 30 serviços ativos",
     "Até 1.000 clientes ativos",
     "Agendamentos sem limite mensal",
     "Perfil público completo com galeria",
@@ -28,6 +30,7 @@ const planFeatures: Record<BillingPlan["code"], string[]> = {
   premium: [
     "Tudo do Pro",
     "Até 15 profissionais ativos",
+    "Até 100 serviços ativos",
     "Clientes sem limite prático",
     "Configuração de promoções",
     "Programa de fidelidade por WhatsApp"

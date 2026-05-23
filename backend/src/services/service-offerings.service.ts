@@ -6,6 +6,7 @@ import type { AuthenticatedRequestUser } from "../types/auth";
 import type { ServiceOffering, ServiceOfferingWriteInput } from "../types/provider";
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult, type PaginationInput } from "../utils/pagination";
+import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const providerServiceWriteSchema = z.object({
   providerId: z.string().min(3),
@@ -19,6 +20,7 @@ export class ServiceOfferingsService {
   public constructor(
     private readonly servicesRepository: ServiceOfferingsRepository,
     private readonly providersRepository: ProvidersRepository,
+    private readonly planEntitlementsService: PlanEntitlementsService,
   ) {}
 
   public async list(
@@ -34,6 +36,9 @@ export class ServiceOfferingsService {
   public async create(user: AuthenticatedRequestUser, input: ServiceOfferingWriteInput): Promise<ServiceOffering> {
     const data = providerServiceWriteSchema.parse(input);
     await this.ensureProvider(user, data.providerId);
+    if (data.isActive !== false) {
+      await this.planEntitlementsService.assertCanCreateServiceOffering(user.organizationId);
+    }
 
     return this.servicesRepository.create(user.organizationId, {
       providerId: data.providerId,
@@ -51,6 +56,15 @@ export class ServiceOfferingsService {
   ): Promise<ServiceOffering> {
     const data = providerServiceWriteSchema.parse(input);
     await this.ensureProvider(user, data.providerId);
+    const currentService = await this.servicesRepository.findByIdInOrganization(user.organizationId, id);
+
+    if (!currentService) {
+      throw new AppError("service_offerings.not_found", "Servico nao encontrado.", 404);
+    }
+
+    if (data.isActive === true && !currentService.isActive) {
+      await this.planEntitlementsService.assertCanCreateServiceOffering(user.organizationId);
+    }
 
     const service = await this.servicesRepository.updateInOrganization(user.organizationId, id, {
       providerId: data.providerId,
@@ -68,6 +82,13 @@ export class ServiceOfferingsService {
   }
 
   public async setStatus(user: AuthenticatedRequestUser, id: string, isActive: boolean): Promise<ServiceOffering> {
+    if (isActive) {
+      const currentService = await this.servicesRepository.findByIdInOrganization(user.organizationId, id);
+      if (currentService && !currentService.isActive) {
+        await this.planEntitlementsService.assertCanCreateServiceOffering(user.organizationId);
+      }
+    }
+
     const service = await this.servicesRepository.setActiveInOrganization(user.organizationId, id, isActive);
 
     if (!service) {

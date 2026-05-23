@@ -102,6 +102,7 @@ const planCards = [
     description: "Para testar o Hubly com limites operacionais.",
     features: [
       "1 profissional ativo",
+      "3 serviços ativos",
       "50 clientes ativos",
       "30 agendamentos por mês",
       "Perfil público básico",
@@ -116,6 +117,7 @@ const planCards = [
     highlighted: true,
     features: [
       "Até 5 profissionais ativos",
+      "Até 30 serviços ativos",
       "Até 1.000 clientes ativos",
       "Agendamentos sem limite mensal",
       "Perfil público completo com galeria",
@@ -129,6 +131,7 @@ const planCards = [
     description: "Para negócios que querem mais equipe e relacionamento.",
     features: [
       "Até 15 profissionais ativos",
+      "Até 100 serviços ativos",
       "Clientes sem limite prático",
       "Agendamentos sem limite mensal",
       "Tudo do Pro",

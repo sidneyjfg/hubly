@@ -59,6 +59,7 @@ export const bookingsRoutes = async (
       notificationsService,
       new ServiceOfferingsRepository(options.dataSource),
       new PlanEntitlementsService(options.dataSource),
+      new OrganizationsRepository(options.dataSource),
     ),
   );
 

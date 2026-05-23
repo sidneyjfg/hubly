@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
 import { getDefaultRouteForRole, getDisplayNameFromEmail } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 
@@ -68,7 +69,13 @@ export default function SignUpPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
           <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
-          <Input onChange={(event) => setPhone(event.target.value)} placeholder="Telefone" value={phone} />
+          <Input
+            inputMode="tel"
+            maxLength={19}
+            onChange={(event) => setPhone(formatBrazilianWhatsAppPhone(event.target.value))}
+            placeholder="+55 (11) 90000-0000"
+            value={phone}
+          />
           <Input
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Senha"
@@ -87,7 +94,7 @@ export default function SignUpPage() {
         <div className="mt-8 flex flex-col gap-4">
           <Button
             className="w-full"
-            disabled={!fullName || !email || !phone || !password || !tradeName || !legalName || mutation.isPending}
+            disabled={!fullName || !email || !isValidBrazilianWhatsAppPhone(phone) || !password || !tradeName || !legalName || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
             Criar negócio

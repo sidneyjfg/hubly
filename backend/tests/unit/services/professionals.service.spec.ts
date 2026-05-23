@@ -26,6 +26,9 @@ describe("ProvidersService", () => {
         },
       } as never,
       {} as never,
+      {
+        async assertCanCreateProvider() {},
+      } as never,
     );
 
     const result = await service.create(authUser, {
@@ -51,6 +54,9 @@ describe("ProvidersService", () => {
         },
       } as never,
       {} as never,
+      {
+        async assertCanCreateProvider() {},
+      } as never,
     );
 
     const result = await service.update(authUser, "pro_001", {
@@ -70,6 +76,9 @@ describe("ProvidersService", () => {
         },
       } as never,
       {} as never,
+      {
+        async assertCanCreateProvider() {},
+      } as never,
     );
 
     await expect(
@@ -94,6 +103,9 @@ describe("ProvidersService", () => {
         },
       } as never,
       {} as never,
+      {
+        async assertCanCreateProvider() {},
+      } as never,
     );
 
     const result = await service.setStatus(authUser, "pro_001", false);

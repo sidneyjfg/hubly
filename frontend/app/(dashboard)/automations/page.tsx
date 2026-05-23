@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gift, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
+import { Gift, HelpCircle, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 
 type WhatsAppStatusView = {
   tone: "success" | "warning" | "danger" | "neutral";
@@ -107,9 +108,14 @@ function getStatusClasses(tone: WhatsAppStatusView["tone"]): string {
   return classes[tone];
 }
 
+function normalizePhoneNumber(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
 export default function AutomationsPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<AutomationTab>("reminders");
+  const [helpOpen, setHelpOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("5511999999999");
   const [newReminderHours, setNewReminderHours] = useState("24");
   const [campaignDraft, setCampaignDraft] = useState<CampaignDraft>({
@@ -177,7 +183,7 @@ export default function AutomationsPage() {
   });
 
   const sessionMutation = useMutation({
-    mutationFn: () => api.startWhatsAppSession(phoneNumber),
+    mutationFn: () => api.startWhatsAppSession(normalizePhoneNumber(phoneNumber)),
     meta: {
       errorMessage: "Código não gerado",
       successMessage: "Código gerado com sucesso"
@@ -188,7 +194,7 @@ export default function AutomationsPage() {
   });
 
   const regenerateCodeMutation = useMutation({
-    mutationFn: () => api.regenerateWhatsAppCode(phoneNumber),
+    mutationFn: () => api.regenerateWhatsAppCode(normalizePhoneNumber(phoneNumber)),
     meta: {
       errorMessage: "Código não regenerado",
       successMessage: "Novo código gerado com sucesso"
@@ -320,10 +326,48 @@ export default function AutomationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Automações</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Playbooks operacionais</h1>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Automações</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Playbooks operacionais</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+            Configure mensagens automáticas para reduzir faltas, lembrar clientes e estimular retorno sem adicionar tarefas manuais à recepção.
+          </p>
+        </div>
+        <Button onClick={() => setHelpOpen(true)} variant="secondary">
+          <HelpCircle className="mr-2 h-4 w-4" />
+          Ajuda
+        </Button>
       </div>
+
+      <Modal onClose={() => setHelpOpen(false)} open={helpOpen} title="Como funcionam as automações">
+        <div className="space-y-5 text-sm leading-6 text-slate-300">
+          <div>
+            <p className="font-semibold text-white">Lembretes de agendamento</p>
+            <p className="mt-2">
+              São disparos antes do horário marcado. Cada regra define quantas horas antes o WhatsApp deve avisar o cliente, por exemplo 24h e 2h antes.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-white">Automações de relacionamento</p>
+            <p className="mt-2">
+              São campanhas baseadas no histórico do cliente. O gatilho atual usa dias após o último agendamento para chamar clientes de volta, divulgar promoções ou reforçar fidelidade.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-white">Criação e salvamento</p>
+            <p className="mt-2">
+              Primeiro você preenche a campanha e clica em Criar automação. Depois revise a lista, ative ou pause campanhas e clique em Salvar relacionamento para persistir as regras.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-white">Pré-requisitos</p>
+            <p className="mt-2">
+              O WhatsApp precisa estar conectado e o plano precisa permitir o recurso. As mensagens só são enviadas para clientes elegíveis conforme o público e o gatilho configurados.
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
         {[
@@ -349,7 +393,9 @@ export default function AutomationsPage() {
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xl font-semibold text-white">Lembretes WhatsApp</p>
-            <p className="mt-3 text-slate-300">Ativa ou pausa o agendamento de notificações automáticas.</p>
+            <p className="mt-3 text-slate-300">
+              Ative esta chave para permitir que o Hubly agende mensagens antes dos atendimentos. As regras abaixo definem os momentos de envio.
+            </p>
           </div>
           <Toggle
             checked={localState.isEnabled}
@@ -368,7 +414,7 @@ export default function AutomationsPage() {
           <div className="max-w-2xl">
             <p className="text-xl font-semibold text-white">Quando notificar</p>
             <p className="mt-3 text-slate-300">
-              Configure quantas horas antes do agendamento cada lembrete deve ser enviado. Você pode criar até 10 regras.
+              Configure quantas horas antes do agendamento cada lembrete deve ser enviado. O mesmo agendamento pode receber mais de um aviso, respeitando até 10 regras.
             </p>
             <p className="mt-2 text-sm text-slate-400">Exemplos: 2 horas, 6 horas, 24 horas ou 72 horas antes.</p>
           </div>
@@ -553,60 +599,105 @@ function RelationshipAutomationPanel({
           <div className="max-w-2xl">
             <p className="text-xl font-semibold text-white">Promoções e fidelidade</p>
             <p className="mt-3 text-slate-300">
-              Configure campanhas automáticas para clientes finais por WhatsApp, incluindo lembretes para remarcar depois do último atendimento.
+              Configure campanhas automáticas por WhatsApp para trazer clientes de volta depois do último atendimento. Cada campanha combina público, gatilho em dias, mensagem e status ativo ou pausado.
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-sm text-sky-100">
-            <Send className="h-4 w-4" />
-            Envio automático
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2 rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-sm text-sky-100">
+              <Send className="h-4 w-4" />
+              Envio automático
+            </div>
+            <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+              <div>
+                <p className="text-sm font-medium text-white">Relacionamento ativo</p>
+                <p className="text-xs text-slate-400">Desligado pausa todos os envios desta aba.</p>
+              </div>
+              <Toggle checked={isEnabled} onChange={() => setIsEnabled((current) => !current)} />
+            </div>
           </div>
-          <Toggle checked={isEnabled} onChange={() => setIsEnabled((current) => !current)} />
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <Input
-            onChange={(event) => setCampaignDraft((draft) => ({ ...draft, title: event.target.value }))}
-            placeholder="Nome da campanha"
-            value={campaignDraft.title}
-          />
-          <select
-            className="h-11 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition focus:border-sky-300"
-            onChange={(event) =>
-              setCampaignDraft((draft) => ({ ...draft, type: event.target.value as CampaignType }))
-            }
-            value={campaignDraft.type}
+        <div className="mt-6 rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-amber-50">
+          Exemplo: uma campanha chamada Retorno de consulta, com gatilho de 30 dias, envia a mensagem para clientes elegíveis 30 dias depois do último atendimento.
+        </div>
+
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <FieldHelp
+            description="Nome usado só dentro do painel para sua equipe identificar esta regra."
+            label="Nome interno da automação"
           >
-            <option className="bg-slate-950" value="promotion">Promoção</option>
-            <option className="bg-slate-950" value="loyalty">Programa de fidelidade</option>
-          </select>
-          <Input
-            onChange={(event) => setCampaignDraft((draft) => ({ ...draft, audience: event.target.value }))}
-            placeholder="Público"
-            value={campaignDraft.audience}
-          />
-          <Input
-            min={1}
-            max={365}
-            onChange={(event) =>
-              setCampaignDraft((draft) => ({
-                ...draft,
-                triggerDaysAfterLastBooking: Number(event.target.value)
-              }))
-            }
-            placeholder="Dias após último agendamento"
-            type="number"
-            value={campaignDraft.triggerDaysAfterLastBooking}
-          />
-          <textarea
-            className="min-h-28 rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-300 lg:col-span-2"
-            onChange={(event) => setCampaignDraft((draft) => ({ ...draft, message: event.target.value }))}
-            placeholder="Mensagem"
-            value={campaignDraft.message}
-          />
+            <Input
+              onChange={(event) => setCampaignDraft((draft) => ({ ...draft, title: event.target.value }))}
+              placeholder="Ex: Retorno de consulta"
+              value={campaignDraft.title}
+            />
+          </FieldHelp>
+
+          <FieldHelp
+            description="Classifica o objetivo da mensagem. Isso ajuda a organizar campanhas de desconto, retorno ou fidelização."
+            label="Tipo de automação"
+          >
+            <select
+              className="h-11 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition focus:border-sky-300"
+              onChange={(event) =>
+                setCampaignDraft((draft) => ({ ...draft, type: event.target.value as CampaignType }))
+              }
+              value={campaignDraft.type}
+            >
+              <option className="bg-slate-950" value="promotion">Promoção</option>
+              <option className="bg-slate-950" value="loyalty">Programa de fidelidade</option>
+            </select>
+          </FieldHelp>
+
+          <FieldHelp
+            description="Descreve quem deve receber. Exemplo: clientes ativos, clientes sem retorno marcado ou clientes de um serviço específico."
+            label="Público alvo"
+          >
+            <Input
+              onChange={(event) => setCampaignDraft((draft) => ({ ...draft, audience: event.target.value }))}
+              placeholder="Ex: Clientes sem retorno marcado"
+              value={campaignDraft.audience}
+            />
+          </FieldHelp>
+
+          <FieldHelp
+            description="Quantidade de dias após o último atendimento para o cliente entrar na campanha."
+            label="Gatilho após último atendimento"
+          >
+            <Input
+              min={1}
+              max={365}
+              onChange={(event) =>
+                setCampaignDraft((draft) => ({
+                  ...draft,
+                  triggerDaysAfterLastBooking: Number(event.target.value)
+                }))
+              }
+              placeholder="Ex: 30"
+              type="number"
+              value={campaignDraft.triggerDaysAfterLastBooking}
+            />
+          </FieldHelp>
+
+          <FieldHelp
+            className="lg:col-span-2"
+            description="Texto que o cliente recebe no WhatsApp quando atingir o gatilho configurado."
+            label="Mensagem enviada"
+          >
+            <textarea
+              className="min-h-28 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-300"
+              onChange={(event) => setCampaignDraft((draft) => ({ ...draft, message: event.target.value }))}
+              placeholder="Ex: Ola, faz um tempo desde seu ultimo atendimento. Temos horarios disponiveis para remarcar."
+              value={campaignDraft.message}
+            />
+          </FieldHelp>
         </div>
 
         <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-3">
+          <div>
+            <p className="text-sm font-medium text-white">Canal de envio</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">Nesta fase a automação de relacionamento envia pelo WhatsApp conectado.</p>
+            <div className="mt-3 flex flex-wrap gap-3">
             {(["whatsapp"] as const).map((channel) => (
               <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200" key={channel}>
                 <input
@@ -617,11 +708,17 @@ function RelationshipAutomationPanel({
                 WhatsApp
               </label>
             ))}
+            </div>
           </div>
-          <Button onClick={onCreateCampaign} type="button">
-            <Plus className="mr-2 h-4 w-4" />
-            Criar automação
-          </Button>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <Button onClick={onCreateCampaign} type="button">
+              <Plus className="mr-2 h-4 w-4" />
+              Criar automação
+            </Button>
+            <p className="max-w-xs text-xs leading-5 text-slate-400 sm:text-right">
+              Este botão adiciona a campanha na lista abaixo. Para gravar de verdade, clique em Salvar relacionamento.
+            </p>
+          </div>
         </div>
       </Card>
 
@@ -660,6 +757,26 @@ function RelationshipAutomationPanel({
         {saveError ? <p className="text-sm text-rose-300">{saveError}</p> : null}
       </div>
     </div>
+  );
+}
+
+function FieldHelp({
+  children,
+  className = "",
+  description,
+  label
+}: {
+  children: React.ReactNode;
+  className?: string;
+  description: string;
+  label: string;
+}) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-sm font-medium text-white">{label}</span>
+      <span className="mt-1 block text-xs leading-5 text-slate-400">{description}</span>
+      <span className="mt-2 block">{children}</span>
+    </label>
   );
 }
 

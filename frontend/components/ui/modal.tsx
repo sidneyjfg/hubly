@@ -9,9 +9,10 @@ type ModalProps = {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  className?: string;
 };
 
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, children, className }: ModalProps) {
   if (!open) {
     return null;
   }
@@ -21,7 +22,8 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       <div className="absolute inset-0" onClick={onClose} />
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-xl border border-white/10 bg-panel p-6 shadow-soft"
+          "relative z-10 w-full rounded-2xl border border-white/10 bg-panel p-6 shadow-soft",
+          className
         )}
       >
         <div className="mb-6 flex items-center justify-between">

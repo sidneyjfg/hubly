@@ -52,6 +52,8 @@ const readConfig = () => ({
   timeoutMs: parseInteger(process.env.WHATSAPP_EVOLUTION_TIMEOUT_MS, 10_000),
 });
 
+const normalizePhoneNumber = (value: string): string => value.replace(/\D/g, "");
+
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -134,7 +136,7 @@ export class EvolutionWhatsAppService {
   }
 
   public async getStatus(instanceName: string): Promise<WhatsAppConnectionStatus> {
-    const data = await this.request<{ instance?: { instanceName: string; state: string } }>(
+    const data = await this.request<{ instance?: { instanceName: string; state?: string; status?: string } }>(
       `/instance/connectionState/${instanceName}`,
       {
         method: "GET",
@@ -142,21 +144,25 @@ export class EvolutionWhatsAppService {
     );
 
     return {
-      state: data.instance?.state ?? "disconnected",
+      state: data.instance?.state ?? data.instance?.status ?? "disconnected",
     };
   }
 
   public async connect(instanceName: string, number?: string): Promise<WhatsAppConnectCode> {
-    const queryString = number ? `?number=${encodeURIComponent(number)}` : "";
+    const normalizedNumber = number ? normalizePhoneNumber(number) : undefined;
+    const postPayload = await this.tryConnectWithPost(instanceName, normalizedNumber);
+    const postResult = normalizeConnectCode(postPayload);
 
-    const payload = await this.request<unknown>(
-      `/instance/connect/${instanceName}${queryString}`,
-      {
-        method: "GET",
-      },
-    );
+    if (postResult.pairingCode || postResult.code) {
+      return postResult;
+    }
 
-    return normalizeConnectCode(payload);
+    const queryString = normalizedNumber ? `?number=${encodeURIComponent(normalizedNumber)}` : "";
+    const getPayload = await this.request<unknown>(`/instance/connect/${instanceName}${queryString}`, {
+      method: "GET",
+    });
+
+    return normalizeConnectCode(getPayload);
   }
 
   public async createInstance(instanceName: string): Promise<WhatsAppInstanceCreateResult> {
@@ -194,6 +200,9 @@ export class EvolutionWhatsAppService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          qrcode: false,
+          qrCode: false,
+          pairingCode: true,
           rejectCall: true,
           msgCall: "",
           groupsIgnore: true,
@@ -204,6 +213,27 @@ export class EvolutionWhatsAppService {
         }),
       },
     );
+  }
+
+  private async tryConnectWithPost(instanceName: string, number?: string): Promise<unknown> {
+    try {
+      return await this.request<unknown>(
+        `/instance/connect/${instanceName}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(number ? { number } : {}),
+        },
+      );
+    } catch (error: unknown) {
+      if (error instanceof AppError && error.code === "whatsapp.request_failed") {
+        return {};
+      }
+
+      throw error;
+    }
   }
 
   public async restartInstance(instanceName: string): Promise<void> {

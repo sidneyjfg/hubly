@@ -5,6 +5,7 @@ import {
   CustomerEntity,
   OrganizationSubscriptionEntity,
   ProviderEntity,
+  ServiceOfferingEntity,
 } from "../database/entities";
 import type { BillingPlanCode } from "../types/billing";
 import { AppError } from "../utils/app-error";
@@ -12,6 +13,7 @@ import { env } from "../utils/env";
 
 type PlanEntitlements = {
   maxProviders: number | null;
+  maxServiceOfferings: number | null;
   maxCustomers: number | null;
   maxMonthlyBookings: number | null;
   maxGalleryImages: number;
@@ -19,9 +21,20 @@ type PlanEntitlements = {
   relationshipAutomations: boolean;
 };
 
+export const PLAN_LIMIT_REGULARIZATION_DAYS = 7;
+
+export type ServiceOfferingLimitStatus = {
+  activeServiceOfferings: number;
+  maxActiveServiceOfferings: number | null;
+  excessActiveServiceOfferings: number;
+  regularizationEndsAt: string | null;
+  isPublicAccessBlocked: boolean;
+};
+
 const planEntitlements: Record<BillingPlanCode, PlanEntitlements> = {
   free: {
     maxProviders: 1,
+    maxServiceOfferings: 3,
     maxCustomers: 50,
     maxMonthlyBookings: 30,
     maxGalleryImages: 1,
@@ -30,6 +43,7 @@ const planEntitlements: Record<BillingPlanCode, PlanEntitlements> = {
   },
   pro: {
     maxProviders: 5,
+    maxServiceOfferings: 30,
     maxCustomers: 1000,
     maxMonthlyBookings: null,
     maxGalleryImages: 12,
@@ -38,6 +52,7 @@ const planEntitlements: Record<BillingPlanCode, PlanEntitlements> = {
   },
   premium: {
     maxProviders: 15,
+    maxServiceOfferings: 100,
     maxCustomers: null,
     maxMonthlyBookings: null,
     maxGalleryImages: 12,
@@ -76,6 +91,70 @@ export class PlanEntitlementsService {
     return planEntitlements[await this.getPlanCode(organizationId, manager)];
   }
 
+  public async getServiceOfferingLimitStatus(
+    organizationId: string,
+    manager?: EntityManager,
+    now = new Date(),
+  ): Promise<ServiceOfferingLimitStatus> {
+    const entityManager = manager ?? this.dataSource.manager;
+    const subscription = await entityManager.getRepository(OrganizationSubscriptionEntity).findOne({
+      where: {
+        organizationId,
+        stripeMode: env.STRIPE_BILLING_MODE,
+      },
+      relations: {
+        billingPlan: true,
+      },
+      order: {
+        createdAt: "DESC",
+      },
+    });
+    const planCode = subscription?.billingPlan.code === "pro" || subscription?.billingPlan.code === "premium"
+      ? subscription.billingPlan.code
+      : "free";
+    const maxActiveServiceOfferings = planEntitlements[planCode].maxServiceOfferings;
+    const activeServiceOfferings = await entityManager.getRepository(ServiceOfferingEntity).count({
+      where: {
+        organizationId,
+        isActive: true,
+      },
+    });
+
+    if (maxActiveServiceOfferings === null) {
+      return {
+        activeServiceOfferings,
+        maxActiveServiceOfferings,
+        excessActiveServiceOfferings: 0,
+        regularizationEndsAt: null,
+        isPublicAccessBlocked: false,
+      };
+    }
+
+    const excessActiveServiceOfferings = Math.max(0, activeServiceOfferings - maxActiveServiceOfferings);
+    if (excessActiveServiceOfferings === 0) {
+      return {
+        activeServiceOfferings,
+        maxActiveServiceOfferings,
+        excessActiveServiceOfferings,
+        regularizationEndsAt: null,
+        isPublicAccessBlocked: false,
+      };
+    }
+
+    const limitExceededAt = subscription?.updatedAt ?? now;
+    const regularizationEndsAt = new Date(
+      limitExceededAt.getTime() + PLAN_LIMIT_REGULARIZATION_DAYS * 24 * 60 * 60 * 1000,
+    );
+
+    return {
+      activeServiceOfferings,
+      maxActiveServiceOfferings,
+      excessActiveServiceOfferings,
+      regularizationEndsAt: regularizationEndsAt.toISOString(),
+      isPublicAccessBlocked: now >= regularizationEndsAt,
+    };
+  }
+
   public async assertCanCreateProvider(organizationId: string, manager?: EntityManager): Promise<void> {
     const entitlements = await this.getEntitlements(organizationId, manager);
     if (entitlements.maxProviders === null) return;
@@ -89,6 +168,22 @@ export class PlanEntitlementsService {
 
     if (total >= entitlements.maxProviders) {
       throw new AppError("billing.plan_limit.providers", "Seu plano atingiu o limite de profissionais ativos.", 403);
+    }
+  }
+
+  public async assertCanCreateServiceOffering(organizationId: string, manager?: EntityManager): Promise<void> {
+    const entitlements = await this.getEntitlements(organizationId, manager);
+    if (entitlements.maxServiceOfferings === null) return;
+
+    const total = await (manager ?? this.dataSource.manager).getRepository(ServiceOfferingEntity).count({
+      where: {
+        organizationId,
+        isActive: true,
+      },
+    });
+
+    if (total >= entitlements.maxServiceOfferings) {
+      throw new AppError("billing.plan_limit.service_offerings", "Seu plano atingiu o limite de serviços ativos.", 403);
     }
   }
 

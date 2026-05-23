@@ -142,6 +142,7 @@ export type OrganizationSubscription = {
   currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  updatedAt: string;
   plan: BillingPlan;
 };
 

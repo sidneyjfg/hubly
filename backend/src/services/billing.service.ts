@@ -666,6 +666,7 @@ export class BillingService {
       currentPeriodStart: subscription.currentPeriodStart?.toISOString() ?? null,
       currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
       cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      updatedAt: subscription.updatedAt.toISOString(),
       plan: this.mapPlan(subscription.billingPlan),
     };
   }

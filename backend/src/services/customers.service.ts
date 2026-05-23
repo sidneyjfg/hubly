@@ -6,12 +6,13 @@ import type { Customer } from "../types/customer";
 import type { CustomerWriteInput } from "../types/customer";
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult, type PaginationInput } from "../utils/pagination";
+import { brazilianWhatsAppPhoneSchema } from "../utils/phone";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const customerWriteSchema = z.object({
   fullName: z.string().min(3).max(120),
   email: z.string().email().nullable().optional(),
-  phone: z.string().min(8).max(30),
+  phone: brazilianWhatsAppPhoneSchema,
 });
 
 export class CustomersService {

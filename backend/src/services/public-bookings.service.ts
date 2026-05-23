@@ -12,7 +12,14 @@ import type { Booking, BookingAvailabilityQuery } from "../types/booking";
 import type { PublicAvailableSlot, PublicBookingPage, PublicBookingRequestInput } from "../types/provider";
 import { AppError } from "../utils/app-error";
 import { hashPassword, verifyPassword } from "../utils/password";
-import { buildAvailableSlots, isWithinProviderAvailability, resolveWeekday } from "../utils/provider-availability";
+import { brazilianWhatsAppPhoneSchema, normalizeBrazilianWhatsAppPhone } from "../utils/phone";
+import {
+  buildAvailableSlots,
+  buildUtcRangeForLocalDate,
+  isWithinProviderAvailability,
+  resolveWeekday,
+  resolveWeekdayInTimeZone,
+} from "../utils/provider-availability";
 import { createCustomerAccessToken, verifyCustomerAccessToken } from "../utils/customer-tokens";
 import { NotificationsService } from "./notifications.service";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
@@ -20,7 +27,7 @@ import { PlanEntitlementsService } from "./plan-entitlements.service";
 const publicBookingRequestSchema = z.object({
   fullName: z.string().min(3).max(120),
   email: z.string().email().nullable().optional(),
-  phone: z.string().min(10).max(30),
+  phone: brazilianWhatsAppPhoneSchema,
   password: z.string().min(8).max(120).optional(),
   customerAccessToken: z.string().min(20).optional(),
   providerId: z.string().min(3),
@@ -40,7 +47,7 @@ const customerSignUpSchema = z.object({
   slug: z.string().min(3),
   fullName: z.string().min(3).max(120),
   email: z.string().email().nullable().optional(),
-  phone: z.string().min(10).max(30),
+  phone: brazilianWhatsAppPhoneSchema,
   password: z.string().min(8).max(120),
 });
 
@@ -119,6 +126,11 @@ export class PublicBookingsService {
       return null;
     }
 
+    const serviceLimitStatus = await this.planEntitlementsService.getServiceOfferingLimitStatus(organization.id);
+    if (serviceLimitStatus.isPublicAccessBlocked) {
+      return null;
+    }
+
     const [providers, serviceOfferings] = await Promise.all([
       this.providersRepository.findActiveByOrganization(organization.id),
       this.serviceOfferingsRepository.findActiveByOrganization(organization.id),
@@ -177,7 +189,6 @@ export class PublicBookingsService {
         && organization.city?.trim()
         && organization.state?.trim()
         && organization.coverImageUrl?.trim()
-        && organization.galleryImageUrls.some((imageUrl) => imageUrl.trim())
     );
   }
 
@@ -214,6 +225,7 @@ export class PublicBookingsService {
     if (!organization) {
       throw new AppError("public_booking.organization_not_found", "Organization not found.", 404);
     }
+    await this.assertPublicBookingAccessIsAvailable(organization.id);
 
     const data = availabilityQuerySchema.parse(query);
     const provider = await this.providersRepository.findByIdInOrganization(organization.id, data.providerId);
@@ -237,8 +249,7 @@ export class PublicBookingsService {
       ? (await this.serviceOfferingsRepository.findByIdInOrganization(organization.id, data.offeringId))?.durationMinutes ?? 30
       : 30;
 
-    const dayStart = new Date(`${data.date}T00:00:00.000Z`);
-    const dayEnd = new Date(`${data.date}T23:59:59.999Z`);
+    const { start: dayStart, end: dayEnd } = buildUtcRangeForLocalDate(data.date, organization.timezone);
     const existingBookings = await this.bookingsRepository.findAll(organization.id, {
       from: dayStart,
       to: dayEnd,
@@ -253,7 +264,7 @@ export class PublicBookingsService {
       }));
 
     return {
-      items: buildAvailableSlots(data.date, availability, durationMinutes, busyWindows),
+      items: buildAvailableSlots(data.date, availability, durationMinutes, busyWindows, organization.timezone),
     };
   }
 
@@ -300,7 +311,10 @@ export class PublicBookingsService {
 
   public async signInCustomer(input: unknown): Promise<CustomerPortalSession> {
     const data = customerSignInSchema.parse(input);
-    const candidates = await this.customersRepository.findAuthCandidatesByEmailOrPhone(data.emailOrPhone);
+    const identifier = data.emailOrPhone.includes("@")
+      ? data.emailOrPhone.trim().toLowerCase()
+      : normalizeBrazilianWhatsAppPhone(data.emailOrPhone) ?? data.emailOrPhone.trim();
+    const candidates = await this.customersRepository.findAuthCandidatesByEmailOrPhone(identifier);
     const customer = candidates.find((candidate) => candidate.passwordHash && verifyPassword(data.password, candidate.passwordHash));
 
     if (!customer) {
@@ -401,6 +415,7 @@ export class PublicBookingsService {
     if (!organization) {
       throw new AppError("public_booking.organization_not_found", "Organization not found.", 404);
     }
+    await this.assertPublicBookingAccessIsAvailable(organization.id);
 
     const data = publicBookingRequestSchema.parse({
       ...input,
@@ -436,7 +451,7 @@ export class PublicBookingsService {
         throw new AppError("providers.not_found", "Provider not found.", 404);
       }
 
-      const weekday = startsAt.getUTCDay();
+      const weekday = resolveWeekdayInTimeZone(startsAt, organization.timezone);
       const availability = await this.providerAvailabilitiesRepository.findByProviderAndWeekdayInOrganization(
         organization.id,
         data.providerId,
@@ -444,7 +459,7 @@ export class PublicBookingsService {
         manager,
       );
 
-      if (!availability || !isWithinProviderAvailability(availability, startsAt, endsAt)) {
+      if (!availability || !isWithinProviderAvailability(availability, startsAt, endsAt, organization.timezone)) {
         throw new AppError("bookings.outside_provider_availability", "Booking is outside provider working hours.", 409);
       }
 
@@ -545,5 +560,16 @@ export class PublicBookingsService {
 
       return booking;
     });
+  }
+
+  private async assertPublicBookingAccessIsAvailable(organizationId: string): Promise<void> {
+    const serviceLimitStatus = await this.planEntitlementsService.getServiceOfferingLimitStatus(organizationId);
+    if (serviceLimitStatus.isPublicAccessBlocked) {
+      throw new AppError(
+        "public_booking.plan_limit_regularization_expired",
+        "Este estabelecimento precisa regularizar os serviços do plano antes de receber agendamentos.",
+        404,
+      );
+    }
   }
 }

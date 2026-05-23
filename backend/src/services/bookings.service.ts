@@ -4,6 +4,7 @@ import { z } from "zod";
 import { BookingsRepository } from "../repositories/bookings.repository";
 import { AuditRepository } from "../repositories/audit.repository";
 import { CustomersRepository } from "../repositories/customers.repository";
+import { OrganizationsRepository } from "../repositories/organizations.repository";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
 import { ServiceOfferingsRepository } from "../repositories/service-offerings.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
@@ -16,7 +17,7 @@ import type {
 import type { AuthenticatedRequestUser } from "../types/auth";
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult } from "../utils/pagination";
-import { isWithinProviderAvailability } from "../utils/provider-availability";
+import { isWithinProviderAvailability, resolveWeekdayInTimeZone } from "../utils/provider-availability";
 import { NotificationsService } from "./notifications.service";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
 
@@ -115,6 +116,7 @@ export class BookingsService {
     private readonly notificationsService: NotificationsService,
     private readonly providerServicesRepository?: ServiceOfferingsRepository,
     private readonly planEntitlementsService?: PlanEntitlementsService,
+    private readonly organizationsRepository?: OrganizationsRepository,
   ) {}
 
   public async list(
@@ -537,7 +539,11 @@ export class BookingsService {
     endsAt: Date,
     manager: EntityManager,
   ): Promise<void> {
-    const weekday = startsAt.getUTCDay();
+    const organization = this.organizationsRepository
+      ? await this.organizationsRepository.findByIdInOrganization(organizationId, organizationId, manager)
+      : null;
+    const timezone = organization?.timezone ?? "UTC";
+    const weekday = resolveWeekdayInTimeZone(startsAt, timezone);
     const availability = await this.providerAvailabilitiesRepository.findByProviderAndWeekdayInOrganization(
       organizationId,
       providerId,
@@ -545,7 +551,7 @@ export class BookingsService {
       manager,
     );
 
-    if (!availability || !isWithinProviderAvailability(availability, startsAt, endsAt)) {
+    if (!availability || !isWithinProviderAvailability(availability, startsAt, endsAt, timezone)) {
       throw new AppError("bookings.outside_provider_availability", "Booking is outside provider working hours.", 409);
     }
   }

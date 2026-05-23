@@ -3,6 +3,7 @@ import type { DataSource } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../../../src/app";
+import { OrganizationEntity, OrganizationSubscriptionEntity, ServiceOfferingEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 
 describe("Public bookings routes", () => {
@@ -60,6 +61,27 @@ describe("Public bookings routes", () => {
     );
   });
 
+  it("keeps a storefront discoverable when it has a cover image but no gallery images", async () => {
+    await dataSource.getRepository(OrganizationEntity).update(
+      { id: "cln_main_001" },
+      { galleryImageUrls: [] },
+    );
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/public/organizations",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          bookingPageSlug: "organizationa-exemplo",
+        }),
+      ]),
+    );
+  });
+
   it("returns only available provider slots inside working hours and outside lunch", async () => {
     const response = await app.inject({
       method: "GET",
@@ -72,16 +94,17 @@ describe("Public bookings routes", () => {
     expect(body.items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          startsAt: "2026-04-21T08:00:00.000Z",
-          endsAt: "2026-04-21T08:30:00.000Z",
+          startsAt: "2026-04-21T11:00:00.000Z",
+          endsAt: "2026-04-21T11:30:00.000Z",
+          label: "08:00",
         }),
       ]),
     );
     expect(body.items).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          startsAt: "2026-04-21T12:30:00.000Z",
-          endsAt: "2026-04-21T13:00:00.000Z",
+          startsAt: "2026-04-21T15:30:00.000Z",
+          endsAt: "2026-04-21T16:00:00.000Z",
         }),
       ]),
     );
@@ -122,8 +145,8 @@ describe("Public bookings routes", () => {
         phone: "+5511955555555",
         password: "password123",
         providerId: "pro_001",
-        startsAt: "2026-04-21T12:30:00.000Z",
-        endsAt: "2026-04-21T13:00:00.000Z",
+        startsAt: "2026-04-21T15:30:00.000Z",
+        endsAt: "2026-04-21T16:00:00.000Z",
       },
     });
 
@@ -192,5 +215,53 @@ describe("Public bookings routes", () => {
         }),
       ]),
     );
+  });
+
+  it("removes the storefront from public discovery after the plan limit regularization period expires", async () => {
+    await dataSource.getRepository(ServiceOfferingEntity).save([
+      {
+        id: "svc_limit_extra_001",
+        organizationId: "cln_main_001",
+        providerId: "pro_001",
+        name: "Retorno prioritário",
+        durationMinutes: 30,
+        priceCents: 10000,
+        isActive: true,
+      },
+      {
+        id: "svc_limit_extra_002",
+        organizationId: "cln_main_001",
+        providerId: "pro_001",
+        name: "Acompanhamento premium",
+        durationMinutes: 45,
+        priceCents: 15000,
+        isActive: true,
+      },
+    ]);
+    await dataSource.getRepository(OrganizationSubscriptionEntity).update(
+      { id: "sub_cln_main_001_test" },
+      { updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) },
+    );
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: "/v1/public/organizations",
+    });
+
+    expect(listResponse.statusCode).toBe(200);
+    expect(listResponse.json().items).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          bookingPageSlug: "organizationa-exemplo",
+        }),
+      ]),
+    );
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/v1/public/organizations/organizationa-exemplo",
+    });
+
+    expect(detailResponse.statusCode).toBe(404);
   });
 });

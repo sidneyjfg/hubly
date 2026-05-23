@@ -150,8 +150,15 @@ function translateApiErrorMessage(code: string | undefined, message: string): st
     "billing.plan_limit.customers": "Seu plano atingiu o limite de clientes ativos.",
     "billing.plan_limit.bookings": "Seu plano atingiu o limite mensal de agendamentos.",
     "billing.plan_limit.gallery": "Seu plano atingiu o limite de fotos na vitrine.",
+    "billing.plan_limit.service_offerings": "Seu plano atingiu o limite de serviços ativos.",
+    "public_booking.plan_limit_regularization_expired": "Este estabelecimento precisa regularizar os serviços do plano antes de receber agendamentos.",
     "billing.plan_feature.whatsapp": "Lembretes por WhatsApp estão disponíveis a partir do plano Pro.",
-    "billing.plan_feature.relationship": "Automações de relacionamento estão disponíveis no plano Premium."
+    "billing.plan_feature.relationship": "Automações de relacionamento estão disponíveis no plano Premium.",
+    "whatsapp.pairing_code_not_returned": "A Evolution não retornou código. Tente regerar o código; se persistir, desconecte a instância antiga e tente novamente.",
+    "whatsapp.disabled": "A integração do WhatsApp está desativada no backend.",
+    "whatsapp.not_configured": "A integração do WhatsApp não está configurada no backend.",
+    "whatsapp.request_failed": "A Evolution recusou a solicitação. Verifique a URL, API key e estado da instância.",
+    "whatsapp.unavailable": "Não foi possível conectar na Evolution agora."
   };
 
   if (code && paymentMessages[code]) {

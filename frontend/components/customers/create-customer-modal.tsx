@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
 import type { Customer, CustomerRow } from "@/lib/types";
 
 type CreateCustomerModalProps = {
@@ -17,7 +18,7 @@ type CreateCustomerModalProps = {
 
 export function CreateCustomerModal({ open, onClose, customer }: CreateCustomerModalProps) {
   const [fullName, setFullName] = useState(customer?.fullName ?? "");
-  const [phone, setPhone] = useState(customer?.phone ?? "");
+  const [phone, setPhone] = useState(customer?.phone ? formatBrazilianWhatsAppPhone(customer.phone) : "");
   const [email, setEmail] = useState(customer?.email ?? "");
   const queryClient = useQueryClient();
   const isEditing = Boolean(customer);
@@ -28,7 +29,7 @@ export function CreateCustomerModal({ open, onClose, customer }: CreateCustomerM
     }
 
     setFullName(customer?.fullName ?? "");
-    setPhone(customer?.phone ?? "");
+    setPhone(customer?.phone ? formatBrazilianWhatsAppPhone(customer.phone) : "");
     setEmail(customer?.email ?? "");
   }, [open, customer]);
 
@@ -61,14 +62,20 @@ export function CreateCustomerModal({ open, onClose, customer }: CreateCustomerM
     <Modal onClose={onClose} open={open} title={isEditing ? "Editar paciente" : "Novo paciente"}>
       <div className="space-y-4">
         <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
-        <Input onChange={(event) => setPhone(event.target.value)} placeholder="Telefone" value={phone} />
+        <Input
+          inputMode="tel"
+          maxLength={19}
+          onChange={(event) => setPhone(formatBrazilianWhatsAppPhone(event.target.value))}
+          placeholder="+55 (11) 90000-0000"
+          value={phone}
+        />
         <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
         <div className="flex justify-end gap-3 pt-2">
           <Button onClick={onClose} type="button" variant="ghost">
             Cancelar
           </Button>
           <Button
-            disabled={!fullName || !phone || mutation.isPending}
+            disabled={!fullName || !isValidBrazilianWhatsAppPhone(phone) || mutation.isPending}
             onClick={() => mutation.mutate()}
             type="button"
           >

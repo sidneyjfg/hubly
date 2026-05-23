@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { saveCustomerSession } from "@/lib/customer-session";
+import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
 
 export default function CustomerSignUpPage() {
   const router = useRouter();
@@ -47,7 +48,13 @@ export default function CustomerSignUpPage() {
     }
   });
 
-  const canSubmit = Boolean(slug && fullName.length >= 3 && email && phone.length >= 10 && password.length >= 8);
+  const canSubmit = Boolean(
+    slug
+      && fullName.length >= 3
+      && email
+      && isValidBrazilianWhatsAppPhone(phone)
+      && password.length >= 8,
+  );
 
   return (
     <main className="min-h-screen bg-background">
@@ -93,7 +100,13 @@ export default function CustomerSignUpPage() {
           <div className="mt-5 space-y-4">
             <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
             <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
-            <Input onChange={(event) => setPhone(event.target.value)} placeholder="Telefone" value={phone} />
+            <Input
+              inputMode="tel"
+              maxLength={19}
+              onChange={(event) => setPhone(formatBrazilianWhatsAppPhone(event.target.value))}
+              placeholder="+55 (11) 90000-0000"
+              value={phone}
+            />
             <Input onChange={(event) => setPassword(event.target.value)} placeholder="Senha" type="password" value={password} />
           </div>
 

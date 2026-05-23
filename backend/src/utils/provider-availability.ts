@@ -20,6 +20,76 @@ const fromMinutes = (value: number): string => {
 
 const buildIso = (date: string, time: string): string => `${date}T${time}:00.000Z`;
 
+const getTimeZoneOffsetMs = (timeZone: string, date: Date): number => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+  const year = Number(values.get("year"));
+  const month = Number(values.get("month"));
+  const day = Number(values.get("day"));
+  const hour = Number(values.get("hour"));
+  const minute = Number(values.get("minute"));
+  const second = Number(values.get("second"));
+
+  return Date.UTC(year, month - 1, day, hour, minute, second) - date.getTime();
+};
+
+export const buildUtcDateFromLocalTime = (date: string, time: string, timeZone: string): Date => {
+  const [yearPart, monthPart, dayPart] = date.split("-");
+  const [hourPart, minutePart] = time.split(":");
+  const localAsUtc = Date.UTC(
+    Number(yearPart),
+    Number(monthPart) - 1,
+    Number(dayPart),
+    Number(hourPart),
+    Number(minutePart),
+    0,
+    0,
+  );
+
+  const firstGuess = new Date(localAsUtc - getTimeZoneOffsetMs(timeZone, new Date(localAsUtc)));
+  return new Date(localAsUtc - getTimeZoneOffsetMs(timeZone, firstGuess));
+};
+
+export const buildUtcRangeForLocalDate = (date: string, timeZone: string): { start: Date; end: Date } => {
+  const start = buildUtcDateFromLocalTime(date, "00:00", timeZone);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  end.setUTCMilliseconds(end.getUTCMilliseconds() - 1);
+
+  return { start, end };
+};
+
+export const resolveWeekdayInTimeZone = (date: Date, timeZone: string): number => {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+  }).format(date);
+
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
+};
+
+const toTimeInTimeZone = (date: Date, timeZone: string): string => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+  return `${values.get("hour")}:${values.get("minute")}`;
+};
+
 export const resolveWeekday = (date: string): number => {
   return new Date(`${date}T00:00:00.000Z`).getUTCDay();
 };
@@ -28,13 +98,14 @@ export const isWithinProviderAvailability = (
   availability: ProviderAvailability,
   startsAt: Date,
   endsAt: Date,
+  timeZone = "UTC",
 ): boolean => {
   if (!availability.isActive) {
     return false;
   }
 
-  const startMinutes = startsAt.getUTCHours() * 60 + startsAt.getUTCMinutes();
-  const endMinutes = endsAt.getUTCHours() * 60 + endsAt.getUTCMinutes();
+  const startMinutes = toMinutes(toTimeInTimeZone(startsAt, timeZone));
+  const endMinutes = toMinutes(toTimeInTimeZone(endsAt, timeZone));
   const workStartMinutes = toMinutes(availability.workStart);
   const workEndMinutes = toMinutes(availability.workEnd);
 
@@ -57,6 +128,7 @@ export const buildAvailableSlots = (
   availability: ProviderAvailability,
   durationMinutes: number,
   busyWindows: Array<{ startsAt: Date; endsAt: Date }>,
+  timeZone = "UTC",
 ): PublicAvailableSlot[] => {
   if (!availability.isActive) {
     return [];
@@ -77,8 +149,14 @@ export const buildAvailableSlots = (
 
   for (const segment of segments) {
     for (let current = segment.start; current + durationMinutes <= segment.end; current += minutesStep) {
-      const slotStart = new Date(buildIso(date, fromMinutes(current)));
-      const slotEnd = new Date(buildIso(date, fromMinutes(current + durationMinutes)));
+      const label = fromMinutes(current);
+      const slotStart = timeZone === "UTC"
+        ? new Date(buildIso(date, label))
+        : buildUtcDateFromLocalTime(date, label, timeZone);
+      const slotEndTime = fromMinutes(current + durationMinutes);
+      const slotEnd = timeZone === "UTC"
+        ? new Date(buildIso(date, slotEndTime))
+        : buildUtcDateFromLocalTime(date, slotEndTime, timeZone);
       const overlapsBusyWindow = busyWindows.some(
         (busyWindow) => slotStart < busyWindow.endsAt && slotEnd > busyWindow.startsAt,
       );
@@ -87,7 +165,7 @@ export const buildAvailableSlots = (
         slots.push({
           startsAt: slotStart.toISOString(),
           endsAt: slotEnd.toISOString(),
-          label: fromMinutes(current),
+          label,
         });
       }
     }

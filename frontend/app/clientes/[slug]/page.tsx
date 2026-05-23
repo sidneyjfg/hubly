@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { getCustomerSession } from "@/lib/customer-session";
-import { addDays, formatDateInput, formatTimeLabel } from "@/lib/utils";
+import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
+import { addDays, formatDateInput } from "@/lib/utils";
 
 type PageProps = {
   params: Promise<{
@@ -43,7 +44,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
     setIsCustomerConnected(true);
     setFullName(session.customer.fullName);
     setEmail(session.customer.email ?? "");
-    setPhone(session.customer.phone);
+    setPhone(formatBrazilianWhatsAppPhone(session.customer.phone));
   }, []);
 
   const organizationQuery = useQuery({
@@ -98,7 +99,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
   const canSubmit = Boolean(
     fullName
       && email
-      && phone
+      && isValidBrazilianWhatsAppPhone(phone)
       && (customerAccessToken || password.length >= 8)
       && selectedSlot
       && selectedProviderId
@@ -271,7 +272,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
                         onClick={() => setSelectedSlot({ startsAt: slot.startsAt, endsAt: slot.endsAt })}
                         type="button"
                       >
-                        {formatTimeLabel(slot.startsAt)}
+                        {slot.label}
                       </button>
                     );
                   })}
@@ -305,7 +306,13 @@ export default function CustomerBookingPage({ params }: PageProps) {
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
                   <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
-                  <Input onChange={(event) => setPhone(event.target.value)} placeholder="Telefone" value={phone} />
+                  <Input
+                    inputMode="tel"
+                    maxLength={19}
+                    onChange={(event) => setPhone(formatBrazilianWhatsAppPhone(event.target.value))}
+                    placeholder="+55 (11) 90000-0000"
+                    value={phone}
+                  />
                   {!customerAccessToken ? (
                     <Input onChange={(event) => setPassword(event.target.value)} placeholder="Senha" type="password" value={password} />
                   ) : null}
