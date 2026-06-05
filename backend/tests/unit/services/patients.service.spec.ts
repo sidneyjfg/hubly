@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { CustomersService } from "../../../src/services/customers.service";
 import type { CustomerWriteInput } from "../../../src/types/customer";
@@ -13,6 +13,9 @@ const authUser = {
 
 describe("CustomersService", () => {
   it("creates a customer in the authenticated organization", async () => {
+    const planEntitlementsService = {
+      assertCanCreateCustomer: vi.fn().mockResolvedValue(undefined),
+    };
     const service = new CustomersService({
       async create(organizationId: string, input: CustomerWriteInput) {
         return {
@@ -23,7 +26,7 @@ describe("CustomersService", () => {
           phone: input.phone,
         };
       },
-    } as never);
+    } as never, planEntitlementsService as never);
 
     const result = await service.create(authUser, {
       fullName: "Marcos Paulo",
@@ -33,6 +36,7 @@ describe("CustomersService", () => {
 
     expect(result.organizationId).toBe("cln_main_001");
     expect(result.email).toBe("marcos@customer.test");
+    expect(planEntitlementsService.assertCanCreateCustomer).toHaveBeenCalledWith("cln_main_001");
   });
 
   it("updates an existing customer", async () => {

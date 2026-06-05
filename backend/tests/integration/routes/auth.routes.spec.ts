@@ -100,7 +100,7 @@ describe("Auth routes", () => {
     expect(meResponse.statusCode).toBe(200);
     const body = meResponse.json();
     expect(body.user.email).toBe("marcos@me-route.test");
-    expect(body.user.phone).toBe("+5511966666666");
+    expect(body.user.phone).toBe("5511966666666");
     expect(body.organization.tradeName).toBe("Organizationa Perfil");
   });
 

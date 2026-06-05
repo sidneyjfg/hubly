@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: hubly_test_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: ${BACKEND_IMAGE}
+    container_name: hubly_test_migrate
+    restart: "no"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - ./.env.test
+    command: ["node", "dist/database/migrations/run-migrations.js"]
+
+  backend:
+    image: ghcr.io/sidneyjfg/hubly-backend:latest
+    container_name: hubly_test_backend
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3333:3333"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - ./.env.test
+
+  frontend:
+    image: ghcr.io/sidneyjfg/hubly-frontend:latest
+    container_name: hubly_test_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./.env.test
+
+volumes:
+  redis_data:

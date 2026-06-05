@@ -161,7 +161,7 @@ describe("Public bookings routes", () => {
         slug: "organizationa-exemplo",
         fullName: "Cliente Conectado",
         email: "cliente-conectado@customer.test",
-        phone: "+5511966666666",
+        phone: "5511966666666",
         password: "password123",
       },
     });
@@ -171,7 +171,7 @@ describe("Public bookings routes", () => {
       expect.objectContaining({
         fullName: "Cliente Conectado",
         email: "cliente-conectado@customer.test",
-        phone: "+5511966666666",
+        phone: "5511966666666",
       }),
     );
 
@@ -181,7 +181,7 @@ describe("Public bookings routes", () => {
       payload: {
         fullName: "Cliente Conectado",
         email: "cliente-conectado@customer.test",
-        phone: "+5511966666666",
+        phone: "5511966666666",
         customerAccessToken: signUpResponse.json().accessToken,
         providerId: "pro_001",
         startsAt: "2026-04-21T16:00:00.000Z",
@@ -204,7 +204,7 @@ describe("Public bookings routes", () => {
       expect.objectContaining({
         fullName: "Cliente Conectado",
         email: "cliente-conectado@customer.test",
-        phone: "+5511966666666",
+        phone: "5511966666666",
       }),
     );
     expect(portalResponse.json().bookings).toEqual(

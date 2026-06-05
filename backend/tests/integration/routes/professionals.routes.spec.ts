@@ -3,6 +3,7 @@ import type { DataSource } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../../../src/app";
+import { OrganizationSubscriptionEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { signInAsAdmin } from "../helpers/auth";
 
@@ -16,6 +17,10 @@ describe("Providers routes", () => {
       dataSource,
     });
     await app.ready();
+    await dataSource.getRepository(OrganizationSubscriptionEntity).update(
+      { organizationId: "cln_main_001", stripeMode: "test" },
+      { billingPlanId: "plan_pro_test" },
+    );
   });
 
   afterAll(async () => {

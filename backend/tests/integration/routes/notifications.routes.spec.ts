@@ -3,7 +3,7 @@ import type { DataSource } from "typeorm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildApp } from "../../../src/app";
-import { BookingNotificationEntity } from "../../../src/database/entities";
+import { BookingNotificationEntity, OrganizationSubscriptionEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 import { requestProtection } from "../../../src/security/request-protection";
 import { signInAsAdmin } from "../helpers/auth";
@@ -25,6 +25,10 @@ describe("Notifications routes", () => {
       dataSource,
     });
     await app.ready();
+    await dataSource.getRepository(OrganizationSubscriptionEntity).update(
+      { organizationId: "cln_main_001", stripeMode: "test" },
+      { billingPlanId: "plan_pro_test" },
+    );
   });
 
   afterEach(async () => {
