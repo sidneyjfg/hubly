@@ -209,6 +209,7 @@ describe("Billing routes", () => {
     expect(stripeMocks.checkoutSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         mode: "subscription",
+        allow_promotion_codes: true,
         line_items: [
           {
             price: "price_test_premium_12990",
