@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LogIn } from "lucide-react";
 
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { saveCustomerSession } from "@/lib/customer-session";
 
-export default function CustomerLoginPage() {
+function CustomerLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/cliente";
@@ -68,5 +68,13 @@ export default function CustomerLoginPage() {
         </Card>
       </section>
     </main>
+  );
+}
+
+export default function CustomerLoginPage() {
+  return (
+    <Suspense>
+      <CustomerLoginContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { UserPlus } from "lucide-react";
 
@@ -13,7 +13,7 @@ import { api } from "@/lib/api";
 import { saveCustomerSession } from "@/lib/customer-session";
 import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
 
-export default function CustomerSignUpPage() {
+function CustomerSignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialSlug = searchParams.get("estabelecimento") ?? "";
@@ -118,5 +118,13 @@ export default function CustomerSignUpPage() {
         </Card>
       </section>
     </main>
+  );
+}
+
+export default function CustomerSignUpPage() {
+  return (
+    <Suspense>
+      <CustomerSignUpContent />
+    </Suspense>
   );
 }

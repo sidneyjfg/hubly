@@ -15,7 +15,7 @@ services:
       retries: 5
 
   migrate:
-    image: ${BACKEND_IMAGE}
+    image: ghcr.io/sidneyjfg/hubly-backend:latest
     container_name: hubly_test_migrate
     restart: "no"
     extra_hosts:
