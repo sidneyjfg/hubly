@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, LogOut, Mail, MapPin, Phone, ReceiptText, Star, UserRound } from "lucide-react";
 
+import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,6 +49,7 @@ export default function CustomerPortalPage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between md:px-10">
           <BrandLogo showSlogan size="sm" />
           <div className="flex flex-wrap gap-3">
+            <BackButton fallbackHref="/clientes" />
             <ButtonLink href="/clientes" variant="secondary">Ver estabelecimentos</ButtonLink>
             <Button onClick={logout} variant="ghost">
               <LogOut className="mr-2 h-4 w-4" />

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, MapPin, Search, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 
+import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,11 +59,9 @@ export default function CustomerDiscoveryPage() {
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <BrandLogo showSlogan size="sm" />
             <div className="flex flex-wrap gap-3">
-              <ButtonLink href="/" variant="ghost">
-                Início
-              </ButtonLink>
+              <BackButton fallbackHref="/" />
               <ButtonLink href="/signup" variant="secondary">
-                Aba parceiro
+                Sou clínica ou barbearia
               </ButtonLink>
               {customerName ? (
                 <ButtonLink href="/cliente">
@@ -85,7 +84,7 @@ export default function CustomerDiscoveryPage() {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:px-10 xl:grid-cols-[0.9fr_1.4fr]">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-sky-300">Aba clientes</p>
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-sky-300">Acesso do cliente final</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">
             Encontre um estabelecimento e agende com segurança.
           </h1>

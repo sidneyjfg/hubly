@@ -5,6 +5,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { UserPlus } from "lucide-react";
 
+import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -61,17 +62,22 @@ function CustomerSignUpContent() {
       <section className="border-b border-white/10 bg-slate-950">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6 md:px-10">
           <BrandLogo showSlogan size="sm" />
-          <ButtonLink href="/cliente/login" variant="ghost">Já tenho conta</ButtonLink>
+          <div className="flex flex-wrap items-center gap-3">
+            <BackButton fallbackHref="/clientes" />
+            <ButtonLink href="/login" variant="ghost">Acesso do negócio</ButtonLink>
+            <ButtonLink href="/cliente/login" variant="secondary">Já tenho conta</ButtonLink>
+          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-xl px-6 py-12 md:px-10">
         <Card>
           <div className="mb-6">
-            <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Cliente</p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Criar conta</h1>
+            <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso do cliente final</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">Criar conta para agendar</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Sua conta é vinculada ao estabelecimento escolhido e passa a aparecer no painel da organização.
+              Escolha o estabelecimento onde deseja agendar. Esta conta é para clientes finais acompanharem agenda,
+              histórico e avaliações.
             </p>
           </div>
 

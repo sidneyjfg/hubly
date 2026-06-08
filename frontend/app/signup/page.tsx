@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
+import { BackButton } from "@/components/app/back-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,10 +62,11 @@ export default function SignUpPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <Card className="w-full max-w-2xl">
-        <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Cadastro completo</p>
-        <h1 className="mt-4 text-3xl font-semibold text-white">Criar conta do negócio</h1>
+        <BackButton className="mb-5 -ml-3" fallbackHref="/" />
+        <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso do negócio</p>
+        <h1 className="mt-4 text-3xl font-semibold text-white">Criar conta para clínica, barbearia ou serviço local</h1>
         <p className="mt-3 text-slate-300">
-          O cadastro já cria o negócio local, o primeiro administrador e a sessão autenticada.
+          O cadastro cria o negócio local, o primeiro administrador e o acesso ao painel de agenda, equipe e clientes.
         </p>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
@@ -100,9 +102,15 @@ export default function SignUpPage() {
             Criar negócio
           </Button>
           <p className="text-center text-sm text-slate-400">
-            Já possui acesso?{" "}
+            Já possui acesso do negócio?{" "}
             <Link className="text-sky-300 hover:text-sky-200" href="/login">
               Entrar
+            </Link>
+          </p>
+          <p className="text-center text-sm text-slate-400">
+            Quer agendar como cliente final?{" "}
+            <Link className="text-sky-300 hover:text-sky-200" href="/clientes">
+              Ver estabelecimentos
             </Link>
           </p>
           {mutation.error ? <p className="text-sm text-rose-300">{mutation.error.message}</p> : null}

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LockKeyhole } from "lucide-react";
 
+import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,7 +19,7 @@ export default function SystemAdminLoginPage() {
   const hasHydrated = useSystemAdminStore((state) => state.hasHydrated);
   const isAuthenticated = useSystemAdminStore((state) => state.isAuthenticated);
   const login = useSystemAdminStore((state) => state.login);
-  const [email, setEmail] = useState("owner@hubly.local");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function SystemAdminLoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
       <Card className="w-full max-w-md">
+        <BackButton className="mb-5 -ml-3" fallbackHref="/login" />
         <BrandLogo className="mb-6" showSlogan size="sm" />
         <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-400/15 text-sky-200">
           <LockKeyhole className="h-5 w-5" />

@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { api } from "@/lib/api";
+import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,8 +17,8 @@ import { useAppStore } from "@/store/app-store";
 export default function LoginPage() {
   const router = useRouter();
   const login = useAppStore((state) => state.login);
-  const [email, setEmail] = useState("admin@organization.test");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -46,11 +47,13 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <Card className="w-full max-w-md">
+        <BackButton className="mb-5 -ml-3" fallbackHref="/" />
         <BrandLogo className="mb-6" showSlogan size="sm" />
-        <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso real</p>
-        <h1 className="mt-4 text-3xl font-semibold text-white">Entrar no painel</h1>
+        <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso do negócio</p>
+        <h1 className="mt-4 text-3xl font-semibold text-white">Entrar no painel da empresa</h1>
         <p className="mt-3 text-slate-300">
-          Conectado ao backend da Hubly. Use as credenciais seed locais para acessar a organizationa de teste.
+          Para clínicas, barbearias, salões, estética, studios e profissionais que gerenciam agenda, equipe,
+          serviços e presença digital.
         </p>
         <div className="mt-8 space-y-4">
           <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
@@ -60,20 +63,21 @@ export default function LoginPage() {
             type="password"
             value={password}
           />
-          <Button className="w-full" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-            Entrar no dashboard
+          <Button className="w-full" disabled={!email || !password || mutation.isPending} onClick={() => mutation.mutate()}>
+            Entrar como negócio
           </Button>
           <p className="text-center text-sm text-slate-400">
-            Ainda não tem conta?{" "}
+            Para clínica, barbearia ou outro negócio local.{" "}
             <Link className="text-sky-300 hover:text-sky-200" href="/signup">
-              Criar negócio
+              Criar conta do negócio
             </Link>
           </p>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-            <p className="font-medium text-white">Credenciais seed</p>
-            <p className="mt-2">E-mail: `admin@organization.test`</p>
-            <p>Senha: `password123`</p>
-          </div>
+          <p className="text-center text-sm text-slate-400">
+            Quer agendar um serviço?{" "}
+            <Link className="text-sky-300 hover:text-sky-200" href="/cliente/login">
+              Entrar como cliente final
+            </Link>
+          </p>
           {mutation.error ? <p className="text-sm text-rose-300">{mutation.error.message}</p> : null}
         </div>
       </Card>

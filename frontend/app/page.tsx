@@ -150,11 +150,11 @@ export default function MarketingPage() {
             <BrandLogo showSlogan size="md" />
             <div className="flex items-center gap-3">
               <ButtonLink href="/login" variant="ghost">
-                Entrar
+                Entrar como negócio
               </ButtonLink>
-              <ButtonLink href="/cliente/login" variant="ghost">Entrar como cliente</ButtonLink>
-              <ButtonLink href="/clientes" variant="secondary">Ver estabelecimentos</ButtonLink>
-              <ButtonLink href="/signup">Aba parceiro</ButtonLink>
+              <ButtonLink href="/cliente/login" variant="ghost">Entrar como cliente final</ButtonLink>
+              <ButtonLink href="/clientes" variant="secondary">Encontrar serviços</ButtonLink>
+              <ButtonLink href="/signup">Tenho uma clínica ou barbearia</ButtonLink>
             </div>
           </header>
 
@@ -179,7 +179,7 @@ export default function MarketingPage() {
                   Criar conta de cliente
                 </ButtonLink>
                 <ButtonLink href="/signup" size="lg" variant="secondary">
-                  Tenho um negócio
+                  Tenho uma clínica ou barbearia
                 </ButtonLink>
               </div>
               <div className="mt-10 flex flex-wrap gap-6 text-sm text-slate-400">

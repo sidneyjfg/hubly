@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LogIn } from "lucide-react";
 
+import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,17 +34,22 @@ function CustomerLoginContent() {
       <section className="border-b border-white/10 bg-slate-950">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6 md:px-10">
           <BrandLogo showSlogan size="sm" />
-          <ButtonLink href="/clientes" variant="ghost">Ver estabelecimentos</ButtonLink>
+          <div className="flex flex-wrap items-center gap-3">
+            <BackButton fallbackHref="/clientes" />
+            <ButtonLink href="/login" variant="ghost">Acesso do negócio</ButtonLink>
+            <ButtonLink href="/clientes" variant="secondary">Ver estabelecimentos</ButtonLink>
+          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-xl px-6 py-12 md:px-10">
         <Card>
           <div className="mb-6">
-            <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Cliente</p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Entrar na sua conta</h1>
+            <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso do cliente final</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">Entrar para agendar serviços</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Acesse seus agendamentos e os estabelecimentos onde você já gastou.
+              Use este acesso para encontrar clínicas, barbearias, salões e outros estabelecimentos, além de acompanhar
+              seus agendamentos.
             </p>
           </div>
           <div className="space-y-4">
