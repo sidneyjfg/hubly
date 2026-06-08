@@ -127,7 +127,7 @@ const planCards = [
   },
   {
     name: "Premium",
-    price: "Sob consulta",
+    price: "R$129,90",
     description: "Para negócios que querem mais equipe e relacionamento.",
     features: [
       "Até 15 profissionais ativos",
