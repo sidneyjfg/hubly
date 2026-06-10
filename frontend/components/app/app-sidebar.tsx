@@ -9,6 +9,7 @@ import {
   CalendarDays,
   CreditCard,
   Crown,
+  HelpCircle,
   Images,
   LayoutDashboard,
   PanelLeftClose,
@@ -20,6 +21,7 @@ import { useState } from "react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
 import type { UserRole } from "@/lib/types";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 
@@ -92,6 +94,19 @@ export function AppSidebar() {
           })}
         </nav>
       </div>
+      <a
+        className={cn(
+          "mt-4 flex shrink-0 items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white",
+          !isExpanded && "justify-center px-0"
+        )}
+        href={HUBLY_SUPPORT_URL}
+        rel="noreferrer"
+        target="_blank"
+        title={isExpanded ? undefined : "Ajuda e suporte"}
+      >
+        <HelpCircle className="h-4 w-4 shrink-0" />
+        {isExpanded ? <span className="truncate">Ajuda e suporte</span> : null}
+      </a>
     </aside>
   );
 }

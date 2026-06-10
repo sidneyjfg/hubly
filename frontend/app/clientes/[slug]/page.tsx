@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, CheckCircle2, Clock, Lock, MapPin, ShieldCheck, Stethoscope } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, Clock, HelpCircle, Lock, MapPin, ShieldCheck, Stethoscope } from "lucide-react";
 
 import { BrandLogo } from "@/components/app/brand-logo";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { getCustomerSession } from "@/lib/customer-session";
 import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 import { addDays, formatDateInput } from "@/lib/utils";
 
 type PageProps = {
@@ -127,6 +128,10 @@ export default function CustomerBookingPage({ params }: PageProps) {
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Link>
+              <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Ajuda
+              </ButtonLink>
               {isCustomerConnected ? (
                 <ButtonLink href="/cliente">Minha conta</ButtonLink>
               ) : (

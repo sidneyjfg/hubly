@@ -47,6 +47,14 @@ export function ButtonLink({
   variant = "primary",
   size = "md"
 }: ButtonLinkProps) {
+  if (href.startsWith("http://") || href.startsWith("https://")) {
+    return (
+      <a className={cn(baseStyles, variants[variant], sizes[size], className)} href={href} rel="noreferrer" target="_blank">
+        {children}
+      </a>
+    );
+  }
+
   if (href.startsWith("#")) {
     return (
       <a className={cn(baseStyles, variants[variant], sizes[size], className)} href={href}>

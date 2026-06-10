@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, MapPin, Search, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
+import { ArrowRight, CalendarDays, HelpCircle, MapPin, Search, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 
 import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { getCustomerSession } from "@/lib/customer-session";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 
 function normalizeSearchValue(value: string): string {
   return value
@@ -60,6 +61,10 @@ export default function CustomerDiscoveryPage() {
             <BrandLogo showSlogan size="sm" />
             <div className="flex flex-wrap gap-3">
               <BackButton fallbackHref="/" />
+              <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Ajuda
+              </ButtonLink>
               <ButtonLink href="/signup" variant="secondary">
                 Sou clínica ou barbearia
               </ButtonLink>

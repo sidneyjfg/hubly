@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { UserPlus } from "lucide-react";
+import { HelpCircle, UserPlus } from "lucide-react";
 
 import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
@@ -13,11 +13,27 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { saveCustomerSession } from "@/lib/customer-session";
 import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
+
+function normalizeBookingPageSlug(value: string): string {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return "";
+  }
+
+  try {
+    const url = new URL(trimmedValue);
+    return url.pathname.split("/").filter(Boolean).at(-1) ?? trimmedValue;
+  } catch {
+    return trimmedValue.replace(/^\/+|\/+$/g, "");
+  }
+}
 
 function CustomerSignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialSlug = searchParams.get("estabelecimento") ?? "";
+  const initialSlug = normalizeBookingPageSlug(searchParams.get("estabelecimento") ?? "");
   const [slug, setSlug] = useState(initialSlug);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,10 +46,12 @@ function CustomerSignUpContent() {
   });
 
   const organizations = useMemo(() => organizationsQuery.data?.items ?? [], [organizationsQuery.data?.items]);
+  const hasOrganizationOptions = organizations.length > 0;
   const selectedOrganization = useMemo(
     () => organizations.find((organization) => organization.bookingPageSlug === slug) ?? null,
     [organizations, slug]
   );
+  const showSlugInput = !hasOrganizationOptions || (slug && !selectedOrganization);
 
   const signUpMutation = useMutation({
     mutationFn: () => api.signUpPublicCustomer({
@@ -64,6 +82,10 @@ function CustomerSignUpContent() {
           <BrandLogo showSlogan size="sm" />
           <div className="flex flex-wrap items-center gap-3">
             <BackButton fallbackHref="/clientes" />
+            <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Ajuda
+            </ButtonLink>
             <ButtonLink href="/login" variant="ghost">Acesso do negócio</ButtonLink>
             <ButtonLink href="/cliente/login" variant="secondary">Já tenho conta</ButtonLink>
           </div>
@@ -81,21 +103,40 @@ function CustomerSignUpContent() {
             </p>
           </div>
 
-          <label className="space-y-2 text-sm text-slate-300">
-            Estabelecimento
-            <select
-              className="h-11 w-full rounded-lg border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition focus:border-primary"
-              onChange={(event) => setSlug(event.target.value)}
-              value={slug}
-            >
-              <option className="bg-slate-950" value="">Selecione</option>
-              {organizations.map((organization) => (
-                <option className="bg-slate-950" key={organization.organizationId} value={organization.bookingPageSlug}>
-                  {organization.tradeName}
-                </option>
-              ))}
-            </select>
-          </label>
+          {hasOrganizationOptions ? (
+            <label className="space-y-2 text-sm text-slate-300">
+              Estabelecimento
+              <select
+                className="h-11 w-full rounded-lg border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition focus:border-primary"
+                onChange={(event) => setSlug(event.target.value)}
+                value={selectedOrganization ? slug : ""}
+              >
+                <option className="bg-slate-950" value="">Selecione</option>
+                {organizations.map((organization) => (
+                  <option className="bg-slate-950" key={organization.organizationId} value={organization.bookingPageSlug}>
+                    {organization.tradeName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {showSlugInput ? (
+            <label className="mt-4 block space-y-2 text-sm text-slate-300">
+              Link do estabelecimento
+              <Input
+                onChange={(event) => setSlug(normalizeBookingPageSlug(event.target.value))}
+                placeholder="ex: barbearia-centro"
+                value={slug}
+              />
+            </label>
+          ) : null}
+
+          {organizationsQuery.isSuccess && !hasOrganizationOptions ? (
+            <p className="mt-3 rounded-lg border border-amber-300/20 bg-amber-300/10 p-3 text-sm text-amber-100">
+              Nenhum estabelecimento apareceu na lista pública. Informe o identificador do link enviado pelo negócio para criar a conta.
+            </p>
+          ) : null}
 
           {selectedOrganization ? (
             <p className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-300">

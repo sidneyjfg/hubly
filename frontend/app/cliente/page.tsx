@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, LogOut, Mail, MapPin, Phone, ReceiptText, Star, UserRound } from "lucide-react";
+import { CalendarDays, HelpCircle, LogOut, Mail, MapPin, Phone, ReceiptText, Star, UserRound } from "lucide-react";
 
 import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
@@ -11,6 +11,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { clearCustomerSession, getCustomerSession } from "@/lib/customer-session";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 
 type PortalTab = "upcoming" | "history" | "reviews";
 
@@ -50,6 +51,10 @@ export default function CustomerPortalPage() {
           <BrandLogo showSlogan size="sm" />
           <div className="flex flex-wrap gap-3">
             <BackButton fallbackHref="/clientes" />
+            <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Ajuda
+            </ButtonLink>
             <ButtonLink href="/clientes" variant="secondary">Ver estabelecimentos</ButtonLink>
             <Button onClick={logout} variant="ghost">
               <LogOut className="mr-2 h-4 w-4" />

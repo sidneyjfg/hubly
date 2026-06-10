@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { CalendarDays, ChevronDown, Crown, LogOut, Menu, Search, Settings, UserCircle2 } from "lucide-react";
+import { CalendarDays, ChevronDown, Crown, HelpCircle, LogOut, Menu, Search, Settings, UserCircle2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { AppVersion } from "@/components/app/app-version";
@@ -11,6 +11,7 @@ import { BrandLogo } from "@/components/app/brand-logo";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/store/app-store";
 import { cn, getDisplayNameFromEmail, getRoleLabel } from "@/lib/utils";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 
 export function AppHeader() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
@@ -76,6 +77,15 @@ export function AppHeader() {
           <div className="hidden lg:block">
             <AppVersion />
           </div>
+          <a
+            className="hidden h-10 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
+            href={HUBLY_SUPPORT_URL}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <HelpCircle className="h-4 w-4" />
+            Ajuda
+          </a>
           <div className="relative" ref={profileMenuRef}>
             <button
               aria-expanded={isProfileOpen}
@@ -107,6 +117,16 @@ export function AppHeader() {
                 {isAdministrator ? <ProfileMenuLink href="/settings" icon={Settings} label="Configurações" /> : null}
                 {isAdministrator ? <ProfileMenuLink href="/admin" icon={Crown} label="Admin" /> : null}
                 <ProfileMenuLink href="/bookings" icon={CalendarDays} label="Agenda" />
+                <a
+                  className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
+                  href={HUBLY_SUPPORT_URL}
+                  rel="noreferrer"
+                  role="menuitem"
+                  target="_blank"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  Ajuda e suporte
+                </a>
                 <button
                   className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-rose-200 transition hover:bg-rose-400/10 hover:text-rose-100"
                   onClick={logout}

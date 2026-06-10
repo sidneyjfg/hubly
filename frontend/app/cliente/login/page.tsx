@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { LogIn } from "lucide-react";
+import { HelpCircle, LogIn } from "lucide-react";
 
 import { BackButton } from "@/components/app/back-button";
 import { BrandLogo } from "@/components/app/brand-logo";
@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { saveCustomerSession } from "@/lib/customer-session";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 
 function CustomerLoginContent() {
   const router = useRouter();
@@ -36,6 +37,10 @@ function CustomerLoginContent() {
           <BrandLogo showSlogan size="sm" />
           <div className="flex flex-wrap items-center gap-3">
             <BackButton fallbackHref="/clientes" />
+            <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Ajuda
+            </ButtonLink>
             <ButtonLink href="/login" variant="ghost">Acesso do negócio</ButtonLink>
             <ButtonLink href="/clientes" variant="secondary">Ver estabelecimentos</ButtonLink>
           </div>
