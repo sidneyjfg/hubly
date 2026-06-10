@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BriefcaseMedical, Camera, CheckCircle2, Eye, ImagePlus, MapPin, Save, Store, UploadCloud, UserRound } from "lucide-react";
+import { AlertCircle, BriefcaseMedical, Camera, CheckCircle2, Eye, HelpCircle, ImagePlus, MapPin, Save, Store, UploadCloud, UserRound } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -335,6 +335,22 @@ export default function StorefrontPage() {
             </span>
           </div>
         </div>
+        <Card className="border-sky-300/20 bg-sky-400/10">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex gap-3">
+              <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-sky-200" />
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">Ajuda rapida</p>
+                <h2 className="mt-2 text-xl font-semibold text-white">Vitrine nao publica ou nao aparece em /clientes?</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                  A vitrine so fica publica quando perfil, endereco, foto de capa, profissional, servico com preco e agenda estao completos.
+                </p>
+              </div>
+            </div>
+            <ButtonLink href="/help#storefront" variant="secondary">Ver checklist</ButtonLink>
+          </div>
+        </Card>
+
         {!canPublishStorefront ? (
           <div className="rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100">
             A vitrine fica bloqueada para clientes até perfil, profissionais, serviços e agenda estarem configurados corretamente.

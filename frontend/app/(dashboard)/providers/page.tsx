@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, BriefcaseMedical, CalendarClock, Pencil, Plus, Power } from "lucide-react";
+import { AlertTriangle, BriefcaseMedical, CalendarClock, HelpCircle, Pencil, Plus, Power } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
@@ -373,6 +373,22 @@ export default function ProvidersPage() {
           </Button>
         </div>
       </div>
+
+      <Card className="border-sky-300/20 bg-sky-400/10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex gap-3">
+            <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-sky-200" />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">Ajuda rapida</p>
+              <h2 className="mt-2 text-xl font-semibold text-white">Profissional, servico ou horario nao aparece para o cliente?</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                Para liberar agendamento publico, o profissional precisa estar ativo, ter horario salvo e possuir pelo menos um servico ativo com preco.
+              </p>
+            </div>
+          </div>
+          <ButtonLink href="/help#providers" variant="secondary">Ver checklist</ButtonLink>
+        </div>
+      </Card>
 
       {isServiceLimitExceeded ? (
         <Card className={isServiceLimitGraceExpired ? "border-rose-400/30 bg-rose-400/10" : "border-amber-300/30 bg-amber-300/10"}>

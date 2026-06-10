@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { HelpCircle, Plus } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { StatusBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
@@ -246,6 +246,22 @@ export default function SchedulePage() {
           </div>
         </div>
       </div>
+
+      <Card className="border-sky-300/20 bg-sky-400/10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex gap-3">
+            <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-sky-200" />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">Ajuda rapida</p>
+              <h2 className="mt-2 text-xl font-semibold text-white">Cliente nao consegue confirmar ou nao encontra horario?</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                Confira dados obrigatorios do cliente, horario disponivel, servico com duracao/preco e conflito com agendamentos existentes.
+              </p>
+            </div>
+          </div>
+          <ButtonLink href="/help#booking" variant="secondary">Ver checklist</ButtonLink>
+        </div>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-3">
         {["confirmed", "scheduled", "missed"].map((status) => (
