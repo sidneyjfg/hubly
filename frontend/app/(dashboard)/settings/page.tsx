@@ -17,7 +17,6 @@ export default function SettingsPage() {
 
   const [legalName, setLegalName] = useState("");
   const [tradeName, setTradeName] = useState("");
-  const [timezone, setTimezone] = useState("");
 
   useEffect(() => {
     if (!data) {
@@ -26,7 +25,6 @@ export default function SettingsPage() {
 
     setLegalName(data.organization.legalName);
     setTradeName(data.organization.tradeName);
-    setTimezone(data.organization.timezone);
   }, [data]);
 
   const isAdministrator = data?.user.role === "administrator";
@@ -35,8 +33,7 @@ export default function SettingsPage() {
     mutationFn: () =>
       api.updateOrganization(data!.organization.id, {
         legalName,
-        tradeName,
-        timezone
+        tradeName
       }),
     meta: {
       errorMessage: "Configurações não salvas",
@@ -67,13 +64,6 @@ export default function SettingsPage() {
             onChange={(event) => setLegalName(event.target.value)}
             placeholder="Razão social"
             value={legalName}
-          />
-          <Input
-            className="md:col-span-2"
-            disabled={!isAdministrator}
-            onChange={(event) => setTimezone(event.target.value)}
-            placeholder="Timezone"
-            value={timezone}
           />
         </div>
         <div className="mt-6 flex items-center gap-3">

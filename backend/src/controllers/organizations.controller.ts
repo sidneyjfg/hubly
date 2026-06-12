@@ -16,12 +16,10 @@ export class OrganizationsController {
       legalName?: string;
       tradeName?: string;
       bookingPageSlug?: string;
-      timezone?: string;
     };
     const input = {
       legalName: body.legalName ?? "",
       tradeName: body.tradeName ?? "",
-      timezone: body.timezone ?? "",
       ...(body.bookingPageSlug === undefined ? {} : { bookingPageSlug: body.bookingPageSlug }),
     };
 
@@ -36,12 +34,10 @@ export class OrganizationsController {
       legalName?: string;
       tradeName?: string;
       bookingPageSlug?: string;
-      timezone?: string;
     };
     const input = {
       legalName: body.legalName ?? "",
       tradeName: body.tradeName ?? "",
-      timezone: body.timezone ?? "",
       ...(body.bookingPageSlug === undefined ? {} : { bookingPageSlug: body.bookingPageSlug }),
     };
 

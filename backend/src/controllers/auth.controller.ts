@@ -55,7 +55,7 @@ export class AuthController {
       organization?: {
         legalName?: string;
         tradeName?: string;
-        timezone?: string;
+        bookingPageSlug?: string;
       };
     };
 
@@ -67,7 +67,7 @@ export class AuthController {
       organization: {
         legalName: body.organization?.legalName ?? "",
         tradeName: body.organization?.tradeName ?? "",
-        timezone: body.organization?.timezone ?? "",
+        ...(body.organization?.bookingPageSlug === undefined ? {} : { bookingPageSlug: body.organization.bookingPageSlug }),
       },
     });
 

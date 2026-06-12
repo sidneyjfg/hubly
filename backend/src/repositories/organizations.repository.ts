@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { OrganizationEntity } from "../database/entities";
 import type { Organization, OrganizationStorefrontInput, OrganizationWriteInput } from "../types/organization";
 import { buildPaginatedResult, getPaginationOffset, type PaginatedResult, type Pagination } from "../utils/pagination";
+import { defaultTimeZone } from "../utils/timezone";
 
 export class OrganizationsRepository {
   public constructor(private readonly dataSource: DataSource) {}
@@ -91,7 +92,7 @@ export class OrganizationsRepository {
       legalName: input.legalName,
       tradeName: input.tradeName,
       bookingPageSlug: input.bookingPageSlug ?? randomUUID(),
-      timezone: input.timezone,
+      timezone: defaultTimeZone,
     });
 
     return this.mapOrganization(organization);
@@ -112,7 +113,7 @@ export class OrganizationsRepository {
     organization.legalName = input.legalName;
     organization.tradeName = input.tradeName;
     organization.bookingPageSlug = input.bookingPageSlug ?? organization.bookingPageSlug;
-    organization.timezone = input.timezone;
+    organization.timezone = defaultTimeZone;
 
     const savedOrganization = await repository.save(organization);
 

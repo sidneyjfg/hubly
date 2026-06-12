@@ -13,6 +13,7 @@ import { createAccessToken, createRefreshToken, verifyRefreshToken } from "../ut
 import type { UserAccountWriteInput } from "../types/user";
 import { slugify } from "../utils/slug";
 import { brazilianWhatsAppPhoneSchema } from "../utils/phone";
+import { defaultTimeZone } from "../utils/timezone";
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -41,7 +42,7 @@ const signUpSchema = z.object({
         legalName: z.string().min(3).max(160),
         tradeName: z.string().min(3).max(160),
         bookingPageSlug: z.string().min(3).max(160).optional(),
-        timezone: z.string().min(3).max(60),
+        timezone: z.string().min(3).max(60).optional().default(defaultTimeZone),
       }),
 });
 
@@ -180,6 +181,7 @@ export class AuthService {
       const organization = await this.organizationsRepository.create(
         {
           ...data.organization,
+          timezone: defaultTimeZone,
           bookingPageSlug: slugify(data.organization.bookingPageSlug ?? data.organization.tradeName),
         },
         manager,

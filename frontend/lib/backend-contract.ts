@@ -263,7 +263,7 @@ export type SignUpInputDTO = {
   organization: {
     legalName: string;
     tradeName: string;
-    timezone: string;
+    timezone?: string;
   };
 };
 
@@ -285,7 +285,7 @@ export type UpdatePasswordInputDTO = {
 export type UpdateOrganizationInputDTO = {
   legalName: string;
   tradeName: string;
-  timezone: string;
+  timezone?: string;
 };
 
 export type UpdateStorefrontInputDTO = {

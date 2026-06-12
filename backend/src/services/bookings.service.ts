@@ -18,6 +18,7 @@ import type { AuthenticatedRequestUser } from "../types/auth";
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult } from "../utils/pagination";
 import { isWithinProviderAvailability, resolveWeekdayInTimeZone } from "../utils/provider-availability";
+import { defaultTimeZone } from "../utils/timezone";
 import { NotificationsService } from "./notifications.service";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
 
@@ -539,10 +540,7 @@ export class BookingsService {
     endsAt: Date,
     manager: EntityManager,
   ): Promise<void> {
-    const organization = this.organizationsRepository
-      ? await this.organizationsRepository.findByIdInOrganization(organizationId, organizationId, manager)
-      : null;
-    const timezone = organization?.timezone ?? "UTC";
+    const timezone = defaultTimeZone;
     const weekday = resolveWeekdayInTimeZone(startsAt, timezone);
     const availability = await this.providerAvailabilitiesRepository.findByProviderAndWeekdayInOrganization(
       organizationId,

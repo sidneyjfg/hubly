@@ -588,7 +588,7 @@ export const api = {
     });
   },
 
-  signUpPublicCustomer(input: { slug: string; fullName: string; email?: string | null; phone: string; password: string }) {
+  signUpPublicCustomer(input: { slug?: string; fullName: string; email?: string | null; phone: string; password: string }) {
     return apiRequest<PublicCustomerSessionDTO>(apiRoutes.publicCustomers.signUp, {
       method: "POST",
       body: input

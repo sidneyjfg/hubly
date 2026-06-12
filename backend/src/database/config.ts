@@ -18,6 +18,7 @@ import { MoveStripeConnectToOrganization1713573000000 } from "./migrations/17135
 import { CreateBillingPlans1713574000000 } from "./migrations/1713574000000-create-billing-plans";
 import { CreateOrganizationSubscriptions1713575000000 } from "./migrations/1713575000000-create-organization-subscriptions";
 import { AddFreeBillingPlanAndSeedSubscriptions1713576000000 } from "./migrations/1713576000000-add-free-billing-plan-and-seed-subscriptions";
+import { AllowGlobalCustomerAccounts1713577000000 } from "./migrations/1713577000000-allow-global-customer-accounts";
 import { databaseEntities } from "./entities";
 
 export type DatabaseDriver = "mysql" | "sqljs";
@@ -59,6 +60,7 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
         CreateBillingPlans1713574000000,
         CreateOrganizationSubscriptions1713575000000,
         AddFreeBillingPlanAndSeedSubscriptions1713576000000,
+        AllowGlobalCustomerAccounts1713577000000,
       ],
     };
   }
@@ -92,6 +94,7 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
       CreateBillingPlans1713574000000,
       CreateOrganizationSubscriptions1713575000000,
       AddFreeBillingPlanAndSeedSubscriptions1713576000000,
+      AllowGlobalCustomerAccounts1713577000000,
     ],
   };
 };

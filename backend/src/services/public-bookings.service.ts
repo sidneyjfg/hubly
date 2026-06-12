@@ -21,6 +21,7 @@ import {
   resolveWeekdayInTimeZone,
 } from "../utils/provider-availability";
 import { createCustomerAccessToken, verifyCustomerAccessToken } from "../utils/customer-tokens";
+import { defaultTimeZone } from "../utils/timezone";
 import { NotificationsService } from "./notifications.service";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
 
@@ -44,7 +45,7 @@ const availabilityQuerySchema = z.object({
 });
 
 const customerSignUpSchema = z.object({
-  slug: z.string().min(3),
+  slug: z.string().min(3).optional(),
   fullName: z.string().min(3).max(120),
   email: z.string().email().nullable().optional(),
   phone: brazilianWhatsAppPhoneSchema,
@@ -150,7 +151,7 @@ export class PublicBookingsService {
       organizationId: organization.id,
       bookingPageSlug: organization.bookingPageSlug,
       tradeName: organization.tradeName,
-      timezone: organization.timezone,
+      timezone: defaultTimeZone,
       publicDescription: organization.publicDescription ?? null,
       publicPhone: organization.publicPhone ?? null,
       publicEmail: organization.publicEmail ?? null,
@@ -228,6 +229,7 @@ export class PublicBookingsService {
     await this.assertPublicBookingAccessIsAvailable(organization.id);
 
     const data = availabilityQuerySchema.parse(query);
+    const organizationTimeZone = defaultTimeZone;
     const provider = await this.providersRepository.findByIdInOrganization(organization.id, data.providerId);
 
     if (!provider || !provider.isActive) {
@@ -249,7 +251,7 @@ export class PublicBookingsService {
       ? (await this.serviceOfferingsRepository.findByIdInOrganization(organization.id, data.offeringId))?.durationMinutes ?? 30
       : 30;
 
-    const { start: dayStart, end: dayEnd } = buildUtcRangeForLocalDate(data.date, organization.timezone);
+    const { start: dayStart, end: dayEnd } = buildUtcRangeForLocalDate(data.date, organizationTimeZone);
     const existingBookings = await this.bookingsRepository.findAll(organization.id, {
       from: dayStart,
       to: dayEnd,
@@ -264,18 +266,49 @@ export class PublicBookingsService {
       }));
 
     return {
-      items: buildAvailableSlots(data.date, availability, durationMinutes, busyWindows, organization.timezone),
+      items: buildAvailableSlots(data.date, availability, durationMinutes, busyWindows, organizationTimeZone),
     };
   }
 
   public async signUpCustomer(input: unknown): Promise<CustomerPortalSession> {
     const data = customerSignUpSchema.parse(input);
+    const passwordHash = hashPassword(data.password);
+
+    if (!data.slug) {
+      const customer = await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+        const candidates = await this.customersRepository.findAuthCandidatesByEmailOrPhone(data.email ?? data.phone);
+        const existingCustomer = candidates.find((candidate) => (
+          candidate.phone === data.phone || Boolean(data.email && candidate.email === data.email)
+        ));
+
+        if (existingCustomer?.passwordHash && !verifyPassword(data.password, existingCustomer.passwordHash)) {
+          throw new AppError("customer_auth.account_exists", "Já existe uma conta com estes dados. Entre com sua senha atual.", 409);
+        }
+
+        if (existingCustomer) {
+          await this.customersRepository.setPortalPasswordHashIfMissing(existingCustomer.id, passwordHash, manager);
+          return existingCustomer;
+        }
+
+        return this.customersRepository.createPortalAccount(
+          {
+            fullName: data.fullName,
+            email: data.email ?? null,
+            phone: data.phone,
+            passwordHash,
+          },
+          manager,
+        );
+      });
+
+      return this.buildCustomerSession(customer);
+    }
+
     const organization = await this.organizationsRepository.findByBookingPageSlug(data.slug);
     if (!organization) {
       throw new AppError("public_booking.organization_not_found", "Estabelecimento não encontrado.", 404);
     }
 
-    const passwordHash = hashPassword(data.password);
     const customer = await this.dataSource.transaction("SERIALIZABLE", async (manager) => {
       const existingCustomer = await this.customersRepository.findAuthCandidateInOrganization(
         organization.id,
@@ -451,7 +484,8 @@ export class PublicBookingsService {
         throw new AppError("providers.not_found", "Provider not found.", 404);
       }
 
-      const weekday = resolveWeekdayInTimeZone(startsAt, organization.timezone);
+      const organizationTimeZone = defaultTimeZone;
+      const weekday = resolveWeekdayInTimeZone(startsAt, organizationTimeZone);
       const availability = await this.providerAvailabilitiesRepository.findByProviderAndWeekdayInOrganization(
         organization.id,
         data.providerId,
@@ -459,7 +493,7 @@ export class PublicBookingsService {
         manager,
       );
 
-      if (!availability || !isWithinProviderAvailability(availability, startsAt, endsAt, organization.timezone)) {
+      if (!availability || !isWithinProviderAvailability(availability, startsAt, endsAt, organizationTimeZone)) {
         throw new AppError("bookings.outside_provider_availability", "Booking is outside provider working hours.", 409);
       }
 

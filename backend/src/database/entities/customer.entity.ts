@@ -9,12 +9,12 @@ export class CustomerEntity {
   @PrimaryColumn({ type: "varchar", length: 36 })
   public id!: string;
 
-  @Column({ type: "varchar", length: 36 })
-  public organizationId!: string;
+  @Column({ type: "varchar", length: 36, nullable: true })
+  public organizationId!: string | null;
 
-  @ManyToOne(() => OrganizationEntity, (organization) => organization.customers, { onDelete: "CASCADE" })
+  @ManyToOne(() => OrganizationEntity, (organization) => organization.customers, { nullable: true, onDelete: "CASCADE" })
   @JoinColumn({ name: "organizationId" })
-  public organization!: OrganizationEntity;
+  public organization!: OrganizationEntity | null;
 
   @Column({ type: "varchar", length: 120 })
   public fullName!: string;

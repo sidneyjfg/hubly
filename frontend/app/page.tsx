@@ -17,6 +17,7 @@ import { AppVersion } from "@/components/app/app-version";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { clientLogos, monetizationHighlights, testimonials } from "@/lib/mock-data";
+import { HUBLY_SUPPORT_URL } from "@/lib/support";
 
 const problemPoints = [
   "Negócios locais dependem de mensagens soltas, redes sociais e indicação para manter a agenda previsível.",
@@ -153,6 +154,7 @@ export default function MarketingPage() {
                 Entrar como negócio
               </ButtonLink>
               <ButtonLink href="/cliente/login" variant="ghost">Entrar como cliente final</ButtonLink>
+              <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">Suporte</ButtonLink>
               <ButtonLink href="/clientes" variant="secondary">Encontrar serviços</ButtonLink>
               <ButtonLink href="/signup">Tenho uma clínica ou barbearia</ButtonLink>
             </div>

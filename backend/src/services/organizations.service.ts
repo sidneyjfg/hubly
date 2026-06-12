@@ -6,13 +6,14 @@ import type { Organization, OrganizationStorefrontInput, OrganizationWriteInput 
 import { AppError } from "../utils/app-error";
 import { parsePagination, type PaginatedResult, type PaginationInput } from "../utils/pagination";
 import { slugify } from "../utils/slug";
+import { defaultTimeZone } from "../utils/timezone";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
 
 const organizationWriteSchema = z.object({
   legalName: z.string().min(3).max(160),
   tradeName: z.string().min(3).max(160),
   bookingPageSlug: z.string().min(3).max(160).optional(),
-  timezone: z.string().min(3).max(60),
+  timezone: z.string().min(3).max(60).optional().default(defaultTimeZone),
 });
 
 const nullableText = (max: number) => z.string().trim().max(max).nullable().optional();
@@ -49,6 +50,7 @@ export class OrganizationsService {
     const data = organizationWriteSchema.parse(input);
     return this.organizationsRepository.create({
       ...data,
+      timezone: defaultTimeZone,
       bookingPageSlug: slugify(data.bookingPageSlug ?? data.tradeName),
     });
   }
@@ -57,6 +59,7 @@ export class OrganizationsService {
     const data = organizationWriteSchema.parse(input);
     const organization = await this.organizationsRepository.updateInOrganization(user.organizationId, id, {
       ...data,
+      timezone: defaultTimeZone,
       bookingPageSlug: slugify(data.bookingPageSlug ?? data.tradeName),
     });
 

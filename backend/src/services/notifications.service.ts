@@ -19,6 +19,7 @@ import type {
   WhatsAppReminderSettingsInput,
 } from "../types/notification";
 import { AppError } from "../utils/app-error";
+import { defaultTimeZone } from "../utils/timezone";
 import { EvolutionWhatsAppService } from "./evolution-whatsapp.service";
 import { PlanEntitlementsService } from "./plan-entitlements.service";
 
@@ -433,8 +434,7 @@ export class NotificationsService {
       return;
     }
 
-    const organization = await this.organizationsRepository.findByIdInOrganization(booking.organizationId, booking.organizationId, manager);
-    const timezone = organization?.timezone ?? "UTC";
+    const timezone = defaultTimeZone;
     const startsAt = new Date(booking.startsAt);
     const now = new Date();
 

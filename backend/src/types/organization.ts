@@ -23,7 +23,7 @@ export type OrganizationWriteInput = {
   legalName: string;
   tradeName: string;
   bookingPageSlug?: string | undefined;
-  timezone: string;
+  timezone?: string | undefined;
 };
 
 export type OrganizationStorefrontInput = {

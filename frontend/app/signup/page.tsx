@@ -24,7 +24,6 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [tradeName, setTradeName] = useState("");
   const [legalName, setLegalName] = useState("");
-  const [timezone, setTimezone] = useState("America/Sao_Paulo");
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -35,8 +34,7 @@ export default function SignUpPage() {
         password,
         organization: {
           legalName,
-          tradeName,
-          timezone
+          tradeName
         }
       }),
     meta: {
@@ -86,12 +84,6 @@ export default function SignUpPage() {
           />
           <Input onChange={(event) => setTradeName(event.target.value)} placeholder="Nome do negócio" value={tradeName} />
           <Input onChange={(event) => setLegalName(event.target.value)} placeholder="Razão social" value={legalName} />
-          <Input
-            className="md:col-span-2"
-            onChange={(event) => setTimezone(event.target.value)}
-            placeholder="Timezone"
-            value={timezone}
-          />
         </div>
         <div className="mt-8 flex flex-col gap-4">
           <Button

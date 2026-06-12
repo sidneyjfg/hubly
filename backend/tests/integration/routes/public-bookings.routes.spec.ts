@@ -3,7 +3,7 @@ import type { DataSource } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../../../src/app";
-import { OrganizationEntity, OrganizationSubscriptionEntity, ServiceOfferingEntity } from "../../../src/database/entities";
+import { CustomerEntity, OrganizationEntity, OrganizationSubscriptionEntity, ServiceOfferingEntity } from "../../../src/database/entities";
 import { createTestDataSource } from "../../../src/database/testing/create-test-data-source";
 
 describe("Public bookings routes", () => {
@@ -110,6 +110,36 @@ describe("Public bookings routes", () => {
     );
   });
 
+  it("normalizes legacy city timezone values when listing public availability", async () => {
+    await dataSource.getRepository(OrganizationEntity).update(
+      { id: "cln_main_001" },
+      { timezone: "curitiba " },
+    );
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: "/v1/public/organizations/organizationa-exemplo/availability?providerId=pro_001&date=2026-04-21",
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            startsAt: "2026-04-21T11:00:00.000Z",
+            endsAt: "2026-04-21T11:30:00.000Z",
+            label: "08:00",
+          }),
+        ]),
+      );
+    } finally {
+      await dataSource.getRepository(OrganizationEntity).update(
+        { id: "cln_main_001" },
+        { timezone: "America/Sao_Paulo" },
+      );
+    }
+  });
+
   it("creates a public booking and blocks times outside provider availability", async () => {
     const createResponse = await app.inject({
       method: "POST",
@@ -151,6 +181,36 @@ describe("Public bookings routes", () => {
     });
 
     expect(outsideResponse.statusCode).toBe(409);
+  });
+
+  it("creates a customer portal account without linking it to an establishment", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/public/customers/sign-up",
+      payload: {
+        fullName: "Cliente Sem Estabelecimento",
+        email: "cliente-global@customer.test",
+        phone: "5511977777777",
+        password: "password123",
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json().customer).toEqual(
+      expect.objectContaining({
+        fullName: "Cliente Sem Estabelecimento",
+        email: "cliente-global@customer.test",
+        phone: "5511977777777",
+      }),
+    );
+
+    const customer = await dataSource.getRepository(CustomerEntity).findOne({
+      where: {
+        id: response.json().customer.id,
+      },
+    });
+
+    expect(customer?.organizationId).toBeNull();
   });
 
   it("reuses the connected customer profile in the portal", async () => {

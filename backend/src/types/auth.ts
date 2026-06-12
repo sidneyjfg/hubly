@@ -40,7 +40,7 @@ export type SignUpInput = {
     legalName: string;
     tradeName: string;
     bookingPageSlug?: string;
-    timezone: string;
+    timezone?: string;
   };
 };
 

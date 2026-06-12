@@ -87,12 +87,11 @@ const meResponseSchema = {
 const organizationWriteSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["legalName", "tradeName", "timezone"],
+  required: ["legalName", "tradeName"],
   properties: {
     legalName: { type: "string" },
     tradeName: { type: "string" },
     bookingPageSlug: { type: "string" },
-    timezone: { type: "string" },
   },
 } as const;
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { HelpCircle, UserPlus } from "lucide-react";
 
 import { BackButton } from "@/components/app/back-button";
@@ -15,47 +15,15 @@ import { saveCustomerSession } from "@/lib/customer-session";
 import { formatBrazilianWhatsAppPhone, isValidBrazilianWhatsAppPhone } from "@/lib/phone";
 import { HUBLY_SUPPORT_URL } from "@/lib/support";
 
-function normalizeBookingPageSlug(value: string): string {
-  const trimmedValue = value.trim();
-
-  if (!trimmedValue) {
-    return "";
-  }
-
-  try {
-    const url = new URL(trimmedValue);
-    return url.pathname.split("/").filter(Boolean).at(-1) ?? trimmedValue;
-  } catch {
-    return trimmedValue.replace(/^\/+|\/+$/g, "");
-  }
-}
-
 function CustomerSignUpContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialSlug = normalizeBookingPageSlug(searchParams.get("estabelecimento") ?? "");
-  const [slug, setSlug] = useState(initialSlug);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
 
-  const organizationsQuery = useQuery({
-    queryKey: ["public-organizations"],
-    queryFn: api.listPublicOrganizations
-  });
-
-  const organizations = useMemo(() => organizationsQuery.data?.items ?? [], [organizationsQuery.data?.items]);
-  const hasOrganizationOptions = organizations.length > 0;
-  const selectedOrganization = useMemo(
-    () => organizations.find((organization) => organization.bookingPageSlug === slug) ?? null,
-    [organizations, slug]
-  );
-  const showSlugInput = !hasOrganizationOptions || (slug && !selectedOrganization);
-
   const signUpMutation = useMutation({
     mutationFn: () => api.signUpPublicCustomer({
-      slug,
       fullName,
       email: email || null,
       phone,
@@ -68,8 +36,7 @@ function CustomerSignUpContent() {
   });
 
   const canSubmit = Boolean(
-    slug
-      && fullName.length >= 3
+    fullName.length >= 3
       && email
       && isValidBrazilianWhatsAppPhone(phone)
       && password.length >= 8,
@@ -98,53 +65,11 @@ function CustomerSignUpContent() {
             <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso do cliente final</p>
             <h1 className="mt-2 text-3xl font-semibold text-white">Criar conta para agendar</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Escolha o estabelecimento onde deseja agendar. Esta conta é para clientes finais acompanharem agenda,
-              histórico e avaliações.
+              Esta conta é para clientes finais acompanharem agenda, histórico e avaliações.
             </p>
           </div>
 
-          {hasOrganizationOptions ? (
-            <label className="space-y-2 text-sm text-slate-300">
-              Estabelecimento
-              <select
-                className="h-11 w-full rounded-lg border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition focus:border-primary"
-                onChange={(event) => setSlug(event.target.value)}
-                value={selectedOrganization ? slug : ""}
-              >
-                <option className="bg-slate-950" value="">Selecione</option>
-                {organizations.map((organization) => (
-                  <option className="bg-slate-950" key={organization.organizationId} value={organization.bookingPageSlug}>
-                    {organization.tradeName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          {showSlugInput ? (
-            <label className="mt-4 block space-y-2 text-sm text-slate-300">
-              Link do estabelecimento
-              <Input
-                onChange={(event) => setSlug(normalizeBookingPageSlug(event.target.value))}
-                placeholder="ex: barbearia-centro"
-                value={slug}
-              />
-            </label>
-          ) : null}
-
-          {organizationsQuery.isSuccess && !hasOrganizationOptions ? (
-            <p className="mt-3 rounded-lg border border-amber-300/20 bg-amber-300/10 p-3 text-sm text-amber-100">
-              Nenhum estabelecimento apareceu na lista pública. Informe o identificador do link enviado pelo negócio para criar a conta.
-            </p>
-          ) : null}
-
-          {selectedOrganization ? (
-            <p className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-              Conta vinculada a {selectedOrganization.tradeName}. Depois você poderá ver este local no seu histórico.
-            </p>
-          ) : null}
-
-          <div className="mt-5 space-y-4">
+          <div className="space-y-4">
             <Input onChange={(event) => setFullName(event.target.value)} placeholder="Nome completo" value={fullName} />
             <Input onChange={(event) => setEmail(event.target.value)} placeholder="E-mail" type="email" value={email} />
             <Input

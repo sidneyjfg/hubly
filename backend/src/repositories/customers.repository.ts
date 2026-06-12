@@ -66,6 +66,19 @@ export class CustomersRepository {
     return this.mapCustomer(customer);
   }
 
+  public async createPortalAccount(input: CustomerWriteInput, manager?: EntityManager): Promise<Customer> {
+    const customer = await this.getRepository(manager).save({
+      id: randomUUID(),
+      organizationId: null,
+      fullName: input.fullName,
+      email: input.email ?? null,
+      phone: input.phone,
+      passwordHash: input.passwordHash ?? null,
+    });
+
+    return this.mapCustomer(customer);
+  }
+
   public async findByPhoneOrEmailInOrganization(
     organizationId: string,
     input: { email?: string | null; phone: string },
@@ -143,6 +156,26 @@ export class CustomersRepository {
       where: {
         id,
         organizationId,
+      },
+    });
+
+    if (!customer || customer.passwordHash) {
+      return;
+    }
+
+    customer.passwordHash = passwordHash;
+    await repository.save(customer);
+  }
+
+  public async setPortalPasswordHashIfMissing(
+    id: string,
+    passwordHash: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repository = this.getRepository(manager);
+    const customer = await repository.findOne({
+      where: {
+        id,
       },
     });
 
