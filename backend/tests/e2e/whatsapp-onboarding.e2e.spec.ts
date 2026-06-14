@@ -76,6 +76,14 @@ describe("WhatsApp onboarding E2E", () => {
           }),
       })
       .mockResolvedValueOnce({
+        ok: true, // logout antes de gerar novo desafio
+        text: async () => JSON.stringify({}),
+      })
+      .mockResolvedValueOnce({
+        ok: true, // restart antes de gerar novo desafio
+        text: async () => JSON.stringify({}),
+      })
+      .mockResolvedValueOnce({
         ok: true, // setPairingCodeMode dentro do startSession
         text: async () => JSON.stringify({}),
       })
