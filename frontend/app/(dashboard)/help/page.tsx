@@ -9,10 +9,11 @@ const helpSections = [
     id: "booking",
     icon: CalendarClock,
     title: "Por que meu cliente nao consegue agendar?",
-    description: "O agendamento publico depende de vitrine publicada, profissional ativo, servico ativo com preco e horario disponivel para o profissional escolhido.",
+    description: "O agendamento publico depende de vitrine publicada, automacoes de agendamento, profissional ativo, servico ativo com preco e horario disponivel para o profissional escolhido.",
     items: [
       "Abra Vitrine e confira se o checklist esta completo.",
       "Confirme se Publicado esta ativo e se a vitrine foi salva.",
+      "Em Automacoes, ative notificacoes de criacao, confirmacao, reagendamento e cancelamento.",
       "Em Profissionais, confira se o profissional esta ativo.",
       "Clique em Horarios e confirme se existe ao menos um dia ativo com expediente valido.",
       "Veja se o servico esta ativo, tem preco maior que zero e pertence ao profissional certo.",
@@ -27,7 +28,8 @@ const helpSections = [
     items: [
       "Preencha nome publico, descricao, telefone ou e-mail.",
       "Informe rua, cidade e UF.",
-      "Adicione uma URL de foto de capa.",
+      "Adicione uma foto de capa.",
+      "Ative as automacoes de agendamento em Automacoes.",
       "Ative Publicado e clique em Salvar vitrine.",
       "Regularize servicos ativos se o plano estiver acima do limite."
     ]
@@ -66,6 +68,7 @@ const setupSteps = [
   "Crie um profissional ativo em Profissionais.",
   "Abra Horarios do profissional e salve dias ativos com expediente valido.",
   "Crie um servico ativo para esse profissional, com duracao e preco.",
+  "Ative as automacoes de agendamento para criacao, confirmacao, reagendamento e cancelamento.",
   "Volte em Vitrine, ative Publicado e clique em Salvar vitrine.",
   "Acesse /clientes, encontre a empresa e faca um agendamento de teste."
 ];
@@ -92,9 +95,9 @@ export default function HelpPage() {
           <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-sky-200" />
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">Diagnostico rapido</p>
-            <h2 className="mt-2 text-xl font-semibold text-white">O cliente so agenda quando estes quatro pontos existem juntos</h2>
-            <div className="mt-4 grid gap-3 md:grid-cols-4">
-              {["Vitrine publicada", "Profissional ativo", "Servico ativo com preco", "Horario disponivel"].map((item) => (
+            <h2 className="mt-2 text-xl font-semibold text-white">O cliente so agenda quando estes pontos existem juntos</h2>
+            <div className="mt-4 grid gap-3 md:grid-cols-5">
+              {["Vitrine publicada", "Automacoes ativas", "Profissional ativo", "Servico ativo com preco", "Horario disponivel"].map((item) => (
                 <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm font-medium text-white" key={item}>
                   {item}
                 </div>

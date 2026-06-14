@@ -35,7 +35,7 @@ function resolveApiBaseUrl(): string {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "PUT";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   auth?: boolean;
   retry?: boolean;
@@ -151,6 +151,7 @@ function translateApiErrorMessage(code: string | undefined, message: string): st
     "billing.plan_limit.bookings": "Seu plano atingiu o limite mensal de agendamentos.",
     "billing.plan_limit.gallery": "Seu plano atingiu o limite de fotos na vitrine.",
     "billing.plan_limit.service_offerings": "Seu plano atingiu o limite de serviços ativos.",
+    "storefront.automation_required": "Ative as automações de agendamento antes de publicar a vitrine.",
     "public_booking.plan_limit_regularization_expired": "Este estabelecimento precisa regularizar os serviços do plano antes de receber agendamentos.",
     "billing.plan_feature.whatsapp": "Lembretes por WhatsApp estão disponíveis a partir do plano Pro.",
     "billing.plan_feature.relationship": "Automações de relacionamento estão disponíveis no plano Premium.",

@@ -35,6 +35,8 @@ import {
   type StripeBalanceDTO,
   type StripeConnectAccountDTO,
   type StripeOnboardingLinkDTO,
+  type StorefrontImageUploadInputDTO,
+  type StorefrontImageUploadResultDTO,
   type UpdateAccountInputDTO,
   type UpdateOrganizationInputDTO,
   type UpdatePasswordInputDTO,
@@ -149,6 +151,22 @@ export const api = {
       method: "PUT",
       auth: true,
       body: input
+    });
+  },
+
+  uploadStorefrontImage(input: StorefrontImageUploadInputDTO) {
+    return apiRequest<StorefrontImageUploadResultDTO>(apiRoutes.organizations.storefrontImages, {
+      method: "POST",
+      auth: true,
+      body: input
+    });
+  },
+
+  deleteStorefrontImage(url: string) {
+    return apiRequest<void>(apiRoutes.organizations.storefrontImages, {
+      method: "DELETE",
+      auth: true,
+      body: { url }
     });
   },
 

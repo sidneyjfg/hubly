@@ -3,6 +3,7 @@ import type { DataSource, EntityManager } from "typeorm";
 
 import { OrganizationNotificationSettingEntity } from "../database/entities";
 import type {
+  BookingEventNotificationType,
   BookingEventNotificationRule,
   BookingEventNotificationSettings,
   RelationshipAutomationSettings,
@@ -54,6 +55,27 @@ const defaultBookingEventSettings = (organizationId: string): BookingEventNotifi
     { event: "cancelled", isEnabled: true },
   ],
 });
+
+export const requiredStorefrontBookingEventTypes: BookingEventNotificationType[] = [
+  "created",
+  "confirmed",
+  "rescheduled",
+  "cancelled",
+];
+
+export const isStorefrontBookingAutomationReady = (settings: BookingEventNotificationSettings): boolean => {
+  if (!settings.isEnabled) {
+    return false;
+  }
+
+  const enabledEvents = new Set(
+    settings.events
+      .filter((eventRule) => eventRule.isEnabled)
+      .map((eventRule) => eventRule.event),
+  );
+
+  return requiredStorefrontBookingEventTypes.every((eventType) => enabledEvents.has(eventType));
+};
 
 export class OrganizationNotificationSettingsRepository {
   public constructor(private readonly dataSource: DataSource) {}

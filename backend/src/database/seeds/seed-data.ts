@@ -103,6 +103,24 @@ export const seedData = {
       isStorefrontPublished: true,
     },
   ],
+  organizationNotificationSettings: [
+    "cln_main_001",
+    "cln_derma_001",
+    "cln_therapy_001",
+    "cln_barber_001",
+    "cln_dental_001",
+  ].map((organizationId) => ({
+    id: `notif_booking_events_${organizationId}`,
+    organizationId,
+    channel: "booking_events",
+    isEnabled: true,
+    rulesJson: JSON.stringify([
+      { event: "created", isEnabled: true },
+      { event: "confirmed", isEnabled: true },
+      { event: "rescheduled", isEnabled: true },
+      { event: "cancelled", isEnabled: true },
+    ]),
+  })),
   billingPlans: [
     {
       id: "plan_free_test",

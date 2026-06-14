@@ -4,24 +4,28 @@ import { OrganizationsService } from "../../../src/services/organizations.servic
 
 describe("OrganizationsService", () => {
   it("lists organizations from repository", async () => {
-    const service = new OrganizationsService({
-      async findAll() {
-        return {
-          items: [
-            {
-              id: "cln_main_001",
-              legalName: "Organizationa Exemplo LTDA",
-              tradeName: "Organizationa Exemplo",
-              timezone: "America/Sao_Paulo",
-            },
-          ],
-          limit: 20,
-          page: 1,
-          total: 1,
-          totalPages: 1,
-        };
-      },
-    } as never);
+    const service = new OrganizationsService(
+      {
+        async findAll() {
+          return {
+            items: [
+              {
+                id: "cln_main_001",
+                legalName: "Organizationa Exemplo LTDA",
+                tradeName: "Organizationa Exemplo",
+                timezone: "America/Sao_Paulo",
+              },
+            ],
+            limit: 20,
+            page: 1,
+            total: 1,
+            totalPages: 1,
+          };
+        },
+      } as never,
+      {} as never,
+      {} as never,
+    );
 
     const result = await service.list({
       id: "usr_admin_001",

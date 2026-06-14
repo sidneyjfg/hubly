@@ -19,6 +19,7 @@ import { CreateBillingPlans1713574000000 } from "./migrations/1713574000000-crea
 import { CreateOrganizationSubscriptions1713575000000 } from "./migrations/1713575000000-create-organization-subscriptions";
 import { AddFreeBillingPlanAndSeedSubscriptions1713576000000 } from "./migrations/1713576000000-add-free-billing-plan-and-seed-subscriptions";
 import { AllowGlobalCustomerAccounts1713577000000 } from "./migrations/1713577000000-allow-global-customer-accounts";
+import { BackfillStorefrontBookingEventAutomations1713578000000 } from "./migrations/1713578000000-backfill-storefront-booking-event-automations";
 import { databaseEntities } from "./entities";
 
 export type DatabaseDriver = "mysql" | "sqljs";
@@ -61,6 +62,7 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
         CreateOrganizationSubscriptions1713575000000,
         AddFreeBillingPlanAndSeedSubscriptions1713576000000,
         AllowGlobalCustomerAccounts1713577000000,
+        BackfillStorefrontBookingEventAutomations1713578000000,
       ],
     };
   }
@@ -95,6 +97,7 @@ export const buildDatabaseOptions = (overrides: DatabaseConfigOverrides = {}): D
       CreateOrganizationSubscriptions1713575000000,
       AddFreeBillingPlanAndSeedSubscriptions1713576000000,
       AllowGlobalCustomerAccounts1713577000000,
+      BackfillStorefrontBookingEventAutomations1713578000000,
     ],
   };
 };

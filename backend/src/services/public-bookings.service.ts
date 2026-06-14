@@ -4,6 +4,10 @@ import { z } from "zod";
 import { AuditRepository } from "../repositories/audit.repository";
 import { BookingsRepository, isBookingBlockingSlot } from "../repositories/bookings.repository";
 import { CustomersRepository } from "../repositories/customers.repository";
+import {
+  isStorefrontBookingAutomationReady,
+  OrganizationNotificationSettingsRepository,
+} from "../repositories/organization-notification-settings.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
 import { ProvidersRepository } from "../repositories/providers.repository";
@@ -76,6 +80,7 @@ export class PublicBookingsService {
     private readonly providerAvailabilitiesRepository: ProviderAvailabilitiesRepository,
     private readonly customersRepository: CustomersRepository,
     private readonly bookingsRepository: BookingsRepository,
+    private readonly organizationNotificationSettingsRepository: OrganizationNotificationSettingsRepository,
     private readonly notificationsService: NotificationsService,
     private readonly auditRepository: AuditRepository,
     private readonly planEntitlementsService: PlanEntitlementsService,
@@ -129,6 +134,11 @@ export class PublicBookingsService {
 
     const serviceLimitStatus = await this.planEntitlementsService.getServiceOfferingLimitStatus(organization.id);
     if (serviceLimitStatus.isPublicAccessBlocked) {
+      return null;
+    }
+
+    const automationSettings = await this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(organization.id);
+    if (!isStorefrontBookingAutomationReady(automationSettings)) {
       return null;
     }
 

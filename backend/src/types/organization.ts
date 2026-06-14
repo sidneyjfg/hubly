@@ -43,3 +43,22 @@ export type OrganizationStorefrontInput = {
   galleryImageUrls?: string[];
   isStorefrontPublished?: boolean;
 };
+
+export type StorefrontImageSlot = "cover" | "logo" | "gallery";
+
+export type StorefrontImageUploadInput = {
+  slot: StorefrontImageSlot;
+  fileName?: string | undefined;
+  contentType?: string | undefined;
+  data: string;
+};
+
+export type StorefrontImageUploadResult = {
+  url: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
+export type StorefrontImageDeleteInput = {
+  url: string;
+};

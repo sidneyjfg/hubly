@@ -422,7 +422,7 @@ export default function ProvidersPage() {
         </Card>
       ) : null}
 
-      <Card className="p-0">
+      <Card className="p-0" id="providers-list">
         <Table>
           <TableRoot>
             <TableHead>
@@ -481,7 +481,7 @@ export default function ProvidersPage() {
         </div>
       </div>
 
-      <Card className="p-0">
+      <Card className="p-0" id="services-list">
         <div className="border-b border-white/10 p-5">
           <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Serviços oferecidos</p>
         </div>

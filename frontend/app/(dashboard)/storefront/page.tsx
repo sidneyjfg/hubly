@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BriefcaseMedical, Camera, CheckCircle2, Eye, HelpCircle, ImagePlus, MapPin, Save, Store, UploadCloud, UserRound } from "lucide-react";
+import { AlertCircle, BriefcaseMedical, Camera, CheckCircle2, Eye, HelpCircle, ImagePlus, MapPin, Save, Store, Trash2, UploadCloud, UserRound } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { api } from "@/lib/api";
+import type { BookingEventNotificationSettings } from "@/lib/types";
 
 type StorefrontForm = {
   tradeName: string;
@@ -25,7 +26,7 @@ type StorefrontForm = {
   postalCode: string;
   coverImageUrl: string;
   logoImageUrl: string;
-  galleryImageUrls: string;
+  galleryImageUrls: string[];
   isStorefrontPublished: boolean;
 };
 
@@ -43,7 +44,7 @@ const emptyForm: StorefrontForm = {
   postalCode: "",
   coverImageUrl: "",
   logoImageUrl: "",
-  galleryImageUrls: "",
+  galleryImageUrls: [],
   isStorefrontPublished: false
 };
 
@@ -51,12 +52,6 @@ const toNullable = (value: string): string | null => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
-
-const parseGallery = (value: string): string[] =>
-  value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
 
 const buildAddress = (form: StorefrontForm): string => {
   const street = [form.addressLine, form.addressNumber].filter(Boolean).join(", ");
@@ -69,7 +64,8 @@ type ReadinessItem = {
   label: string;
   description: string;
   isComplete: boolean;
-  href: string;
+  href?: string;
+  targetStepId?: string;
 };
 
 type GuideStep = {
@@ -80,11 +76,47 @@ type GuideStep = {
   href?: string;
 };
 
+type StorefrontImageSlot = "cover" | "logo" | "gallery";
+
+const requiredAutomationEvents = ["created", "confirmed", "rescheduled", "cancelled"] as const;
+
+const isBookingAutomationReady = (settings?: BookingEventNotificationSettings): boolean => {
+  if (!settings?.isEnabled) {
+    return false;
+  }
+
+  const enabledEvents = new Set(
+    settings.events
+      .filter((eventRule) => eventRule.isEnabled)
+      .map((eventRule) => eventRule.event)
+  );
+
+  return requiredAutomationEvents.every((eventType) => enabledEvents.has(eventType));
+};
+
+const readFileAsDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Não foi possível ler a imagem selecionada."));
+    });
+    reader.addEventListener("error", () => reject(new Error("Não foi possível ler a imagem selecionada.")));
+    reader.readAsDataURL(file);
+  });
+
 export default function StorefrontPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<StorefrontForm>(emptyForm);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [activeGuideStep, setActiveGuideStep] = useState("profile");
+  const [uploadingSlot, setUploadingSlot] = useState<StorefrontImageSlot | null>(null);
+  const [pendingDeleteUrls, setPendingDeleteUrls] = useState<string[]>([]);
 
   const { data } = useQuery({
     queryKey: ["storefront"],
@@ -99,6 +131,11 @@ export default function StorefrontPage() {
   const servicesQuery = useQuery({
     queryKey: ["services-readiness"],
     queryFn: () => api.getServiceOfferings({ page: 1, limit: 100 })
+  });
+
+  const bookingAutomationQuery = useQuery({
+    queryKey: ["storefront-booking-automation"],
+    queryFn: api.getBookingEventSettings
   });
 
   const providerIds = useMemo(
@@ -144,12 +181,12 @@ export default function StorefrontPage() {
       postalCode: data.postalCode ?? "",
       coverImageUrl: data.coverImageUrl ?? "",
       logoImageUrl: data.logoImageUrl ?? "",
-      galleryImageUrls: (data.galleryImageUrls ?? []).join("\n"),
+      galleryImageUrls: data.galleryImageUrls ?? [],
       isStorefrontPublished: data.isStorefrontPublished
     });
   }, [data]);
 
-  const gallery = useMemo(() => parseGallery(form.galleryImageUrls), [form.galleryImageUrls]);
+  const gallery = form.galleryImageUrls;
   const previewImages = [form.coverImageUrl, ...gallery].filter((url) => url.trim().length > 0);
   const address = buildAddress(form);
   const activeProviders = providersQuery.data?.items.filter((provider) => provider.isActive) ?? [];
@@ -167,62 +204,84 @@ export default function StorefrontPage() {
       )
       .map((provider) => provider.id)
   );
-  const hasMinimumPublicProfile = Boolean(
+  const hasBookingAutomation = isBookingAutomationReady(bookingAutomationQuery.data);
+  const hasPublicProfileInfo = Boolean(
     form.tradeName.trim()
       && form.publicDescription.trim()
       && (form.publicPhone.trim() || form.publicEmail.trim())
-      && form.addressLine.trim()
-      && form.city.trim()
-      && form.state.trim()
-      && form.coverImageUrl.trim()
   );
+  const hasPublicAddress = Boolean(form.addressLine.trim() && form.city.trim() && form.state.trim());
+  const hasStorefrontPhoto = Boolean(form.coverImageUrl.trim());
+  const hasMinimumPublicProfile = hasPublicProfileInfo && hasPublicAddress && hasStorefrontPhoto;
   const canPublishStorefront = hasMinimumPublicProfile
     && activeProviders.length > 0
     && activePricedServices.length > 0
     && schedulableProviderIds.size > 0
-    && readyProviderIds.size > 0;
+    && readyProviderIds.size > 0
+    && hasBookingAutomation;
   const checklist: ReadinessItem[] = [
     {
       id: "profile",
       label: "Perfil público completo",
-      description: "Nome, descrição, contato, endereço e foto de capa preenchidos.",
-      isComplete: hasMinimumPublicProfile,
-      href: "/storefront"
+      description: "Nome, descrição e contato preenchidos.",
+      isComplete: hasPublicProfileInfo,
+      targetStepId: "profile"
     },
     {
-      id: "publish",
-      label: "Vitrine publicada",
-      description: "O seletor de publicação precisa estar ativo.",
-      isComplete: form.isStorefrontPublished && canPublishStorefront,
-      href: "/storefront"
+      id: "address",
+      label: "Endereço completo",
+      description: "Rua, cidade e UF preenchidos para descoberta local.",
+      isComplete: hasPublicAddress,
+      targetStepId: "address"
+    },
+    {
+      id: "photos",
+      label: "Foto de capa",
+      description: "Inclua capa e, se possível, galeria com imagens reais.",
+      isComplete: hasStorefrontPhoto,
+      targetStepId: "photos"
     },
     {
       id: "providers",
       label: "Profissional ativo",
       description: "Cadastre e mantenha pelo menos um profissional ativo.",
       isComplete: activeProviders.length > 0,
-      href: "/providers"
+      href: "/providers#providers-list"
     },
     {
       id: "services",
       label: "Serviço com preço",
       description: "O serviço precisa estar ativo e ter preço para aparecer no perfil público.",
       isComplete: activePricedServices.length > 0,
-      href: "/providers"
+      href: "/providers#services-list"
     },
     {
       id: "availability",
       label: "Agenda disponível",
       description: "O profissional precisa ter disponibilidade ativa para aceitar horários.",
       isComplete: schedulableProviderIds.size > 0,
-      href: "/providers"
+      href: "/providers#providers-list"
     },
     {
       id: "ready",
       label: "Perfil pronto para agendamento",
       description: "O perfil precisa ter serviço com preço, profissional ativo e agenda disponível.",
       isComplete: readyProviderIds.size > 0,
-      href: "/providers"
+      href: "/providers#providers-list"
+    },
+    {
+      id: "automations",
+      label: "Automações de agendamento",
+      description: "Ative notificações de criação, confirmação, reagendamento e cancelamento.",
+      isComplete: hasBookingAutomation,
+      href: "/automations"
+    },
+    {
+      id: "publish",
+      label: "Vitrine publicada",
+      description: "Ative Publicado e salve quando os passos anteriores estiverem completos.",
+      isComplete: form.isStorefrontPublished && canPublishStorefront,
+      targetStepId: "publish"
     }
   ];
   const completedChecklistCount = checklist.filter((item) => item.isComplete).length;
@@ -231,6 +290,13 @@ export default function StorefrontPage() {
     setForm((current) => ({
       ...current,
       [field]: value
+    }));
+  };
+
+  const updateGallery = (galleryImageUrls: string[]) => {
+    setForm((current) => ({
+      ...current,
+      galleryImageUrls
     }));
   };
 
@@ -258,10 +324,72 @@ export default function StorefrontPage() {
       successMessage: "Vitrine salva com sucesso"
     },
     onSuccess: async () => {
+      const urlsToDelete = pendingDeleteUrls;
+      setPendingDeleteUrls([]);
       await queryClient.invalidateQueries({ queryKey: ["storefront"] });
       await queryClient.invalidateQueries({ queryKey: ["me"] });
+
+      if (urlsToDelete.length > 0) {
+        await Promise.allSettled(urlsToDelete.map((url) => api.deleteStorefrontImage(url)));
+      }
     }
   });
+
+  const uploadImageMutation = useMutation({
+    mutationFn: async ({ file, slot }: { file: File; slot: StorefrontImageSlot }) => {
+      setUploadingSlot(slot);
+      const dataUrl = await readFileAsDataUrl(file);
+      return api.uploadStorefrontImage({
+        slot,
+        fileName: file.name,
+        contentType: file.type,
+        data: dataUrl
+      });
+    },
+    meta: {
+      errorMessage: "Imagem não enviada",
+      successMessage: "Imagem adicionada à vitrine"
+    },
+    onSuccess: (result, variables) => {
+      if (variables.slot === "cover") {
+        updateField("coverImageUrl", result.url);
+        return;
+      }
+
+      if (variables.slot === "logo") {
+        updateField("logoImageUrl", result.url);
+        return;
+      }
+
+      updateGallery([...gallery, result.url]);
+      setSelectedPhoto(result.url);
+    },
+    onSettled: () => setUploadingSlot(null)
+  });
+
+  const handleImageUpload = (slot: StorefrontImageSlot, file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+
+    uploadImageMutation.mutate({ file, slot });
+  };
+
+  const removeImage = (slot: StorefrontImageSlot, url: string) => {
+    if (slot === "cover") {
+      updateField("coverImageUrl", "");
+    } else if (slot === "logo") {
+      updateField("logoImageUrl", "");
+    } else {
+      updateGallery(gallery.filter((item) => item !== url));
+    }
+
+    if (selectedPhoto === url) {
+      setSelectedPhoto(null);
+    }
+
+    setPendingDeleteUrls((current) => (current.includes(url) ? current : [...current, url]));
+  };
 
   const selectedPhotoUrl = selectedPhoto ?? previewImages[0] ?? "";
   const isVisiblyPublished = form.isStorefrontPublished && canPublishStorefront;
@@ -281,7 +409,7 @@ export default function StorefrontPage() {
     {
       id: "photos",
       title: "Adicione fotos reais",
-      clickTarget: "Clique em Fotos da vitrine e informe capa, logo e pelo menos uma foto de galeria.",
+      clickTarget: "Clique em Fotos da vitrine e envie capa, logo e pelo menos uma foto de galeria.",
       outcome: "A página pública só é liberada quando há imagens suficientes para não ficar incompleta."
     },
     {
@@ -289,7 +417,14 @@ export default function StorefrontPage() {
       title: "Configure equipe, serviços e agenda",
       clickTarget: "Clique em Configurar profissionais e cadastre profissional ativo, serviço com preço e disponibilidade.",
       outcome: "Somente profissionais prontos aparecem para o cliente escolher horário.",
-      href: "/providers"
+      href: "/providers#providers-list"
+    },
+    {
+      id: "automations",
+      title: "Ative automações de agendamento",
+      clickTarget: "Clique em Configurar automações e habilite criado, confirmado, reagendado e cancelado.",
+      outcome: "A vitrine só fica disponível quando o cliente recebe avisos essenciais do agendamento.",
+      href: "/automations"
     },
     {
       id: "publish",
@@ -299,13 +434,15 @@ export default function StorefrontPage() {
     }
   ];
 
-  const focusGuideStep = (step: GuideStep) => {
-    setActiveGuideStep(step.id);
-    document.getElementById(`storefront-step-${step.id}`)?.scrollIntoView({
+  const focusStorefrontStep = (stepId: string) => {
+    setActiveGuideStep(stepId);
+    document.getElementById(`storefront-step-${stepId}`)?.scrollIntoView({
       behavior: "smooth",
       block: "center"
     });
   };
+
+  const focusGuideStep = (step: GuideStep) => focusStorefrontStep(step.id);
 
   const focusClass = (stepId: string): string =>
     activeGuideStep === stepId ? "ring-2 ring-sky-300/70 ring-offset-2 ring-offset-background" : "";
@@ -343,7 +480,7 @@ export default function StorefrontPage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">Ajuda rapida</p>
                 <h2 className="mt-2 text-xl font-semibold text-white">Vitrine nao publica ou nao aparece em /clientes?</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-                  A vitrine so fica publica quando perfil, endereco, foto de capa, profissional, servico com preco e agenda estao completos.
+                  A vitrine so fica publica quando perfil, endereco, foto de capa, profissional, servico com preco, agenda e automacoes estao completos.
                 </p>
               </div>
             </div>
@@ -353,7 +490,7 @@ export default function StorefrontPage() {
 
         {!canPublishStorefront ? (
           <div className="rounded-lg border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100">
-            A vitrine fica bloqueada para clientes até perfil, profissionais, serviços e agenda estarem configurados corretamente.
+            A vitrine fica bloqueada para clientes até perfil, profissionais, serviços, agenda e automações estarem configurados corretamente.
           </div>
         ) : null}
 
@@ -426,32 +563,58 @@ export default function StorefrontPage() {
             </div>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {checklist.map((item) => (
-              <Link
-                className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.06]"
-                href={item.href}
-                key={item.id}
-              >
-                {item.isComplete ? (
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
-                ) : (
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
-                )}
-                <span>
-                  <span className="block text-sm font-semibold text-white">{item.label}</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-400">{item.description}</span>
-                </span>
-              </Link>
-            ))}
+            {checklist.map((item, index) => {
+              const content = (
+                <>
+                  <span className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs font-semibold text-slate-200">
+                      {index + 1}
+                    </span>
+                    {item.isComplete ? (
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                    ) : (
+                      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+                    )}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-white">{item.label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-400">{item.description}</span>
+                  </span>
+                </>
+              );
+
+              return item.href ? (
+                <Link
+                  className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4 text-left transition hover:bg-white/[0.06]"
+                  href={item.href}
+                  key={item.id}
+                >
+                  {content}
+                </Link>
+              ) : (
+                <button
+                  className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4 text-left transition hover:bg-white/[0.06]"
+                  key={item.id}
+                  onClick={() => focusStorefrontStep(item.targetStepId ?? item.id)}
+                  type="button"
+                >
+                  {content}
+                </button>
+              );
+            })}
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
-            <ButtonLink href="/providers" variant="secondary">
+            <ButtonLink href="/providers#providers-list" variant="secondary">
               <UserRound className="mr-2 h-4 w-4" />
               Configurar profissionais
             </ButtonLink>
-            <ButtonLink href="/providers" variant="secondary">
+            <ButtonLink href="/providers#services-list" variant="secondary">
               <BriefcaseMedical className="mr-2 h-4 w-4" />
               Configurar serviços
+            </ButtonLink>
+            <ButtonLink href="/automations" variant="secondary">
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Configurar automações
             </ButtonLink>
           </div>
         </Card>
@@ -514,14 +677,127 @@ export default function StorefrontPage() {
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input onChange={(event) => updateField("coverImageUrl", event.target.value)} placeholder="URL da foto de capa" value={form.coverImageUrl} />
-            <Input onChange={(event) => updateField("logoImageUrl", event.target.value)} placeholder="URL do logo ou avatar" value={form.logoImageUrl} />
-            <textarea
-              className="min-h-36 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-400 focus:border-primary/60 focus:bg-white/8 md:col-span-2"
-              onChange={(event) => updateField("galleryImageUrls", event.target.value)}
-              placeholder="URLs da galeria, uma por linha"
-              value={form.galleryImageUrls}
-            />
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-sm font-semibold text-white">Foto de capa</p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">Imagem principal exibida no topo da vitrine.</p>
+              {form.coverImageUrl ? (
+                <div className="mt-4 aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                  <div
+                    aria-label="Foto de capa atual"
+                    className="h-full w-full bg-cover bg-center"
+                    role="img"
+                    style={{ backgroundImage: `url(${form.coverImageUrl})` }}
+                  />
+                </div>
+              ) : null}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  {uploadingSlot === "cover" ? "Enviando..." : "Enviar capa"}
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={uploadImageMutation.isPending}
+                    onChange={(event) => {
+                      handleImageUpload("cover", event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                    type="file"
+                  />
+                </label>
+                {form.coverImageUrl ? (
+                  <Button disabled={mutation.isPending} onClick={() => removeImage("cover", form.coverImageUrl)} type="button" variant="secondary">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remover
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-sm font-semibold text-white">Logo ou avatar</p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">Imagem quadrada usada ao lado do nome público.</p>
+              {form.logoImageUrl ? (
+                <div className="mt-4 h-28 w-28 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                  <div
+                    aria-label="Logo atual"
+                    className="h-full w-full bg-cover bg-center"
+                    role="img"
+                    style={{ backgroundImage: `url(${form.logoImageUrl})` }}
+                  />
+                </div>
+              ) : null}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  {uploadingSlot === "logo" ? "Enviando..." : "Enviar logo"}
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={uploadImageMutation.isPending}
+                    onChange={(event) => {
+                      handleImageUpload("logo", event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                    type="file"
+                  />
+                </label>
+                {form.logoImageUrl ? (
+                  <Button disabled={mutation.isPending} onClick={() => removeImage("logo", form.logoImageUrl)} type="button" variant="secondary">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remover
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-white">Galeria</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">Fotos complementares do espaço, equipe, fachada e resultados visuais.</p>
+                </div>
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                  <ImagePlus className="mr-2 h-4 w-4" />
+                  {uploadingSlot === "gallery" ? "Enviando..." : "Adicionar foto"}
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={uploadImageMutation.isPending}
+                    onChange={(event) => {
+                      handleImageUpload("gallery", event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                    type="file"
+                  />
+                </label>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {gallery.map((url) => (
+                  <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5" key={url}>
+                    <button className="block aspect-[4/3] w-full" onClick={() => setSelectedPhoto(url)} type="button">
+                      <span
+                        aria-label="Foto da galeria"
+                        className="block h-full w-full bg-cover bg-center"
+                        role="img"
+                        style={{ backgroundImage: `url(${url})` }}
+                      />
+                    </button>
+                    <div className="flex items-center justify-between gap-2 p-2">
+                      <span className="truncate text-xs text-slate-400">{url}</span>
+                      <Button disabled={mutation.isPending} onClick={() => removeImage("gallery", url)} size="sm" type="button" variant="ghost">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {gallery.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-white/10 p-6 text-sm text-slate-400">
+                    Nenhuma foto de galeria adicionada.
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>

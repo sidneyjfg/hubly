@@ -45,6 +45,7 @@ export const apiRoutes = {
   organizations: {
     update: (id: string) => `/v1/organizations/${id}`,
     storefront: "/v1/organizations/storefront",
+    storefrontImages: "/v1/organizations/storefront/images",
     subscription: "/v1/organization/subscription",
     subscriptionCheckout: "/v1/organization/subscription/checkout",
     subscriptionCustomerPortal: "/v1/organization/subscription/customer-portal",
@@ -306,6 +307,19 @@ export type UpdateStorefrontInputDTO = {
   logoImageUrl?: string | null;
   galleryImageUrls?: string[];
   isStorefrontPublished?: boolean;
+};
+
+export type StorefrontImageUploadInputDTO = {
+  slot: "cover" | "logo" | "gallery";
+  fileName?: string;
+  contentType?: string;
+  data: string;
+};
+
+export type StorefrontImageUploadResultDTO = {
+  url: string;
+  contentType: string;
+  sizeBytes: number;
 };
 
 export type NoShowOverviewDTO = {

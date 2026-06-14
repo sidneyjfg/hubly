@@ -7,6 +7,7 @@ import {
   BillingPlanEntity,
   OrganizationEntity,
   OrganizationIntegrationEntity,
+  OrganizationNotificationSettingEntity,
   OrganizationSubscriptionEntity,
   CustomerEntity,
   ProviderAvailabilityEntity,
@@ -23,6 +24,7 @@ export const seedDatabase = async (dataSource: DataSource): Promise<void> => {
     await manager.createQueryBuilder().delete().from(BookingEntity).execute();
     await manager.createQueryBuilder().delete().from(AuditEventEntity).execute();
     await manager.createQueryBuilder().delete().from(OrganizationIntegrationEntity).execute();
+    await manager.createQueryBuilder().delete().from(OrganizationNotificationSettingEntity).execute();
     await manager.createQueryBuilder().delete().from(ProviderAvailabilityEntity).execute();
     await manager.createQueryBuilder().delete().from(ServiceOfferingEntity).execute();
     await manager.createQueryBuilder().delete().from(ProviderEntity).execute();
@@ -39,6 +41,7 @@ export const seedDatabase = async (dataSource: DataSource): Promise<void> => {
         galleryImageUrls: [...organization.galleryImageUrls],
       })),
     );
+    await manager.save(OrganizationNotificationSettingEntity, [...seedData.organizationNotificationSettings]);
     await manager.save(ProviderEntity, [...seedData.providers]);
     await manager.save(UserEntity, [...seedData.users]);
     await manager.save(ProviderAvailabilityEntity, [...seedData.providerAvailabilities]);

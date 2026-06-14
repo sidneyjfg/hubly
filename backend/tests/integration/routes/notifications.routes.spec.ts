@@ -120,6 +120,10 @@ describe("Notifications routes", () => {
 
   it("stores booking event notification settings", async () => {
     const headers = await signInAsAdmin(app);
+    await dataSource.getRepository(OrganizationSubscriptionEntity).update(
+      { organizationId: "cln_main_001", stripeMode: "test" },
+      { billingPlanId: "plan_free_test" },
+    );
 
     const updateResponse = await app.inject({
       method: "PUT",
@@ -204,6 +208,21 @@ describe("Notifications routes", () => {
       method: "GET",
       url: "/v1/integrations/whatsapp/status",
       headers,
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/v1/notifications/booking-events/settings",
+      headers,
+      payload: {
+        isEnabled: false,
+        events: [
+          { event: "created", isEnabled: true },
+          { event: "confirmed", isEnabled: true },
+          { event: "rescheduled", isEnabled: true },
+          { event: "cancelled", isEnabled: true },
+        ],
+      },
     });
 
     await app.inject({

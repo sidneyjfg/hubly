@@ -257,10 +257,6 @@ export class NotificationsService {
     ));
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
-      if (data.isEnabled && events.some((event) => event.isEnabled)) {
-        await this.planEntitlementsService.assertCanUseWhatsAppReminders(user.organizationId, manager);
-      }
-
       const settings = await this.organizationNotificationSettingsRepository.upsertBookingEventSettings(
         {
           organizationId: user.organizationId,
