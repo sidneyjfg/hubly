@@ -5,6 +5,7 @@ import { OrganizationIntegrationsRepository } from "../repositories/organization
 import type { AuthenticatedRequestUser } from "../types/auth";
 import type {
   IntegrationSummary,
+  WhatsAppConnectCode,
   WhatsAppConnectionStatus,
   WhatsAppDisconnectResult,
   WhatsAppSessionConnectResult,
@@ -26,14 +27,14 @@ function isWhatsAppConnected(state: string | null | undefined): boolean {
   return connectedWhatsAppStates.has((state ?? "").toLowerCase());
 }
 
-function ensurePairingCodeReturned(connectResult: { pairingCode?: string; code?: string }): void {
-  if (connectResult.pairingCode || connectResult.code) {
+function ensureConnectionChallengeReturned(connectResult: { pairingCode?: string; code?: string; qrCode?: string }): void {
+  if (connectResult.pairingCode || connectResult.code || connectResult.qrCode) {
     return;
   }
 
   throw new AppError(
-    "whatsapp.pairing_code_not_returned",
-    "A Evolution API não retornou código de pareamento. Verifique se a instância antiga foi removida e se QR code está desativado.",
+    "whatsapp.connection_challenge_not_returned",
+    "A Evolution API não retornou QR code nem código de pareamento. Verifique se a instância antiga foi removida.",
     502,
   );
 }
@@ -101,10 +102,7 @@ export class IntegrationsService {
       );
     }
 
-    await this.evolutionWhatsAppService.setPairingCodeMode(integration.instanceName);
-
-    const connectResult = await this.evolutionWhatsAppService.connect(integration.instanceName, data.phoneNumber);
-    ensurePairingCodeReturned(connectResult);
+    const connectResult = await this.createCleanConnectionChallenge(integration, data.phoneNumber);
 
     const status = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
 
@@ -123,6 +121,7 @@ export class IntegrationsService {
       phoneNumber: data.phoneNumber,
       ...(connectResult.pairingCode === undefined ? {} : { pairingCode: connectResult.pairingCode }),
       ...(connectResult.code === undefined ? {} : { code: connectResult.code }),
+      ...(connectResult.qrCode === undefined ? {} : { qrCode: connectResult.qrCode }),
       ...(connectResult.count === undefined ? {} : { count: connectResult.count }),
     };
   }
@@ -145,11 +144,7 @@ export class IntegrationsService {
       );
     }
 
-    await this.evolutionWhatsAppService.restartInstance(integration.instanceName);
-    await this.evolutionWhatsAppService.setPairingCodeMode(integration.instanceName);
-
-    const connectResult = await this.evolutionWhatsAppService.connect(integration.instanceName, data.phoneNumber);
-    ensurePairingCodeReturned(connectResult);
+    const connectResult = await this.createCleanConnectionChallenge(integration, data.phoneNumber);
 
     const status = await this.evolutionWhatsAppService.getStatus(integration.instanceName);
 
@@ -168,6 +163,7 @@ export class IntegrationsService {
       phoneNumber: data.phoneNumber,
       ...(connectResult.pairingCode === undefined ? {} : { pairingCode: connectResult.pairingCode }),
       ...(connectResult.code === undefined ? {} : { code: connectResult.code }),
+      ...(connectResult.qrCode === undefined ? {} : { qrCode: connectResult.qrCode }),
       ...(connectResult.count === undefined ? {} : { count: connectResult.count }),
     };
   }
@@ -233,6 +229,50 @@ export class IntegrationsService {
 
   private buildInstanceName(organizationId: string): string {
     return `organization-${organizationId}`;
+  }
+
+  private async createCleanConnectionChallenge(
+    integration: { id: string; instanceName: string },
+    phoneNumber: string,
+  ): Promise<WhatsAppConnectCode> {
+    try {
+      await this.preparePairingSession(integration.instanceName);
+      const connectResult = await this.evolutionWhatsAppService.connect(integration.instanceName, phoneNumber);
+      ensureConnectionChallengeReturned(connectResult);
+
+      return connectResult;
+    } catch (error: unknown) {
+      await this.cleanupFailedPairingSession(integration);
+      throw error;
+    }
+  }
+
+  private async preparePairingSession(instanceName: string): Promise<void> {
+    await this.bestEffortLogout(instanceName);
+    await this.bestEffortRestart(instanceName);
+    await this.evolutionWhatsAppService.setPairingCodeMode(instanceName);
+  }
+
+  private async cleanupFailedPairingSession(integration: { id: string; instanceName: string }): Promise<void> {
+    await this.bestEffortLogout(integration.instanceName);
+    await this.bestEffortRestart(integration.instanceName);
+    await this.organizationIntegrationsRepository.updateStatus(integration.id, "connect_failed");
+  }
+
+  private async bestEffortLogout(instanceName: string): Promise<void> {
+    try {
+      await this.evolutionWhatsAppService.logoutInstance(instanceName);
+    } catch {
+      return;
+    }
+  }
+
+  private async bestEffortRestart(instanceName: string): Promise<void> {
+    try {
+      await this.evolutionWhatsAppService.restartInstance(instanceName);
+    } catch {
+      return;
+    }
   }
 
   private async findExistingWhatsAppInstanceState(instanceName: string): Promise<string | null> {

@@ -3,6 +3,7 @@
 import {
   apiRoutes,
   type BookingDTO,
+  type BookingEventNotificationSettingsDTO,
   type BookingWriteDTO,
   type AuthSessionDTO,
   type OrganizationDTO,
@@ -503,6 +504,23 @@ export const api = {
       method: "PUT",
       auth: true,
       body: input
+    });
+  },
+
+  getBookingEventSettings() {
+    return apiRequest<BookingEventNotificationSettingsDTO>(apiRoutes.notifications.bookingEventSettings, {
+      auth: true
+    });
+  },
+
+  updateBookingEventSettings(input: BookingEventNotificationSettingsDTO) {
+    return apiRequest<BookingEventNotificationSettingsDTO>(apiRoutes.notifications.bookingEventSettings, {
+      method: "PUT",
+      auth: true,
+      body: {
+        isEnabled: input.isEnabled,
+        events: input.events
+      }
     });
   },
 

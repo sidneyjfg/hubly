@@ -118,6 +118,48 @@ describe("Notifications routes", () => {
     expect(cancelledNotifications.every((item) => item.status === "cancelled")).toBe(true);
   });
 
+  it("stores booking event notification settings", async () => {
+    const headers = await signInAsAdmin(app);
+
+    const updateResponse = await app.inject({
+      method: "PUT",
+      url: "/v1/notifications/booking-events/settings",
+      headers,
+      payload: {
+        isEnabled: true,
+        events: [
+          { event: "created", isEnabled: true },
+          { event: "confirmed", isEnabled: true },
+          { event: "rescheduled", isEnabled: false },
+          { event: "cancelled", isEnabled: true },
+        ],
+      },
+    });
+
+    expect(updateResponse.statusCode).toBe(200);
+    expect(updateResponse.json()).toEqual(
+      expect.objectContaining({
+        channel: "booking_events",
+        isEnabled: true,
+      }),
+    );
+    expect(updateResponse.json().events).toEqual([
+      { event: "created", isEnabled: true },
+      { event: "confirmed", isEnabled: true },
+      { event: "rescheduled", isEnabled: false },
+      { event: "cancelled", isEnabled: true },
+    ]);
+
+    const getResponse = await app.inject({
+      method: "GET",
+      url: "/v1/notifications/booking-events/settings",
+      headers,
+    });
+
+    expect(getResponse.statusCode).toBe(200);
+    expect(getResponse.json().events).toEqual(updateResponse.json().events);
+  });
+
   it("processes due WhatsApp reminders through the integration", async () => {
     process.env.WHATSAPP_EVOLUTION_ENABLED = "true";
     process.env.WHATSAPP_EVOLUTION_BASE_URL = "http://evolution.local";

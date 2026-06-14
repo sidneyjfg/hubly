@@ -309,6 +309,20 @@ export type WhatsAppReminderSettings = {
   reminders: WhatsAppReminderRule[];
 };
 
+export type BookingEventNotificationType = "created" | "confirmed" | "rescheduled" | "cancelled";
+
+export type BookingEventNotificationRule = {
+  event: BookingEventNotificationType;
+  isEnabled: boolean;
+};
+
+export type BookingEventNotificationSettings = {
+  organizationId: string;
+  channel: "booking_events";
+  isEnabled: boolean;
+  events: BookingEventNotificationRule[];
+};
+
 export type RelationshipCampaignType = "promotion" | "loyalty";
 export type RelationshipCampaignChannel = "whatsapp";
 
@@ -348,6 +362,7 @@ export type WhatsAppSessionConnectResult = {
   phoneNumber: string;
   pairingCode?: string;
   code?: string;
+  qrCode?: string;
   count?: number;
 };
 

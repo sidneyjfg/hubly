@@ -18,6 +18,10 @@ export class NotificationsController {
     reply.status(200).send(await this.notificationsService.getRelationshipSettings(getAuthUser(request)));
   };
 
+  public getBookingEventSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    reply.status(200).send(await this.notificationsService.getBookingEventSettings(getAuthUser(request)));
+  };
+
   public updateWhatsAppSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const body = request.body as {
       isEnabled?: boolean;
@@ -60,6 +64,26 @@ export class NotificationsController {
           triggerDaysAfterLastBooking: item.triggerDaysAfterLastBooking ?? 0,
           message: item.message ?? "",
           channels: item.channels ?? [],
+          isEnabled: item.isEnabled ?? false,
+        })),
+      }),
+    );
+  };
+
+  public updateBookingEventSettings = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const body = request.body as {
+      isEnabled?: boolean;
+      events?: Array<{
+        event?: "created" | "confirmed" | "rescheduled" | "cancelled";
+        isEnabled?: boolean;
+      }>;
+    };
+
+    reply.status(200).send(
+      await this.notificationsService.updateBookingEventSettings(getAuthUser(request), {
+        isEnabled: body.isEnabled ?? false,
+        events: (body.events ?? []).map((item) => ({
+          event: item.event ?? "created",
           isEnabled: item.isEnabled ?? false,
         })),
       }),

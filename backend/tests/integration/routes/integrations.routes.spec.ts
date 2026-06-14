@@ -283,6 +283,14 @@ describe("Integrations routes", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
+        text: async () => JSON.stringify({}),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({}),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
         text: async () =>
           JSON.stringify({
             pairingCode: "ABC12345",
@@ -475,6 +483,10 @@ describe("Integrations routes", () => {
         ok: true,
         text: async () =>
           JSON.stringify({}),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({}),
       })
       .mockResolvedValueOnce({
         ok: true,

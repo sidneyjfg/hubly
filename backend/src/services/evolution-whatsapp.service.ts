@@ -105,11 +105,13 @@ function findNumberValue(value: unknown, keys: string[]): number | undefined {
 function normalizeConnectCode(payload: unknown): WhatsAppConnectCode {
   const pairingCode = findStringValue(payload, ["pairingCode", "pairing_code", "pairing"]);
   const code = findStringValue(payload, ["code"]);
+  const qrCode = findStringValue(payload, ["qrCode", "qrcode", "qr", "base64"]);
   const count = findNumberValue(payload, ["count"]);
 
   return {
     ...(pairingCode === undefined ? {} : { pairingCode }),
     ...(code === undefined ? {} : { code }),
+    ...(qrCode === undefined ? {} : { qrCode }),
     ...(count === undefined ? {} : { count }),
   };
 }
@@ -176,8 +178,8 @@ export class EvolutionWhatsAppService {
         body: JSON.stringify({
           instanceName,
           integration: "WHATSAPP-BAILEYS",
-          qrcode: false,
-          qrCode: false,
+          qrcode: true,
+          qrCode: true,
           pairingCode: true,
           rejectCall: true,
           msgCall: "",
@@ -200,8 +202,8 @@ export class EvolutionWhatsAppService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          qrcode: false,
-          qrCode: false,
+          qrcode: true,
+          qrCode: true,
           pairingCode: true,
           rejectCall: true,
           msgCall: "",

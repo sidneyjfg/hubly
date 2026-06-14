@@ -11,6 +11,9 @@ import { CustomersRepository } from "../repositories/customers.repository";
 import type { Booking } from "../types/booking";
 import type { AuthenticatedRequestUser } from "../types/auth";
 import type {
+  BookingEventNotificationSettings,
+  BookingEventNotificationSettingsInput,
+  BookingEventNotificationType,
   BookingNotification,
   ProcessDueNotificationsResult,
   RelationshipAutomationSettings,
@@ -55,6 +58,31 @@ const whatsappReminderSettingsSchema = z.object({
   }
 });
 
+const bookingEventNotificationTypes = ["created", "confirmed", "rescheduled", "cancelled"] as const;
+
+const bookingEventNotificationSettingsSchema = z.object({
+  isEnabled: z.boolean(),
+  events: z.array(z.object({
+    event: z.enum(bookingEventNotificationTypes),
+    isEnabled: z.boolean(),
+  })).max(bookingEventNotificationTypes.length),
+}).superRefine((value, context) => {
+  const seenEvents = new Set<string>();
+
+  for (const item of value.events) {
+    if (seenEvents.has(item.event)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Booking event notification rules must be unique.",
+        path: ["events"],
+      });
+      return;
+    }
+
+    seenEvents.add(item.event);
+  }
+});
+
 const relationshipCampaignSchema = z.object({
   id: z.string().uuid(),
   title: z.string().trim().min(3).max(120),
@@ -92,6 +120,12 @@ type BookingNotificationEvent =
   | { type: "booking.missed"; booking: Booking };
 
 const activeBookingStatuses = new Set(["scheduled", "confirmed", "rescheduled"]);
+const eventTypeByBookingEvent = new Map<BookingNotificationEvent["type"], BookingEventNotificationType>([
+  ["booking.created", "created"],
+  ["booking.confirmed", "confirmed"],
+  ["booking.rescheduled", "rescheduled"],
+  ["booking.cancelled", "cancelled"],
+]);
 
 const normalizePhoneNumber = (value: string): string => value.replace(/\D+/g, "");
 
@@ -135,6 +169,10 @@ export class NotificationsService {
 
   public async getRelationshipSettings(user: AuthenticatedRequestUser): Promise<RelationshipAutomationSettings> {
     return this.organizationNotificationSettingsRepository.findRelationshipByOrganization(user.organizationId);
+  }
+
+  public async getBookingEventSettings(user: AuthenticatedRequestUser): Promise<BookingEventNotificationSettings> {
+    return this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(user.organizationId);
   }
 
   public async updateWhatsAppSettings(
@@ -209,6 +247,44 @@ export class NotificationsService {
     });
   }
 
+  public async updateBookingEventSettings(
+    user: AuthenticatedRequestUser,
+    input: BookingEventNotificationSettingsInput,
+  ): Promise<BookingEventNotificationSettings> {
+    const data = bookingEventNotificationSettingsSchema.parse(input);
+    const events = bookingEventNotificationTypes.map((event) => (
+      data.events.find((item) => item.event === event) ?? { event, isEnabled: false }
+    ));
+
+    return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+      if (data.isEnabled && events.some((event) => event.isEnabled)) {
+        await this.planEntitlementsService.assertCanUseWhatsAppReminders(user.organizationId, manager);
+      }
+
+      const settings = await this.organizationNotificationSettingsRepository.upsertBookingEventSettings(
+        {
+          organizationId: user.organizationId,
+          isEnabled: data.isEnabled,
+          events,
+        },
+        manager,
+      );
+
+      await this.auditRepository.create(
+        {
+          organizationId: user.organizationId,
+          actorId: user.id,
+          action: "notification.booking_events.settings_updated",
+          targetType: "notification_setting",
+          targetId: "booking_events",
+        },
+        manager,
+      );
+
+      return settings;
+    });
+  }
+
   public async handleBookingEvent(
     _user: AuthenticatedRequestUser,
     event: BookingNotificationEvent,
@@ -220,10 +296,11 @@ export class NotificationsService {
         event.booking.id,
         manager,
       );
-      return;
+    } else {
+      await this.syncWhatsAppRemindersForBooking(event.booking, manager);
     }
 
-    await this.syncWhatsAppRemindersForBooking(event.booking, manager);
+    await this.sendBookingEventNotification(event, manager);
   }
 
   public async processDueWhatsAppReminders(
@@ -476,5 +553,68 @@ export class NotificationsService {
     const providerName = booking.providerName ?? "profissional";
 
     return `Olá, ${customerName}. Este é um lembrete de WhatsApp da sua consulta com ${providerName} em ${formattedDate}. Envio programado com ${leadTimeText} de antecedência.`;
+  }
+
+  private async sendBookingEventNotification(
+    event: BookingNotificationEvent,
+    manager: EntityManager,
+  ): Promise<void> {
+    const bookingEventType = eventTypeByBookingEvent.get(event.type);
+    if (!bookingEventType) {
+      return;
+    }
+
+    const settings = await this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(
+      event.booking.organizationId,
+      manager,
+    );
+    const eventRule = settings.events.find((item) => item.event === bookingEventType);
+    if (!settings.isEnabled || !eventRule?.isEnabled) {
+      return;
+    }
+
+    const [customer, integration] = await Promise.all([
+      this.customersRepository.findByIdInOrganization(event.booking.organizationId, event.booking.customerId, manager),
+      this.organizationIntegrationsRepository.findByOrganizationAndChannel(event.booking.organizationId, "whatsapp", manager),
+    ]);
+
+    const customerPhone = customer ? normalizePhoneNumber(customer.phone) : "";
+    if (!customerPhone || !integration) {
+      return;
+    }
+
+    try {
+      await this.evolutionWhatsAppService.sendText(integration.instanceName, {
+        number: customerPhone,
+        text: this.buildBookingEventMessage(event.booking, bookingEventType),
+      });
+    } catch {
+      return;
+    }
+  }
+
+  private buildBookingEventMessage(booking: Booking, eventType: BookingEventNotificationType): string {
+    const formattedDate = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: defaultTimeZone,
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date(booking.startsAt));
+
+    const customerName = booking.customerName ?? "cliente";
+    const providerName = booking.providerName ?? "profissional";
+
+    if (eventType === "cancelled") {
+      return `Olá, ${customerName}. Seu agendamento com ${providerName} em ${formattedDate} foi cancelado.`;
+    }
+
+    if (eventType === "confirmed") {
+      return `Olá, ${customerName}. Seu agendamento com ${providerName} em ${formattedDate} foi confirmado.`;
+    }
+
+    if (eventType === "rescheduled") {
+      return `Olá, ${customerName}. Seu agendamento com ${providerName} foi reagendado para ${formattedDate}.`;
+    }
+
+    return `Olá, ${customerName}. Seu agendamento com ${providerName} foi criado para ${formattedDate}.`;
   }
 }

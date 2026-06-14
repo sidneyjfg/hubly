@@ -3,6 +3,8 @@ import type { DataSource, EntityManager } from "typeorm";
 
 import { OrganizationNotificationSettingEntity } from "../database/entities";
 import type {
+  BookingEventNotificationRule,
+  BookingEventNotificationSettings,
   RelationshipAutomationSettings,
   RelationshipCampaign,
   WhatsAppReminderRule,
@@ -21,6 +23,12 @@ type UpsertRelationshipSettingsInput = {
   campaigns: RelationshipCampaign[];
 };
 
+type UpsertBookingEventSettingsInput = {
+  organizationId: string;
+  isEnabled: boolean;
+  events: BookingEventNotificationRule[];
+};
+
 const defaultSettings = (organizationId: string): WhatsAppReminderSettings => ({
   organizationId,
   channel: "whatsapp",
@@ -33,6 +41,18 @@ const defaultRelationshipSettings = (organizationId: string): RelationshipAutoma
   channel: "relationship",
   isEnabled: false,
   campaigns: [],
+});
+
+const defaultBookingEventSettings = (organizationId: string): BookingEventNotificationSettings => ({
+  organizationId,
+  channel: "booking_events",
+  isEnabled: false,
+  events: [
+    { event: "created", isEnabled: true },
+    { event: "confirmed", isEnabled: true },
+    { event: "rescheduled", isEnabled: true },
+    { event: "cancelled", isEnabled: true },
+  ],
 });
 
 export class OrganizationNotificationSettingsRepository {
@@ -141,6 +161,57 @@ export class OrganizationNotificationSettingsRepository {
       channel: "relationship",
       isEnabled: savedItem.isEnabled,
       campaigns: JSON.parse(savedItem.rulesJson) as RelationshipCampaign[],
+    };
+  }
+
+  public async findBookingEventsByOrganization(
+    organizationId: string,
+    manager?: EntityManager,
+  ): Promise<BookingEventNotificationSettings> {
+    const item = await this.getRepository(manager).findOne({
+      where: {
+        organizationId,
+        channel: "booking_events",
+      },
+    });
+
+    if (!item) {
+      return defaultBookingEventSettings(organizationId);
+    }
+
+    return {
+      organizationId: item.organizationId,
+      channel: "booking_events",
+      isEnabled: item.isEnabled,
+      events: JSON.parse(item.rulesJson) as BookingEventNotificationRule[],
+    };
+  }
+
+  public async upsertBookingEventSettings(
+    input: UpsertBookingEventSettingsInput,
+    manager?: EntityManager,
+  ): Promise<BookingEventNotificationSettings> {
+    const repository = this.getRepository(manager);
+    const currentItem = await repository.findOne({
+      where: {
+        organizationId: input.organizationId,
+        channel: "booking_events",
+      },
+    });
+
+    const savedItem = await repository.save({
+      id: currentItem?.id ?? randomUUID(),
+      organizationId: input.organizationId,
+      channel: "booking_events",
+      isEnabled: input.isEnabled,
+      rulesJson: JSON.stringify(input.events),
+    });
+
+    return {
+      organizationId: savedItem.organizationId,
+      channel: "booking_events",
+      isEnabled: savedItem.isEnabled,
+      events: JSON.parse(savedItem.rulesJson) as BookingEventNotificationRule[],
     };
   }
 }

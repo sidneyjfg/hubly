@@ -1,5 +1,6 @@
 import type {
   Booking,
+  BookingEventNotificationSettings,
   Organization,
   IntegrationSummary,
   MeResponse,
@@ -99,6 +100,7 @@ export const apiRoutes = {
   notifications: {
     channels: "/v1/notifications/channels",
     whatsappSettings: "/v1/notifications/whatsapp/settings",
+    bookingEventSettings: "/v1/notifications/booking-events/settings",
     relationshipSettings: "/v1/notifications/relationship/settings",
     process: "/v1/notifications/whatsapp/process"
   },
@@ -317,6 +319,7 @@ export type NoShowOverviewDTO = {
 };
 
 export type WhatsAppReminderSettingsDTO = WhatsAppReminderSettings;
+export type BookingEventNotificationSettingsDTO = BookingEventNotificationSettings;
 export type IntegrationSummaryDTO = IntegrationSummary;
 export type WhatsAppConnectionStatusDTO = WhatsAppConnectionStatus;
 export type WhatsAppSessionConnectResultDTO = WhatsAppSessionConnectResult;

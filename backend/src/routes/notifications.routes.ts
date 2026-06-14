@@ -3,6 +3,8 @@ import type { DataSource } from "typeorm";
 
 import { NotificationsController } from "../controllers/notifications.controller";
 import {
+  notificationsBookingEventSettingsGetRouteSchema,
+  notificationsBookingEventSettingsUpdateRouteSchema,
   notificationsChannelsRouteSchema,
   notificationsProcessDueWhatsAppRouteSchema,
   notificationsRelationshipSettingsGetRouteSchema,
@@ -73,6 +75,27 @@ export const notificationsRoutes = async (
       schema: notificationsRelationshipSettingsUpdateRouteSchema,
     },
     notificationsController.updateRelationshipSettings,
+  );
+
+  app.get(
+    "/notifications/booking-events/settings",
+    {
+      preHandler: allowRoles(["administrator", "reception"]),
+      schema: notificationsBookingEventSettingsGetRouteSchema,
+    },
+    notificationsController.getBookingEventSettings,
+  );
+
+  app.put(
+    "/notifications/booking-events/settings",
+    {
+      preHandler: [
+        allowRoles(["administrator"]),
+        criticalRouteRateLimitMiddleware("notifications:booking-events:settings"),
+      ],
+      schema: notificationsBookingEventSettingsUpdateRouteSchema,
+    },
+    notificationsController.updateBookingEventSettings,
   );
 
   app.post(

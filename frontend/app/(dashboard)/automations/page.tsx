@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gift, HelpCircle, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
+import { CalendarCheck2, Gift, HelpCircle, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { Toggle } from "@/components/ui/toggle";
@@ -18,11 +18,18 @@ type WhatsAppStatusView = {
   isConnected: boolean;
 };
 
-type AutomationTab = "reminders" | "relationship";
+type AutomationTab = "reminders" | "booking-events" | "relationship";
 
 type CampaignType = "promotion" | "loyalty";
 
 type CampaignChannel = "whatsapp";
+
+type BookingEventNotificationType = "created" | "confirmed" | "rescheduled" | "cancelled";
+
+type BookingEventNotificationRule = {
+  event: BookingEventNotificationType;
+  isEnabled: boolean;
+};
 
 type RelationshipCampaign = {
   id: string;
@@ -112,6 +119,18 @@ function normalizePhoneNumber(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+function normalizeQrCodeImage(value?: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith("data:image/")) {
+    return value;
+  }
+
+  return `data:image/png;base64,${value}`;
+}
+
 export default function AutomationsPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<AutomationTab>("reminders");
@@ -143,12 +162,22 @@ export default function AutomationsPage() {
     isEnabled: false,
     reminders: [] as number[]
   });
+  const [bookingEventState, setBookingEventState] = useState({
+    isEnabled: false,
+    events: [
+      { event: "created", isEnabled: true },
+      { event: "confirmed", isEnabled: true },
+      { event: "rescheduled", isEnabled: true },
+      { event: "cancelled", isEnabled: true }
+    ] as BookingEventNotificationRule[]
+  });
 
   const { data, refetch: refetchAutomationSettings, isFetching: isFetchingAutomationSettings } = useQuery({
     queryKey: ["automation-settings"],
     queryFn: async () => {
-      const [settings, relationshipSettings, integrations, status] = await Promise.all([
+      const [settings, bookingEventSettings, relationshipSettings, integrations, status] = await Promise.all([
         api.getWhatsAppSettings(),
+        api.getBookingEventSettings(),
         api.getRelationshipSettings(),
         api.listIntegrations(),
         api.getWhatsAppStatus().catch(() => null)
@@ -156,6 +185,7 @@ export default function AutomationsPage() {
 
       return {
         settings,
+        bookingEventSettings,
         relationshipSettings,
         integrations: integrations.items,
         status
@@ -181,6 +211,23 @@ export default function AutomationsPage() {
       await queryClient.invalidateQueries({ queryKey: ["automation-settings"] });
     }
   });
+
+  const saveBookingEventMutation = useMutation({
+    mutationFn: () => api.updateBookingEventSettings({
+      organizationId: data?.bookingEventSettings.organizationId ?? "",
+      channel: "booking_events",
+      isEnabled: bookingEventState.isEnabled,
+      events: bookingEventState.events
+    }),
+    meta: {
+      errorMessage: "Notificações de agendamento não salvas",
+      successMessage: "Notificações de agendamento salvas com sucesso"
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["automation-settings"] });
+    }
+  });
+
 
   const sessionMutation = useMutation({
     mutationFn: () => api.startWhatsAppSession(normalizePhoneNumber(phoneNumber)),
@@ -248,6 +295,10 @@ export default function AutomationsPage() {
       reminders: Array.from(reminderHours).sort((left, right) => right - left)
     });
     setRelationshipEnabled(data.relationshipSettings.isEnabled);
+    setBookingEventState({
+      isEnabled: data.bookingEventSettings.isEnabled,
+      events: data.bookingEventSettings.events
+    });
     if (data.relationshipSettings.campaigns.length > 0) {
       setCampaigns(data.relationshipSettings.campaigns);
     }
@@ -271,6 +322,15 @@ export default function AutomationsPage() {
     setLocalState((state) => ({
       ...state,
       reminders: state.reminders.filter((item) => item !== hoursBefore)
+    }));
+  }
+
+  function toggleBookingEvent(eventType: BookingEventNotificationType): void {
+    setBookingEventState((state) => ({
+      ...state,
+      events: state.events.map((item) => (
+        item.event === eventType ? { ...item, isEnabled: !item.isEnabled } : item
+      ))
     }));
   }
 
@@ -316,6 +376,7 @@ export default function AutomationsPage() {
 
   const integration = data?.integrations[0];
   const latestSessionResult = regenerateCodeMutation.data ?? sessionMutation.data;
+  const qrCodeImage = normalizeQrCodeImage(latestSessionResult?.qrCode);
   const isCodeRequestPending = sessionMutation.isPending || regenerateCodeMutation.isPending;
   const connectedPhoneNumber = data?.status?.phoneNumber ?? integration?.phoneNumber ?? latestSessionResult?.phoneNumber;
   const statusView = getWhatsAppStatusView({
@@ -372,6 +433,7 @@ export default function AutomationsPage() {
       <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
         {[
           { label: "Lembretes", value: "reminders" },
+          { label: "Agendamentos", value: "booking-events" },
           { label: "Relacionamento", value: "relationship" }
         ].map((item) => (
           <button
@@ -513,10 +575,25 @@ export default function AutomationsPage() {
         </div>
         {!statusView.isConnected && latestSessionResult ? (
           <div className="mt-6 rounded-xl border border-sky-400/20 bg-sky-400/10 p-4">
-            <p className="text-sm text-slate-300">Código de conexão</p>
-            <p className="mt-2 text-2xl font-semibold tracking-[0.2em] text-white">
-              {latestSessionResult.pairingCode ?? latestSessionResult.code ?? "Aguardando retorno"}
-            </p>
+            <p className="text-sm text-slate-300">Conexão WhatsApp</p>
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+              {qrCodeImage ? (
+                <img
+                  alt="QR Code de conexão do WhatsApp"
+                  className="h-44 w-44 rounded-lg border border-white/10 bg-white p-2"
+                  src={qrCodeImage}
+                />
+              ) : null}
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Código de pareamento</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[0.2em] text-white">
+                  {latestSessionResult.pairingCode ?? latestSessionResult.code ?? "Aguardando retorno"}
+                </p>
+                <p className="mt-2 text-sm text-slate-300">
+                  Use o QR code quando aparecer. O código continua disponível como alternativa.
+                </p>
+              </div>
+            </div>
           </div>
         ) : null}
       </Card>
@@ -545,6 +622,16 @@ export default function AutomationsPage() {
         </Card>
       ) : null}
         </>
+      ) : activeTab === "booking-events" ? (
+        <BookingEventNotificationsPanel
+          events={bookingEventState.events}
+          isEnabled={bookingEventState.isEnabled}
+          onSaveSettings={() => saveBookingEventMutation.mutate()}
+          onToggleEvent={toggleBookingEvent}
+          saveError={saveBookingEventMutation.error?.message}
+          savePending={saveBookingEventMutation.isPending}
+          setIsEnabled={(value) => setBookingEventState((state) => ({ ...state, isEnabled: value }))}
+        />
       ) : (
         <RelationshipAutomationPanel
           campaignDraft={campaignDraft}
@@ -561,6 +648,97 @@ export default function AutomationsPage() {
           setIsEnabled={setRelationshipEnabled}
         />
       )}
+    </div>
+  );
+}
+
+const bookingEventLabels: Record<BookingEventNotificationType, { title: string; description: string }> = {
+  created: {
+    title: "Agendamento criado",
+    description: "Avisa o cliente quando um novo horário é criado pela equipe ou pela vitrine.",
+  },
+  confirmed: {
+    title: "Agendamento confirmado",
+    description: "Avisa o cliente quando a equipe confirma o atendimento.",
+  },
+  rescheduled: {
+    title: "Agendamento reagendado",
+    description: "Avisa o cliente quando o horário muda.",
+  },
+  cancelled: {
+    title: "Agendamento cancelado",
+    description: "Avisa o cliente quando a equipe cancela o atendimento.",
+  },
+};
+
+function BookingEventNotificationsPanel({
+  events,
+  isEnabled,
+  onSaveSettings,
+  onToggleEvent,
+  saveError,
+  savePending,
+  setIsEnabled
+}: {
+  events: BookingEventNotificationRule[];
+  isEnabled: boolean;
+  onSaveSettings: () => void;
+  onToggleEvent: (eventType: BookingEventNotificationType) => void;
+  saveError?: string;
+  savePending: boolean;
+  setIsEnabled: (value: boolean) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xl font-semibold text-white">Notificações de agendamento</p>
+            <p className="mt-3 max-w-2xl text-slate-300">
+              Envie mensagens imediatas por WhatsApp quando o agendamento for criado, confirmado, reagendado ou cancelado.
+            </p>
+          </div>
+          <Toggle checked={isEnabled} onChange={() => setIsEnabled(!isEnabled)} />
+        </div>
+      </Card>
+
+      <Card>
+        <div className="grid gap-3 md:grid-cols-2">
+          {events.map((item) => {
+            const label = bookingEventLabels[item.event];
+
+            return (
+              <div
+                className={`rounded-lg border p-4 text-left transition ${
+                  item.isEnabled
+                    ? "border-sky-400/30 bg-sky-400/10"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/5"
+                }`}
+                key={item.event}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-semibold text-white">{label.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{label.description}</p>
+                  </div>
+                  <Toggle checked={item.isEnabled} onChange={() => onToggleEvent(item.event)} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button disabled={savePending} onClick={onSaveSettings}>
+          <CalendarCheck2 className="mr-2 h-4 w-4" />
+          Salvar notificações
+        </Button>
+        <p className="text-sm text-slate-400">
+          O WhatsApp precisa estar conectado. Falhas de envio não bloqueiam a operação da agenda.
+        </p>
+      </div>
+      {saveError ? <p className="text-sm text-rose-300">{saveError}</p> : null}
     </div>
   );
 }

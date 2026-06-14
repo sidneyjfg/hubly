@@ -16,6 +16,7 @@ export type WhatsAppConnectionStatus = {
 export type WhatsAppConnectCode = {
   pairingCode?: string;
   code?: string;
+  qrCode?: string;
   count?: number;
 };
 
@@ -28,6 +29,7 @@ export type WhatsAppSessionConnectResult = {
   phoneNumber: string;
   pairingCode?: string;
   code?: string;
+  qrCode?: string;
   count?: number;
 };
 

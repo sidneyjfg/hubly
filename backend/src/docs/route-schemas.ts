@@ -479,6 +479,7 @@ const whatsappSessionResponseSchema = {
     phoneNumber: { type: "string" },
     pairingCode: { type: "string" },
     code: { type: "string" },
+    qrCode: { type: "string" },
     count: { type: "number" },
   },
 } as const;
@@ -541,6 +542,46 @@ const whatsappReminderSettingsWriteSchema = {
       type: "array",
       items: whatsappReminderRuleSchema,
       maxItems: 10,
+    },
+  },
+} as const;
+
+const bookingEventNotificationRuleSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["event", "isEnabled"],
+  properties: {
+    event: { type: "string", enum: ["created", "confirmed", "rescheduled", "cancelled"] },
+    isEnabled: { type: "boolean" },
+  },
+} as const;
+
+const bookingEventNotificationSettingsSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["organizationId", "channel", "isEnabled", "events"],
+  properties: {
+    organizationId: { type: "string" },
+    channel: { type: "string", const: "booking_events" },
+    isEnabled: { type: "boolean" },
+    events: {
+      type: "array",
+      items: bookingEventNotificationRuleSchema,
+      maxItems: 4,
+    },
+  },
+} as const;
+
+const bookingEventNotificationSettingsWriteSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["isEnabled", "events"],
+  properties: {
+    isEnabled: { type: "boolean" },
+    events: {
+      type: "array",
+      items: bookingEventNotificationRuleSchema,
+      maxItems: 4,
     },
   },
 } as const;
@@ -1263,6 +1304,31 @@ export const notificationsRelationshipSettingsUpdateRouteSchema = {
   },
 } satisfies FastifySchema;
 
+export const notificationsBookingEventSettingsGetRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Notifications"],
+  summary: "Get booking event notification settings",
+  description: "Returns WhatsApp notification settings for booking lifecycle events.",
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: bookingEventNotificationSettingsSchema,
+  },
+} satisfies FastifySchema;
+
+export const notificationsBookingEventSettingsUpdateRouteSchema = {
+  ...protectedRouteSchemaBase,
+  tags: ["Notifications"],
+  summary: "Update booking event notification settings",
+  description: "Configures immediate WhatsApp notifications for booking lifecycle events.",
+  body: bookingEventNotificationSettingsWriteSchema,
+  response: {
+    ...protectedRouteSchemaBase.response,
+    200: bookingEventNotificationSettingsSchema,
+    400: errorResponseSchema,
+    409: errorResponseSchema,
+  },
+} satisfies FastifySchema;
+
 export const notificationsProcessDueWhatsAppRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Notifications"],
@@ -1318,7 +1384,7 @@ export const whatsappSessionStartRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Integrations"],
   summary: "Start WhatsApp session",
-  description: "Creates or reuses the organization instance and requests a phone-number pairing code. QR code login is intentionally disabled.",
+  description: "Creates or reuses the organization instance and requests a QR code and phone-number pairing code.",
   body: whatsappSessionRequestSchema,
   response: {
     ...protectedRouteSchemaBase.response,
@@ -1332,7 +1398,7 @@ export const whatsappRegenerateCodeRouteSchema = {
   ...protectedRouteSchemaBase,
   tags: ["Integrations"],
   summary: "Regenerate WhatsApp code",
-  description: "Restarts the organization instance and requests a fresh phone-number pairing code. QR code login is intentionally disabled.",
+  description: "Restarts the organization instance and requests a fresh QR code and phone-number pairing code.",
   body: whatsappSessionRequestSchema,
   response: {
     ...protectedRouteSchemaBase.response,
