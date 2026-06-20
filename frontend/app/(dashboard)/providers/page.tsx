@@ -372,8 +372,8 @@ export default function ProvidersPage() {
           <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Profissionais</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Equipe e serviços da agenda</h1>
         </div>
-        <div className="flex gap-3">
-          <Button onClick={() => {
+        <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:gap-3">
+          <Button className="px-3" onClick={() => {
             if (isProviderCreationBlocked) {
               requestUpgrade({ feature: `Mais de ${PLAN_PROVIDER_LIMITS[currentPlan]} profissionais ativos`, requiredPlan: currentPlan === "free" ? "pro" : "premium" });
               return;
@@ -381,9 +381,9 @@ export default function ProvidersPage() {
             setProviderForm(emptyProviderForm);
           }} variant={isProviderCreationBlocked ? "secondary" : "primary"}>
             {isProviderCreationBlocked ? <LockKeyhole className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
-            Novo profissional
+            <span className="sm:hidden">Profissional</span><span className="hidden sm:inline">Novo profissional</span>
           </Button>
-          <Button onClick={() => {
+          <Button className="px-3" onClick={() => {
             if (activeServiceCount >= maxActiveServices) {
               requestUpgrade({ feature: `Mais de ${maxActiveServices} serviços ativos`, requiredPlan: currentPlan === "free" ? "pro" : "premium" });
               return;
@@ -391,7 +391,7 @@ export default function ProvidersPage() {
             setServiceForm({ ...emptyServiceForm, providerId: providers[0]?.id ?? "" });
           }} variant="secondary">
             {activeServiceCount >= maxActiveServices ? <LockKeyhole className="mr-2 h-4 w-4" /> : <BriefcaseMedical className="mr-2 h-4 w-4" />}
-            Novo serviço
+            <span className="sm:hidden">Serviço</span><span className="hidden sm:inline">Novo serviço</span>
           </Button>
         </div>
       </div>

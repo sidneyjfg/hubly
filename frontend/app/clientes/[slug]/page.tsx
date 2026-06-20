@@ -120,7 +120,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-background">
       <section className="border-b border-white/10 bg-slate-950">
-        <div className="mx-auto max-w-7xl px-6 py-6 md:px-10">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 md:px-10 md:py-6">
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <BrandLogo showSlogan size="sm" />
             <div className="flex flex-wrap items-center gap-3">
@@ -128,7 +128,7 @@ export default function CustomerBookingPage({ params }: PageProps) {
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Link>
-              <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+              <ButtonLink className="hidden sm:inline-flex" href={HUBLY_SUPPORT_URL} variant="ghost">
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Ajuda
               </ButtonLink>
@@ -145,10 +145,10 @@ export default function CustomerBookingPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-6 py-8 md:px-10 xl:grid-cols-[0.9fr_1.1fr]">
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 md:px-10 md:py-8 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
           <div className="overflow-hidden rounded-xl border border-white/10 bg-panel/90">
-            <div className="h-64 bg-slate-900">
+            <div className="h-48 bg-slate-900 sm:h-64">
               {organization?.coverImageUrl ? (
                 <img alt={organization.tradeName} className="h-full w-full object-cover" src={organization.coverImageUrl} />
               ) : (
@@ -157,9 +157,9 @@ export default function CustomerBookingPage({ params }: PageProps) {
                 </div>
               )}
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-sky-300">Estabelecimento</p>
-              <h1 className="mt-3 text-3xl font-semibold text-white">{organization?.tradeName ?? "Carregando..."}</h1>
+              <h1 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">{organization?.tradeName ?? "Carregando..."}</h1>
               <p className="mt-4 leading-7 text-slate-300">
                 {organization?.publicDescription ?? "Escolha um profissional e horário disponível para concluir seu agendamento."}
               </p>

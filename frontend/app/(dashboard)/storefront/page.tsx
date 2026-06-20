@@ -700,7 +700,7 @@ export default function StorefrontPage() {
                 </div>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-2">
-                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                <label className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 sm:w-auto">
                   <UploadCloud className="mr-2 h-4 w-4" />
                   {uploadingSlot === "cover" ? "Enviando..." : "Enviar capa"}
                   <input
@@ -737,7 +737,7 @@ export default function StorefrontPage() {
                 </div>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-2">
-                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                <label className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 sm:w-auto">
                   <UploadCloud className="mr-2 h-4 w-4" />
                   {uploadingSlot === "logo" ? "Enviando..." : "Enviar logo"}
                   <input
@@ -768,14 +768,14 @@ export default function StorefrontPage() {
                 </div>
                 {isGalleryUploadBlocked ? (
                   <button
-                    className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 opacity-70"
+                    className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 opacity-70 sm:w-auto"
                     onClick={() => requestUpgrade({ feature: `Mais de ${galleryLimit} fotos na galeria`, requiredPlan: currentPlan === "free" ? "pro" : "premium" })}
                     type="button"
                   >
                     <LockKeyhole className="mr-2 h-4 w-4" />Adicionar foto
                   </button>
                 ) : (
-                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                <label className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 sm:w-auto">
                   <ImagePlus className="mr-2 h-4 w-4" />
                   {uploadingSlot === "gallery" ? "Enviando..." : "Adicionar foto"}
                   <input
@@ -819,7 +819,7 @@ export default function StorefrontPage() {
             </div>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+            <Button className="w-full sm:w-auto" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
               <Save className="mr-2 h-4 w-4" />
               Salvar vitrine
             </Button>

@@ -53,8 +53,8 @@ const benefits = [
     icon: Activity
   },
   {
-    title: "Teste grátis",
-    description: "Entre com baixa barreira usando teste gratuito, primeiro mês grátis ou desconto inicial.",
+    title: "Plano gratuito",
+    description: "Comece sem mensalidade com os recursos essenciais e limites adequados para testar a operação.",
     icon: Clock3
   },
   {
@@ -78,7 +78,7 @@ const comparisons = [
 const steps = [
   "Crie sua conta, publique perfil, fotos e serviços.",
   "Receba agendamentos pelo perfil público e pela busca local.",
-  "Use o teste grátis e depois mantenha o plano mensal fixo."
+  "Comece no plano Gratuito e evolua para o Pro quando precisar ampliar a operação."
 ];
 
 const faqs = [
@@ -88,11 +88,11 @@ const faqs = [
   },
   {
     question: "Como funciona a cobrança?",
-    answer: "O modelo é assinatura mensal fixa, com plano principal de R$69,90/mês após a entrada gratuita ou promocional."
+    answer: "O plano Gratuito não tem mensalidade. O Pro custa R$69,90/mês em uma assinatura fixa, sem comissão por agendamento."
   },
   {
-    question: "Existe teste grátis?",
-    answer: "Sim. A entrada pode ser feita com teste grátis, primeiro mês gratuito ou desconto inicial para reduzir a barreira de adoção."
+    question: "O que está incluído no plano Gratuito?",
+    answer: "O Gratuito inclui 1 profissional, 3 serviços, 50 clientes, 30 agendamentos por mês, perfil público com 1 foto e avisos por WhatsApp quando o agendamento é criado ou cancelado."
   }
 ];
 
@@ -108,6 +108,7 @@ const planCards = [
       "30 agendamentos por mês",
       "Perfil público básico",
       "1 foto na vitrine",
+      "WhatsApp ao criar ou cancelar, após conectar",
       "Relatórios básicos"
     ]
   },
@@ -121,8 +122,9 @@ const planCards = [
       "Até 30 serviços ativos",
       "Até 1.000 clientes ativos",
       "Agendamentos sem limite mensal",
-      "Perfil público completo com galeria",
-      "Lembretes por WhatsApp",
+      "Perfil público com até 12 fotos na galeria",
+      "Avisos ao criar, confirmar, reagendar e cancelar",
+      "Lembretes programados por WhatsApp",
       "Histórico completo do cliente"
     ]
   },
@@ -146,17 +148,17 @@ export default function MarketingPage() {
   return (
     <main className="overflow-x-hidden">
       <section className="surface-grid border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-6 pb-24 pt-8 md:px-10">
-          <header className="mb-20 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 pb-16 pt-5 sm:px-6 md:px-10 md:pb-24 md:pt-8">
+          <header className="mb-14 flex flex-wrap items-center justify-between gap-3 md:mb-20">
             <BrandLogo showSlogan size="md" />
-            <div className="flex items-center gap-3">
-              <ButtonLink href="/login" variant="ghost">
-                Entrar como negócio
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+              <ButtonLink className="px-3 sm:px-5" href="/login" variant="ghost">
+                <span className="sm:hidden">Entrar</span><span className="hidden sm:inline">Entrar como negócio</span>
               </ButtonLink>
-              <ButtonLink href="/cliente/login" variant="ghost">Entrar como cliente final</ButtonLink>
-              <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">Suporte</ButtonLink>
-              <ButtonLink href="/clientes" variant="secondary">Encontrar serviços</ButtonLink>
-              <ButtonLink href="/signup">Tenho uma clínica ou barbearia</ButtonLink>
+              <ButtonLink className="hidden lg:inline-flex" href="/cliente/login" variant="ghost">Entrar como cliente final</ButtonLink>
+              <ButtonLink className="hidden lg:inline-flex" href={HUBLY_SUPPORT_URL} variant="ghost">Suporte</ButtonLink>
+              <ButtonLink className="hidden sm:inline-flex" href="/clientes" variant="secondary">Encontrar serviços</ButtonLink>
+              <ButtonLink className="px-3 sm:px-5" href="/signup"><span className="sm:hidden">Criar negócio</span><span className="hidden sm:inline">Tenho uma clínica ou barbearia</span></ButtonLink>
             </div>
           </header>
 
@@ -166,7 +168,7 @@ export default function MarketingPage() {
                 <BadgeCheck className="h-4 w-4" />
                 SaaS para negócios locais que querem crescer
               </div>
-              <h1 className="max-w-3xl text-5xl font-semibold tracking-tight text-white md:text-7xl">
+              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-7xl">
                 Agendamento, gestão e presença digital para negócios locais.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
@@ -248,7 +250,7 @@ export default function MarketingPage() {
 
       <section className="mx-auto max-w-7xl px-6 py-20 md:px-10">
         <SectionHeading
-          description="Assinatura previsível, teste grátis e operação simples para começar com baixa barreira de entrada."
+          description="Comece gratuitamente e adote uma assinatura previsível quando precisar ampliar a operação."
           eyebrow="Benefícios"
           title="Cresça com presença digital, agenda moderna e gestão básica."
         />
@@ -276,15 +278,15 @@ export default function MarketingPage() {
             title="Hubly versus agenda comum"
             description="A diferença é simples: agenda comum organiza horários; Hubly também melhora descoberta, presença digital e relacionamento."
           />
-          <div className="mt-10 overflow-hidden rounded-xl border border-white/10">
-            <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr] bg-white/5 px-6 py-4 text-sm uppercase tracking-[0.18em] text-slate-400">
+          <div className="mt-10 overflow-x-auto rounded-xl border border-white/10">
+            <div className="grid min-w-[38rem] grid-cols-[1.4fr_0.8fr_0.8fr] bg-white/5 px-4 py-4 text-sm uppercase tracking-[0.18em] text-slate-400 sm:px-6">
               <span>Capacidade</span>
               <span>Hubly</span>
               <span>Agenda comum</span>
             </div>
             {comparisons.map((item) => (
               <div
-                className="grid grid-cols-[1.4fr_0.8fr_0.8fr] border-t border-white/10 px-6 py-5 text-sm text-slate-200"
+                className="grid min-w-[38rem] grid-cols-[1.4fr_0.8fr_0.8fr] border-t border-white/10 px-4 py-5 text-sm text-slate-200 sm:px-6"
                 key={item.feature}
               >
                 <span>{item.feature}</span>
@@ -340,7 +342,7 @@ export default function MarketingPage() {
         <SectionHeading
           eyebrow="Monetização"
           title="Assinatura mensal fixa"
-          description="Comece com teste grátis, primeiro mês gratuito ou desconto inicial. Depois, o plano principal custa R$69,90/mês."
+          description="Comece no plano Gratuito. Quando precisar de mais capacidade e automações, o Pro custa R$69,90/mês."
         />
         <div className="mt-12 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <Card className="border-sky-400/25 bg-sky-400/10">

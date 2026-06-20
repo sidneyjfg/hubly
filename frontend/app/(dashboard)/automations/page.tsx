@@ -432,7 +432,7 @@ export default function AutomationsPage() {
         </div>
       </Modal>
 
-      <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+      <div className="grid grid-cols-3 rounded-xl border border-white/10 bg-white/5 p-1">
         {[
           { label: "Lembretes", value: "reminders", requiredPlan: "pro" },
           { label: "Agendamentos", value: "booking-events", requiredPlan: "free" },
@@ -440,7 +440,7 @@ export default function AutomationsPage() {
         ].map((item) => (
           <button
             aria-disabled={!hasPlan(item.requiredPlan as "free" | "pro" | "premium")}
-            className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+            className={`flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs transition sm:gap-2 sm:px-4 sm:text-sm ${
               activeTab === item.value ? "bg-primary text-white" : "text-slate-300 hover:bg-white/8"
             } ${!hasPlan(item.requiredPlan as "free" | "pro" | "premium") ? "cursor-not-allowed opacity-60" : ""}`}
             key={item.value}

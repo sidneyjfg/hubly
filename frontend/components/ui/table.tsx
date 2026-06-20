@@ -1,11 +1,20 @@
 import { cn } from "@/lib/utils";
 
 export function Table({ children }: { children: React.ReactNode }) {
-  return <div className="overflow-hidden rounded-xl border border-white/10">{children}</div>;
+  return (
+    <div className="rounded-xl border border-white/10">
+      <p className="border-b border-white/10 bg-white/[0.03] px-4 py-2 text-xs text-slate-400 md:hidden">
+        Deslize para o lado para ver todas as informações.
+      </p>
+      <div className="overflow-x-auto [scrollbar-color:rgba(148,163,184,0.35)_transparent]">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function TableRoot({ children }: { children: React.ReactNode }) {
-  return <table className="min-w-full divide-y divide-white/10">{children}</table>;
+  return <table className="min-w-[44rem] divide-y divide-white/10 md:min-w-full">{children}</table>;
 }
 
 export function TableHead({ children }: { children: React.ReactNode }) {
@@ -35,5 +44,5 @@ export function TableCell({
   children: React.ReactNode;
   colSpan?: number;
 }) {
-  return <td className={cn("px-5 py-4 text-sm text-slate-200", className)} colSpan={colSpan}>{children}</td>;
+  return <td className={cn("px-4 py-4 text-sm text-slate-200 md:px-5", className)} colSpan={colSpan}>{children}</td>;
 }

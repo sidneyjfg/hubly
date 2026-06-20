@@ -12,9 +12,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen bg-background">
         <div className="mx-auto flex min-h-screen max-w-[1800px]">
           <AppSidebar />
-          <div className="flex min-h-screen flex-1 flex-col">
+          <div className="flex min-h-screen min-w-0 flex-1 flex-col">
             <AppHeader />
-            <main className="flex-1 px-4 py-4 pb-28 md:px-6 md:py-6 xl:pb-6">{children}</main>
+            <main className="min-w-0 flex-1 px-4 py-4 pb-28 md:px-6 md:py-6 xl:pb-6">{children}</main>
             <footer className="hidden border-t border-white/10 px-4 py-4 md:px-6 xl:block">
               <div className="flex justify-end">
                 <AppVersion />

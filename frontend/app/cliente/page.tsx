@@ -47,11 +47,11 @@ export default function CustomerPortalPage() {
   return (
     <main className="min-h-screen bg-background">
       <section className="border-b border-white/10 bg-slate-950">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 md:flex-row md:items-center md:justify-between md:px-10 md:py-6">
           <BrandLogo showSlogan size="sm" />
           <div className="flex flex-wrap gap-3">
             <BackButton fallbackHref="/clientes" />
-            <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+            <ButtonLink className="hidden sm:inline-flex" href={HUBLY_SUPPORT_URL} variant="ghost">
               <HelpCircle className="mr-2 h-4 w-4" />
               Ajuda
             </ButtonLink>
@@ -64,7 +64,7 @@ export default function CustomerPortalPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-10 md:px-10">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-10 md:py-10">
         <div className="mb-8">
           <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Minha conta</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">{portal?.customer.fullName ?? "Cliente"}</h1>

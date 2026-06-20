@@ -56,16 +56,16 @@ export default function CustomerDiscoveryPage() {
   return (
     <main className="min-h-screen bg-background">
       <section className="border-b border-white/10 bg-slate-950">
-        <div className="mx-auto max-w-7xl px-6 py-6 md:px-10">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 md:px-10 md:py-6">
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <BrandLogo showSlogan size="sm" />
             <div className="flex flex-wrap gap-3">
               <BackButton fallbackHref="/" />
-              <ButtonLink href={HUBLY_SUPPORT_URL} variant="ghost">
+              <ButtonLink className="hidden sm:inline-flex" href={HUBLY_SUPPORT_URL} variant="ghost">
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Ajuda
               </ButtonLink>
-              <ButtonLink href="/signup" variant="secondary">
+              <ButtonLink className="hidden md:inline-flex" href="/signup" variant="secondary">
                 Sou clínica ou barbearia
               </ButtonLink>
               {customerName ? (
@@ -87,10 +87,10 @@ export default function CustomerDiscoveryPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:px-10 xl:grid-cols-[0.9fr_1.4fr]">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 md:px-10 md:py-10 xl:grid-cols-[0.9fr_1.4fr]">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-sky-300">Acesso do cliente final</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
             Encontre um estabelecimento e agende com segurança.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">

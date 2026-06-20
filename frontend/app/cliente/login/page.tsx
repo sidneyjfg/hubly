@@ -33,7 +33,7 @@ function CustomerLoginContent() {
   return (
     <main className="min-h-screen bg-background">
       <section className="border-b border-white/10 bg-slate-950">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6 md:px-10">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5 sm:px-6 md:px-10 md:py-6">
           <BrandLogo showSlogan size="sm" />
           <div className="flex flex-wrap items-center gap-3">
             <BackButton fallbackHref="/clientes" />
@@ -47,7 +47,7 @@ function CustomerLoginContent() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-xl px-6 py-12 md:px-10">
+      <section className="mx-auto max-w-xl px-4 py-8 sm:px-6 md:px-10 md:py-12">
         <Card>
           <div className="mb-6">
             <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Acesso do cliente final</p>

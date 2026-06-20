@@ -395,13 +395,14 @@ export default function SchedulePage() {
         <p>
           Página {data?.bookings.page ?? page} de {data?.bookings.totalPages ?? 1} - {data?.bookings.total ?? 0} consultas
         </p>
-        <div className="flex gap-2">
-          <Button disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} variant="secondary">
+        <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto">
+          <Button className="w-full" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} variant="secondary">
             Anterior
           </Button>
           <Button
             disabled={!data || page >= data.bookings.totalPages}
             onClick={() => setPage((current) => current + 1)}
+            className="w-full"
             variant="secondary"
           >
             Próxima
