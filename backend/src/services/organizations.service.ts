@@ -5,8 +5,10 @@ import { randomUUID } from "node:crypto";
 
 import { OrganizationsRepository } from "../repositories/organizations.repository";
 import {
+  freeStorefrontBookingEventTypes,
   isStorefrontBookingAutomationReady,
   OrganizationNotificationSettingsRepository,
+  paidStorefrontBookingEventTypes,
 } from "../repositories/organization-notification-settings.repository";
 import type { AuthenticatedRequestUser } from "../types/auth";
 import type {
@@ -237,9 +239,15 @@ export class OrganizationsService {
   }
 
   private async assertStorefrontBookingAutomationReady(organizationId: string): Promise<void> {
-    const settings = await this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(organizationId);
+    const [settings, planCode] = await Promise.all([
+      this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(organizationId),
+      this.planEntitlementsService.getPlanCode(organizationId),
+    ]);
+    const requiredEvents = planCode === "free"
+      ? freeStorefrontBookingEventTypes
+      : paidStorefrontBookingEventTypes;
 
-    if (!isStorefrontBookingAutomationReady(settings)) {
+    if (!isStorefrontBookingAutomationReady(settings, requiredEvents)) {
       throw new AppError(
         "storefront.automation_required",
         "Booking event automations must be enabled before publishing the storefront.",

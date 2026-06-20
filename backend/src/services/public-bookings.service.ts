@@ -5,8 +5,10 @@ import { AuditRepository } from "../repositories/audit.repository";
 import { BookingsRepository, isBookingBlockingSlot } from "../repositories/bookings.repository";
 import { CustomersRepository } from "../repositories/customers.repository";
 import {
+  freeStorefrontBookingEventTypes,
   isStorefrontBookingAutomationReady,
   OrganizationNotificationSettingsRepository,
+  paidStorefrontBookingEventTypes,
 } from "../repositories/organization-notification-settings.repository";
 import { OrganizationsRepository } from "../repositories/organizations.repository";
 import { ProviderAvailabilitiesRepository } from "../repositories/provider-availabilities.repository";
@@ -137,8 +139,14 @@ export class PublicBookingsService {
       return null;
     }
 
-    const automationSettings = await this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(organization.id);
-    if (!isStorefrontBookingAutomationReady(automationSettings)) {
+    const [automationSettings, planCode] = await Promise.all([
+      this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(organization.id),
+      this.planEntitlementsService.getPlanCode(organization.id),
+    ]);
+    const requiredEvents = planCode === "free"
+      ? freeStorefrontBookingEventTypes
+      : paidStorefrontBookingEventTypes;
+    if (!isStorefrontBookingAutomationReady(automationSettings, requiredEvents)) {
       return null;
     }
 

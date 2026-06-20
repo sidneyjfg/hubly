@@ -47,7 +47,7 @@ const defaultRelationshipSettings = (organizationId: string): RelationshipAutoma
 const defaultBookingEventSettings = (organizationId: string): BookingEventNotificationSettings => ({
   organizationId,
   channel: "booking_events",
-  isEnabled: false,
+  isEnabled: true,
   events: [
     { event: "created", isEnabled: true },
     { event: "confirmed", isEnabled: true },
@@ -56,14 +56,22 @@ const defaultBookingEventSettings = (organizationId: string): BookingEventNotifi
   ],
 });
 
-export const requiredStorefrontBookingEventTypes: BookingEventNotificationType[] = [
+export const freeStorefrontBookingEventTypes: BookingEventNotificationType[] = [
+  "created",
+  "cancelled",
+];
+
+export const paidStorefrontBookingEventTypes: BookingEventNotificationType[] = [
   "created",
   "confirmed",
   "rescheduled",
   "cancelled",
 ];
 
-export const isStorefrontBookingAutomationReady = (settings: BookingEventNotificationSettings): boolean => {
+export const isStorefrontBookingAutomationReady = (
+  settings: BookingEventNotificationSettings,
+  requiredEventTypes: BookingEventNotificationType[],
+): boolean => {
   if (!settings.isEnabled) {
     return false;
   }
@@ -74,7 +82,7 @@ export const isStorefrontBookingAutomationReady = (settings: BookingEventNotific
       .map((eventRule) => eventRule.event),
   );
 
-  return requiredStorefrontBookingEventTypes.every((eventType) => enabledEvents.has(eventType));
+  return requiredEventTypes.every((eventType) => enabledEvents.has(eventType));
 };
 
 export class OrganizationNotificationSettingsRepository {

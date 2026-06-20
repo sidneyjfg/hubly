@@ -79,9 +79,10 @@ type GuideStep = {
 
 type StorefrontImageSlot = "cover" | "logo" | "gallery";
 
-const requiredAutomationEvents = ["created", "confirmed", "rescheduled", "cancelled"] as const;
-
-const isBookingAutomationReady = (settings?: BookingEventNotificationSettings): boolean => {
+const isBookingAutomationReady = (
+  settings: BookingEventNotificationSettings | undefined,
+  planCode: "free" | "pro" | "premium"
+): boolean => {
   if (!settings?.isEnabled) {
     return false;
   }
@@ -92,7 +93,11 @@ const isBookingAutomationReady = (settings?: BookingEventNotificationSettings): 
       .map((eventRule) => eventRule.event)
   );
 
-  return requiredAutomationEvents.every((eventType) => enabledEvents.has(eventType));
+  const requiredEvents = planCode === "free"
+    ? ["created", "cancelled"] as const
+    : ["created", "confirmed", "rescheduled", "cancelled"] as const;
+
+  return requiredEvents.every((eventType) => enabledEvents.has(eventType));
 };
 
 const readFileAsDataUrl = (file: File): Promise<string> =>
@@ -208,7 +213,7 @@ export default function StorefrontPage() {
       )
       .map((provider) => provider.id)
   );
-  const hasBookingAutomation = isBookingAutomationReady(bookingAutomationQuery.data);
+  const hasBookingAutomation = isBookingAutomationReady(bookingAutomationQuery.data, currentPlan);
   const hasPublicProfileInfo = Boolean(
     form.tradeName.trim()
       && form.publicDescription.trim()

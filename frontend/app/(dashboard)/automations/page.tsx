@@ -134,7 +134,7 @@ function normalizeQrCodeImage(value?: string): string | null {
 
 export default function AutomationsPage() {
   const queryClient = useQueryClient();
-  const { hasPlan, requestUpgrade } = usePlanAccess();
+  const { currentPlan, hasPlan, requestUpgrade } = usePlanAccess();
   const [activeTab, setActiveTab] = useState<AutomationTab>("booking-events");
   const [helpOpen, setHelpOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("5511999999999");
@@ -638,10 +638,15 @@ export default function AutomationsPage() {
         </>
       ) : activeTab === "booking-events" ? (
         <BookingEventNotificationsPanel
+          isFreePlan={currentPlan === "free"}
           events={bookingEventState.events}
           isEnabled={bookingEventState.isEnabled}
           onSaveSettings={() => saveBookingEventMutation.mutate()}
           onToggleEvent={toggleBookingEvent}
+          onUpgradeRequired={() => requestUpgrade({
+            feature: "Confirmação e reagendamento por WhatsApp",
+            requiredPlan: "pro"
+          })}
           saveError={saveBookingEventMutation.error?.message}
           savePending={saveBookingEventMutation.isPending}
           setIsEnabled={(value) => setBookingEventState((state) => ({ ...state, isEnabled: value }))}
@@ -687,17 +692,21 @@ const bookingEventLabels: Record<BookingEventNotificationType, { title: string; 
 
 function BookingEventNotificationsPanel({
   events,
+  isFreePlan,
   isEnabled,
   onSaveSettings,
   onToggleEvent,
+  onUpgradeRequired,
   saveError,
   savePending,
   setIsEnabled
 }: {
   events: BookingEventNotificationRule[];
+  isFreePlan: boolean;
   isEnabled: boolean;
   onSaveSettings: () => void;
   onToggleEvent: (eventType: BookingEventNotificationType) => void;
+  onUpgradeRequired: () => void;
   saveError?: string;
   savePending: boolean;
   setIsEnabled: (value: boolean) => void;
@@ -720,6 +729,8 @@ function BookingEventNotificationsPanel({
         <div className="grid gap-3 md:grid-cols-2">
           {events.map((item) => {
             const label = bookingEventLabels[item.event];
+            const requiresPro = item.event === "confirmed" || item.event === "rescheduled";
+            const isLocked = isFreePlan && requiresPro;
 
             return (
               <div
@@ -732,10 +743,22 @@ function BookingEventNotificationsPanel({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-semibold text-white">{label.title}</p>
+                    <p className="flex items-center gap-2 font-semibold text-white">
+                      {label.title}
+                      {isLocked ? <LockKeyhole className="h-3.5 w-3.5 text-slate-400" /> : null}
+                    </p>
                     <p className="mt-2 text-sm leading-6 text-slate-300">{label.description}</p>
+                    {isLocked ? (
+                      <button className="mt-2 text-xs font-medium text-sky-300" onClick={onUpgradeRequired} type="button">
+                        Disponível no plano Pro
+                      </button>
+                    ) : null}
                   </div>
-                  <Toggle checked={item.isEnabled} onChange={() => onToggleEvent(item.event)} />
+                  <Toggle
+                    checked={isLocked ? false : item.isEnabled}
+                    disabled={isLocked}
+                    onChange={() => onToggleEvent(item.event)}
+                  />
                 </div>
               </div>
             );

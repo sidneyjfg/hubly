@@ -59,6 +59,7 @@ const whatsappReminderSettingsSchema = z.object({
 });
 
 const bookingEventNotificationTypes = ["created", "confirmed", "rescheduled", "cancelled"] as const;
+const freeBookingEventNotificationTypes = new Set<BookingEventNotificationType>(["created", "cancelled"]);
 
 const bookingEventNotificationSettingsSchema = z.object({
   isEnabled: z.boolean(),
@@ -172,7 +173,12 @@ export class NotificationsService {
   }
 
   public async getBookingEventSettings(user: AuthenticatedRequestUser): Promise<BookingEventNotificationSettings> {
-    return this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(user.organizationId);
+    const [settings, planCode] = await Promise.all([
+      this.organizationNotificationSettingsRepository.findBookingEventsByOrganization(user.organizationId),
+      this.planEntitlementsService.getPlanCode(user.organizationId),
+    ]);
+
+    return this.applyBookingEventPlanAccess(settings, planCode);
   }
 
   public async updateWhatsAppSettings(
@@ -257,11 +263,18 @@ export class NotificationsService {
     ));
 
     return this.dataSource.transaction("SERIALIZABLE", async (manager) => {
+      const planCode = await this.planEntitlementsService.getPlanCode(user.organizationId, manager);
+      const allowedEvents = planCode === "free"
+        ? events.map((item) => ({
+          ...item,
+          isEnabled: freeBookingEventNotificationTypes.has(item.event) && item.isEnabled,
+        }))
+        : events;
       const settings = await this.organizationNotificationSettingsRepository.upsertBookingEventSettings(
         {
           organizationId: user.organizationId,
           isEnabled: data.isEnabled,
-          events,
+          events: allowedEvents,
         },
         manager,
       );
@@ -569,6 +582,11 @@ export class NotificationsService {
       return;
     }
 
+    const planCode = await this.planEntitlementsService.getPlanCode(event.booking.organizationId, manager);
+    if (planCode === "free" && !freeBookingEventNotificationTypes.has(bookingEventType)) {
+      return;
+    }
+
     const [customer, integration] = await Promise.all([
       this.customersRepository.findByIdInOrganization(event.booking.organizationId, event.booking.customerId, manager),
       this.organizationIntegrationsRepository.findByOrganizationAndChannel(event.booking.organizationId, "whatsapp", manager),
@@ -612,5 +630,22 @@ export class NotificationsService {
     }
 
     return `Olá, ${customerName}. Seu agendamento com ${providerName} foi criado para ${formattedDate}.`;
+  }
+
+  private applyBookingEventPlanAccess(
+    settings: BookingEventNotificationSettings,
+    planCode: "free" | "pro" | "premium",
+  ): BookingEventNotificationSettings {
+    if (planCode !== "free") {
+      return settings;
+    }
+
+    return {
+      ...settings,
+      events: settings.events.map((item) => ({
+        ...item,
+        isEnabled: freeBookingEventNotificationTypes.has(item.event) && item.isEnabled,
+      })),
+    };
   }
 }

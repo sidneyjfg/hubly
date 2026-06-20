@@ -149,7 +149,7 @@ describe("Notifications routes", () => {
     );
     expect(updateResponse.json().events).toEqual([
       { event: "created", isEnabled: true },
-      { event: "confirmed", isEnabled: true },
+      { event: "confirmed", isEnabled: false },
       { event: "rescheduled", isEnabled: false },
       { event: "cancelled", isEnabled: true },
     ]);
