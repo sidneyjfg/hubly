@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BriefcaseMedical, Camera, CheckCircle2, Eye, HelpCircle, ImagePlus, MapPin, Save, Store, Trash2, UploadCloud, UserRound } from "lucide-react";
+import { AlertCircle, BriefcaseMedical, Camera, CheckCircle2, Eye, HelpCircle, ImagePlus, LockKeyhole, MapPin, Save, Store, Trash2, UploadCloud, UserRound } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { api } from "@/lib/api";
 import type { BookingEventNotificationSettings } from "@/lib/types";
+import { usePlanAccess } from "@/components/billing/plan-access-provider";
 
 type StorefrontForm = {
   tradeName: string;
@@ -111,6 +112,7 @@ const readFileAsDataUrl = (file: File): Promise<string> =>
   });
 
 export default function StorefrontPage() {
+  const { currentPlan, requestUpgrade } = usePlanAccess();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<StorefrontForm>(emptyForm);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
@@ -187,6 +189,8 @@ export default function StorefrontPage() {
   }, [data]);
 
   const gallery = form.galleryImageUrls;
+  const galleryLimit = currentPlan === "free" ? 1 : 12;
+  const isGalleryUploadBlocked = gallery.length >= galleryLimit;
   const previewImages = [form.coverImageUrl, ...gallery].filter((url) => url.trim().length > 0);
   const address = buildAddress(form);
   const activeProviders = providersQuery.data?.items.filter((provider) => provider.isActive) ?? [];
@@ -757,6 +761,15 @@ export default function StorefrontPage() {
                   <p className="text-sm font-semibold text-white">Galeria</p>
                   <p className="mt-1 text-xs leading-5 text-slate-400">Fotos complementares do espaço, equipe, fachada e resultados visuais.</p>
                 </div>
+                {isGalleryUploadBlocked ? (
+                  <button
+                    className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 opacity-70"
+                    onClick={() => requestUpgrade({ feature: `Mais de ${galleryLimit} fotos na galeria`, requiredPlan: currentPlan === "free" ? "pro" : "premium" })}
+                    type="button"
+                  >
+                    <LockKeyhole className="mr-2 h-4 w-4" />Adicionar foto
+                  </button>
+                ) : (
                 <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
                   <ImagePlus className="mr-2 h-4 w-4" />
                   {uploadingSlot === "gallery" ? "Enviando..." : "Adicionar foto"}
@@ -771,6 +784,7 @@ export default function StorefrontPage() {
                     type="file"
                   />
                 </label>
+                )}
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {gallery.map((url) => (

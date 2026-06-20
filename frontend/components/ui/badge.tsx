@@ -15,6 +15,18 @@ const badgeStyles: Record<BadgeVariant, string> = {
   missed: "bg-rose-500/15 text-rose-300"
 };
 
+const badgeLabels: Record<BadgeVariant, string> = {
+  active: "Ativo",
+  pending: "Pendente",
+  returning: "Retorno",
+  scheduled: "Agendado",
+  confirmed: "Confirmado",
+  cancelled: "Cancelado",
+  rescheduled: "Reagendado",
+  attended: "Compareceu",
+  missed: "Faltou"
+};
+
 export function StatusBadge({ status }: { status: BadgeVariant }) {
   return (
     <span
@@ -23,7 +35,7 @@ export function StatusBadge({ status }: { status: BadgeVariant }) {
         badgeStyles[status]
       )}
     >
-      {status}
+      {badgeLabels[status]}
     </span>
   );
 }

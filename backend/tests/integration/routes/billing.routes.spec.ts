@@ -229,6 +229,13 @@ describe("Billing routes", () => {
   it("blocks providers from changing the organization subscription", async () => {
     const headers = await signInAsProvider(app);
 
+    const readResponse = await app.inject({
+      method: "GET",
+      url: "/v1/organization/subscription",
+      headers,
+    });
+    expect(readResponse.statusCode).toBe(200);
+
     const response = await app.inject({
       method: "PATCH",
       url: "/v1/organization/subscription",

@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, ChevronDown, History, Pencil, Plus, Power } from "lucide-react";
+import { CalendarClock, ChevronDown, History, LockKeyhole, Pencil, Plus, Power } from "lucide-react";
 
 import { CreateCustomerModal } from "@/components/customers/create-customer-modal";
 import { StatusBadge } from "@/components/ui/badge";
@@ -12,8 +12,12 @@ import { Table, TableBody, TableCell, TableHead, TableRoot, TableRow } from "@/c
 import { api } from "@/lib/api";
 import { buildCustomerRows } from "@/lib/dashboard-data";
 import type { CustomerRow } from "@/lib/types";
+import { usePlanAccess } from "@/components/billing/plan-access-provider";
+
+const CUSTOMER_LIMITS = { free: 50, pro: 1000, premium: null } as const;
 
 export default function CustomersPage() {
+  const { currentPlan, requestUpgrade } = usePlanAccess();
   const [open, setOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerRow | null>(null);
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
@@ -35,6 +39,8 @@ export default function CustomersPage() {
     }
   });
   const customers = data?.items ?? [];
+  const customerLimit = CUSTOMER_LIMITS[currentPlan];
+  const isCustomerCreationBlocked = customerLimit !== null && (data?.total ?? 0) >= customerLimit;
   const statusMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => api.setCustomerStatus(id, isActive),
     meta: {
@@ -54,10 +60,13 @@ export default function CustomersPage() {
           <h1 className="mt-2 text-3xl font-semibold text-white">Base ativa do negócio</h1>
         </div>
         <Button onClick={() => {
-          setEditingCustomer(null);
-          setOpen(true);
-        }}>
-          <Plus className="mr-2 h-4 w-4" />
+          if (isCustomerCreationBlocked) {
+            requestUpgrade({ feature: `Mais de ${customerLimit} clientes ativos`, requiredPlan: currentPlan === "free" ? "pro" : "premium" });
+            return;
+          }
+          setEditingCustomer(null); setOpen(true);
+        }} variant={isCustomerCreationBlocked ? "secondary" : "primary"}>
+          {isCustomerCreationBlocked ? <LockKeyhole className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
           Novo paciente
         </Button>
       </div>

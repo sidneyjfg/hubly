@@ -19,7 +19,7 @@ export const billingRoutes = async (
   app.get(
     "/organization/subscription",
     {
-      preHandler: allowRoles(["administrator"]),
+      preHandler: allowRoles(["administrator", "reception", "provider"]),
     },
     controller.getOrganizationSubscription,
   );

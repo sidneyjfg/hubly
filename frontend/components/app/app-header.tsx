@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { CalendarDays, ChevronDown, Crown, HelpCircle, LogOut, Menu, Search, Settings, UserCircle2 } from "lucide-react";
+import { CalendarDays, ChevronDown, Crown, HelpCircle, LogOut, Search, Settings, UserCircle2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { AppVersion } from "@/components/app/app-version";
@@ -62,10 +62,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/75 px-4 py-4 backdrop-blur md:px-6">
       <div className="flex items-center gap-4">
-        <Link className="flex items-center gap-3 xl:hidden" href="/">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-white">
-            <Menu className="h-4 w-4" />
-          </div>
+        <Link className="flex items-center gap-3 xl:hidden" href="/bookings">
           <BrandLogo compact size="sm" />
         </Link>
         <div className="relative hidden max-w-sm flex-1 md:block">

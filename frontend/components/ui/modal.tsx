@@ -18,15 +18,15 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="absolute inset-0" onClick={onClose} />
       <div
         className={cn(
-          "relative z-10 w-full rounded-2xl border border-white/10 bg-panel p-6 shadow-soft",
+          "relative z-10 max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-white/10 bg-panel p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-soft sm:rounded-2xl sm:p-6",
           className
         )}
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-5 flex items-center justify-between sm:mb-6">
           <h3 className="text-xl font-semibold text-white">{title}</h3>
           <button
             aria-label="Fechar modal"

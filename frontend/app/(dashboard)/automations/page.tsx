@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarCheck2, Gift, HelpCircle, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
+import { CalendarCheck2, Gift, HelpCircle, LockKeyhole, Plus, RefreshCw, Send, Trash2 } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { Toggle } from "@/components/ui/toggle";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { usePlanAccess } from "@/components/billing/plan-access-provider";
 
 type WhatsAppStatusView = {
   tone: "success" | "warning" | "danger" | "neutral";
@@ -133,7 +134,8 @@ function normalizeQrCodeImage(value?: string): string | null {
 
 export default function AutomationsPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<AutomationTab>("reminders");
+  const { hasPlan, requestUpgrade } = usePlanAccess();
+  const [activeTab, setActiveTab] = useState<AutomationTab>("booking-events");
   const [helpOpen, setHelpOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("5511999999999");
   const [newReminderHours, setNewReminderHours] = useState("24");
@@ -432,18 +434,30 @@ export default function AutomationsPage() {
 
       <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
         {[
-          { label: "Lembretes", value: "reminders" },
-          { label: "Agendamentos", value: "booking-events" },
-          { label: "Relacionamento", value: "relationship" }
+          { label: "Lembretes", value: "reminders", requiredPlan: "pro" },
+          { label: "Agendamentos", value: "booking-events", requiredPlan: "free" },
+          { label: "Relacionamento", value: "relationship", requiredPlan: "premium" }
         ].map((item) => (
           <button
-            className={`rounded-lg px-4 py-2 text-sm transition ${
+            aria-disabled={!hasPlan(item.requiredPlan as "free" | "pro" | "premium")}
+            className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
               activeTab === item.value ? "bg-primary text-white" : "text-slate-300 hover:bg-white/8"
-            }`}
+            } ${!hasPlan(item.requiredPlan as "free" | "pro" | "premium") ? "cursor-not-allowed opacity-60" : ""}`}
             key={item.value}
-            onClick={() => setActiveTab(item.value as AutomationTab)}
+            onClick={() => {
+              const requiredPlan = item.requiredPlan as "free" | "pro" | "premium";
+              if (!hasPlan(requiredPlan)) {
+                requestUpgrade({
+                  feature: item.value === "relationship" ? "Automações de relacionamento" : "Lembretes automáticos por WhatsApp",
+                  requiredPlan: requiredPlan === "premium" ? "premium" : "pro"
+                });
+                return;
+              }
+              setActiveTab(item.value as AutomationTab);
+            }}
             type="button"
           >
+            {!hasPlan(item.requiredPlan as "free" | "pro" | "premium") ? <LockKeyhole className="h-3.5 w-3.5" /> : null}
             {item.label}
           </button>
         ))}

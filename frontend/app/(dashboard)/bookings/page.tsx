@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { HelpCircle, Plus } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, LockKeyhole, Plus, UserRound, X } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { StatusBadge } from "@/components/ui/badge";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { endOfDayIso, formatDateInput, formatDateLabel, formatTimeLabel, startOfDayIso } from "@/lib/utils";
+import { usePlanAccess } from "@/components/billing/plan-access-provider";
 
 type ScheduleView = "day" | "week" | "month";
 
@@ -27,6 +28,12 @@ const scheduleViews = [
   { label: "Dia", value: "day" },
   { label: "Semana", value: "week" },
   { label: "Mês", value: "month" }
+] as const;
+
+const scheduleSummaryStatuses = [
+  { label: "Confirmados", value: "confirmed" },
+  { label: "Agendados", value: "scheduled" },
+  { label: "Faltas", value: "missed" }
 ] as const;
 
 function addDays(value: Date, amount: number): Date {
@@ -88,7 +95,18 @@ function buildBookingEnd(startsAt: string, durationMinutes: string): string {
   return startDate.toISOString();
 }
 
+function moveScheduleDate(dateInput: string, view: ScheduleView, direction: -1 | 1): string {
+  const date = new Date(`${dateInput}T12:00:00`);
+  if (view === "month") {
+    date.setMonth(date.getMonth() + direction);
+    return formatDateInput(date);
+  }
+
+  return formatDateInput(addDays(date, direction * (view === "week" ? 7 : 1)));
+}
+
 export default function SchedulePage() {
+  const { currentPlan, requestUpgrade } = usePlanAccess();
   const [selectedDate, setSelectedDate] = useState(formatDateInput(new Date()));
   const [view, setView] = useState<ScheduleView>("day");
   const [page, setPage] = useState(1);
@@ -112,6 +130,17 @@ export default function SchedulePage() {
         : await api.getBookings({ from: range.from, limit: 100, page: 1, to: range.to });
 
       return { bookings, summary };
+    }
+  });
+
+  const monthlyUsageQuery = useQuery({
+    enabled: currentPlan === "free",
+    queryKey: ["booking-monthly-plan-usage", formatDateInput(new Date()).slice(0, 7)],
+    queryFn: () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return api.getBookings({ from: startOfDayIso(start), to: endOfDayIso(end), limit: 1, page: 1 });
     }
   });
 
@@ -191,34 +220,49 @@ export default function SchedulePage() {
   const formProviders = formOptionsQuery.data?.providers ?? [];
   const formServices = formOptionsQuery.data?.services ?? [];
   const availableServices = formServices.filter((service) => service.providerId === bookingForm?.providerId);
+  const isBookingCreationBlocked = currentPlan === "free" && (monthlyUsageQuery.data?.total ?? 0) >= 30;
+  const openBookingForm = () => {
+    if (isBookingCreationBlocked) {
+      requestUpgrade({ feature: "Mais de 30 agendamentos por mês", requiredPlan: "pro" });
+      return;
+    }
+    setBookingForm({
+    customerId: "",
+    providerId: "",
+    offeringId: "",
+    startsAt: toLocalDateTimeInput(new Date(`${selectedDate}T09:00:00`)),
+    durationMinutes: "60",
+      notes: ""
+    });
+  };
+  const changeDate = (direction: -1 | 1) => {
+    setSelectedDate((current) => moveScheduleDate(current, view, direction));
+    setPage(1);
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-center justify-between gap-3 md:items-end">
         <div>
-          <p className="text-sm uppercase tracking-[0.18em] text-sky-300">Agenda</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Visão por dia, semana e mês</h1>
+          <p className="hidden text-sm uppercase tracking-[0.18em] text-sky-300 md:block">Agenda</p>
+          <h1 className="text-2xl font-semibold text-white md:mt-2 md:text-3xl">Agendamentos</h1>
+          <p className="mt-1 text-sm capitalize text-slate-400 md:hidden">{range.label}</p>
         </div>
+        <Button className="shrink-0 px-4" onClick={openBookingForm} variant={isBookingCreationBlocked ? "secondary" : "primary"}>
+            {isBookingCreationBlocked ? <LockKeyhole className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+            <span className="md:hidden">Novo</span>
+            <span className="hidden md:inline">Novo agendamento</span>
+        </Button>
+      </div>
+
+      <div className="sticky top-[73px] z-10 -mx-4 border-y border-white/10 bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:flex md:items-end md:justify-end md:border-0 md:bg-transparent md:p-0">
         <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-end">
-          <Button
-            onClick={() => setBookingForm({
-              customerId: "",
-              providerId: "",
-              offeringId: "",
-              startsAt: toLocalDateTimeInput(new Date(`${selectedDate}T09:00:00`)),
-              durationMinutes: "60",
-              notes: ""
-            })}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Novo agendamento
-          </Button>
           <div>
-            <p className="mb-2 text-sm text-slate-400">Visão</p>
-            <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+            <p className="mb-2 hidden text-sm text-slate-400 md:block">Visão</p>
+            <div className="grid grid-cols-3 rounded-xl border border-white/10 bg-white/5 p-1 md:flex">
               {scheduleViews.map((item) => (
                 <button
-                  className={`rounded-lg px-4 py-2 text-sm transition ${
+                  className={`min-h-10 rounded-lg px-4 py-2 text-sm transition ${
                     view === item.value ? "bg-primary text-white" : "text-slate-300 hover:bg-white/8"
                   }`}
                   key={item.value}
@@ -233,48 +277,39 @@ export default function SchedulePage() {
               ))}
             </div>
           </div>
-          <div className="w-full max-w-xs">
-            <p className="mb-2 text-sm text-slate-400">Data de referência</p>
+          <div className="flex items-center gap-2">
+            <Button aria-label="Período anterior" className="shrink-0 px-3" onClick={() => changeDate(-1)} variant="secondary">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
             <Input
-              onChange={(event) => {
-                setSelectedDate(event.target.value);
-                setPage(1);
-              }}
+              aria-label="Data de referência"
+              className="min-w-0 flex-1 md:w-44"
+              onChange={(event) => { setSelectedDate(event.target.value); setPage(1); }}
               type="date"
               value={selectedDate}
             />
+            <Button aria-label="Próximo período" className="shrink-0 px-3" onClick={() => changeDate(1)} variant="secondary">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+            <Button className="hidden md:inline-flex" onClick={() => { setSelectedDate(formatDateInput(new Date())); setPage(1); }} variant="ghost">
+              Hoje
+            </Button>
           </div>
         </div>
       </div>
 
-      <Card className="border-sky-300/20 bg-sky-400/10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex gap-3">
-            <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-sky-200" />
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">Ajuda rapida</p>
-              <h2 className="mt-2 text-xl font-semibold text-white">Cliente nao consegue confirmar ou nao encontra horario?</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-                Confira dados obrigatorios do cliente, horario disponivel, servico com duracao/preco e conflito com agendamentos existentes.
-              </p>
-            </div>
-          </div>
-          <ButtonLink href="/help#booking" variant="secondary">Ver checklist</ButtonLink>
-        </div>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {["confirmed", "scheduled", "missed"].map((status) => (
-          <Card key={status}>
-            <p className="text-sm uppercase tracking-[0.18em] text-slate-400">{status}</p>
+      <div className="hidden gap-4 md:grid md:grid-cols-3">
+        {scheduleSummaryStatuses.map((status) => (
+          <Card key={status.value}>
+            <p className="text-sm uppercase tracking-[0.18em] text-slate-400">{status.label}</p>
             <p className="mt-4 text-4xl font-semibold text-white">
-              {summaryBookings.filter((booking) => booking.status === status).length}
+              {summaryBookings.filter((booking) => booking.status === status.value).length}
             </p>
           </Card>
         ))}
       </div>
 
-      <Card>
+      <Card className="hidden md:block">
         <p className="text-sm uppercase tracking-[0.18em] text-slate-400">{getViewTitle(view)}</p>
         <p className="mt-2 text-sm capitalize text-slate-300">{range.label}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-4">
@@ -291,42 +326,59 @@ export default function SchedulePage() {
         </div>
       </Card>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {mutation.error ? <p className="text-sm text-rose-300">{mutation.error.message}</p> : null}
+        {!data ? (
+          <Card className="text-sm text-slate-400">Carregando agenda...</Card>
+        ) : bookings.length === 0 ? (
+          <Card className="flex flex-col items-center px-5 py-10 text-center">
+            <CalendarDays className="h-8 w-8 text-slate-500" />
+            <p className="mt-4 font-medium text-white">Nenhum agendamento neste período</p>
+            <p className="mt-1 text-sm text-slate-400">Você pode avançar a data ou criar um novo horário.</p>
+            <Button className="mt-5" onClick={openBookingForm}><Plus className="mr-2 h-4 w-4" />Novo agendamento</Button>
+          </Card>
+        ) : null}
         {bookings.map((booking) => (
-          <Card className="bg-panelAlt/80" key={booking.id}>
+          <Card className="bg-panelAlt/80 p-4 md:p-6" key={booking.id}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+              <div className="flex min-w-0 items-start gap-3 md:items-center md:gap-4">
+                <div className="w-20 shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-center md:w-auto md:px-4">
+                  <p className="hidden text-xs uppercase tracking-[0.18em] text-slate-400 md:block">
                     {formatDateLabel(booking.startsAt)}
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-white">{formatTimeLabel(booking.startsAt)}</p>
+                  <p className="text-xl font-semibold text-white md:mt-1 md:text-lg">{formatTimeLabel(booking.startsAt)}</p>
                 </div>
-                <div>
-                  <p className="text-lg font-medium text-white">{booking.customerName}</p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {booking.providerName}{booking.serviceName ? ` - ${booking.serviceName}` : ""}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="truncate text-base font-semibold text-white md:text-lg md:font-medium">{booking.customerName}</p>
+                    <div className="shrink-0 lg:hidden"><StatusBadge status={booking.status} /></div>
+                  </div>
+                  <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-slate-400"><UserRound className="h-3.5 w-3.5 shrink-0" />{booking.providerName}</p>
+                  {booking.serviceName ? <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-slate-400"><Clock3 className="h-3.5 w-3.5 shrink-0" />{booking.serviceName}</p> : null}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <StatusBadge status={booking.status} />
+              <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-3 lg:flex lg:flex-wrap lg:items-center lg:border-0 lg:pt-0">
+                <div className="hidden lg:block"><StatusBadge status={booking.status} /></div>
                 <Button
+                  className="px-2"
                   onClick={() => mutation.mutate({ bookingId: booking.id, action: "attended" })}
                   size="sm"
                   variant="secondary"
                 >
-                  Compareceu
+                  <Check className="mr-1.5 h-4 w-4 md:hidden" />
+                  <span className="md:hidden">Atendido</span><span className="hidden md:inline">Compareceu</span>
                 </Button>
                 <Button
+                  className="px-2"
                   onClick={() => mutation.mutate({ bookingId: booking.id, action: "missed" })}
                   size="sm"
                   variant="secondary"
                 >
+                  <X className="mr-1.5 h-4 w-4 md:hidden" />
                   Faltou
                 </Button>
                 <Button
+                  className="px-2 text-rose-300 hover:text-rose-200"
                   onClick={() => mutation.mutate({ bookingId: booking.id, action: "cancelled" })}
                   size="sm"
                   variant="ghost"
@@ -357,11 +409,11 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      <Modal onClose={() => setBookingForm(null)} open={Boolean(bookingForm)} title="Novo agendamento">
+      <Modal className="sm:max-w-xl" onClose={() => setBookingForm(null)} open={Boolean(bookingForm)} title="Novo agendamento">
         {bookingForm ? (
           <div className="space-y-4">
             <label className="block text-sm text-slate-300">
-              Paciente
+              Cliente
               <select
                 className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none transition focus:border-sky-300"
                 onChange={(event) => setBookingForm({ ...bookingForm, customerId: event.target.value })}
@@ -406,10 +458,12 @@ export default function SchedulePage() {
                 ))}
               </select>
             </label>
-            <Input onChange={(event) => setBookingForm({ ...bookingForm, startsAt: event.target.value })} type="datetime-local" value={bookingForm.startsAt} />
-            <Input min={5} onChange={(event) => setBookingForm({ ...bookingForm, durationMinutes: event.target.value })} placeholder="Duração em minutos" type="number" value={bookingForm.durationMinutes} />
-            <Input onChange={(event) => setBookingForm({ ...bookingForm, notes: event.target.value })} placeholder="Observações" value={bookingForm.notes} />
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm text-slate-300">Data e horário<Input className="mt-2" onChange={(event) => setBookingForm({ ...bookingForm, startsAt: event.target.value })} type="datetime-local" value={bookingForm.startsAt} /></label>
+              <label className="block text-sm text-slate-300">Duração em minutos<Input className="mt-2" min={5} onChange={(event) => setBookingForm({ ...bookingForm, durationMinutes: event.target.value })} type="number" value={bookingForm.durationMinutes} /></label>
+            </div>
+            <label className="block text-sm text-slate-300">Observações (opcional)<Input className="mt-2" onChange={(event) => setBookingForm({ ...bookingForm, notes: event.target.value })} placeholder="Ex.: cliente pediu encaixe" value={bookingForm.notes} /></label>
+            <div className="grid grid-cols-2 gap-3 pt-2 sm:flex sm:justify-end">
               <Button onClick={() => setBookingForm(null)} type="button" variant="ghost">Cancelar</Button>
               <Button
                 disabled={!bookingForm.customerId || !bookingForm.providerId || !bookingForm.startsAt || !bookingForm.durationMinutes || createBookingMutation.isPending}

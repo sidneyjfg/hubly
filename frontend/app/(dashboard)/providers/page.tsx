@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, BriefcaseMedical, CalendarClock, HelpCircle, Pencil, Plus, Power } from "lucide-react";
+import { AlertTriangle, BriefcaseMedical, CalendarClock, HelpCircle, LockKeyhole, Pencil, Plus, Power } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Modal } from "@/components/ui/modal";
 import { Table, TableBody, TableCell, TableHead, TableRoot, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
 import type { Provider, ProviderAvailability, ServiceOffering } from "@/lib/types";
+import { usePlanAccess } from "@/components/billing/plan-access-provider";
 
 type ProviderFormState = {
   id?: string;
@@ -52,6 +53,7 @@ const PLAN_SERVICE_LIMITS = {
   pro: 30,
   premium: 100
 } as const;
+const PLAN_PROVIDER_LIMITS = { free: 1, pro: 5, premium: 15 } as const;
 
 const SERVICE_LIMIT_REGULARIZATION_DAYS = 7;
 
@@ -164,6 +166,7 @@ function TimeField({
 }
 
 export default function ProvidersPage() {
+  const { currentPlan, requestUpgrade } = usePlanAccess();
   const [providerPage, setProviderPage] = useState(1);
   const [servicePage, setServicePage] = useState(1);
   const [providerForm, setProviderForm] = useState<ProviderFormState | null>(null);
@@ -188,6 +191,11 @@ export default function ProvidersPage() {
     queryFn: () => api.getServiceOfferings({ page: 1, limit: 100 })
   });
 
+  const providerLimitQuery = useQuery({
+    queryKey: ["providers-limit-status"],
+    queryFn: () => api.getProviders({ page: 1, limit: 100 })
+  });
+
   const subscriptionQuery = useQuery({
     queryKey: ["organization-subscription"],
     queryFn: api.getOrganizationSubscription
@@ -203,6 +211,8 @@ export default function ProvidersPage() {
   const services = servicesQuery.data?.items ?? [];
   const activeServiceCount = serviceLimitQuery.data?.items.filter((service) => service.isActive).length ?? 0;
   const currentPlanCode = subscriptionQuery.data?.current.plan.code ?? "free";
+  const activeProviderCount = providerLimitQuery.data?.items.filter((provider) => provider.isActive).length ?? 0;
+  const isProviderCreationBlocked = activeProviderCount >= PLAN_PROVIDER_LIMITS[currentPlan];
   const maxActiveServices = PLAN_SERVICE_LIMITS[currentPlanCode];
   const excessActiveServices = Math.max(0, activeServiceCount - maxActiveServices);
   const serviceLimitRegularizationDate = subscriptionQuery.data?.current.updatedAt
@@ -363,12 +373,24 @@ export default function ProvidersPage() {
           <h1 className="mt-2 text-3xl font-semibold text-white">Equipe e serviços da agenda</h1>
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => setProviderForm(emptyProviderForm)}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button onClick={() => {
+            if (isProviderCreationBlocked) {
+              requestUpgrade({ feature: `Mais de ${PLAN_PROVIDER_LIMITS[currentPlan]} profissionais ativos`, requiredPlan: currentPlan === "free" ? "pro" : "premium" });
+              return;
+            }
+            setProviderForm(emptyProviderForm);
+          }} variant={isProviderCreationBlocked ? "secondary" : "primary"}>
+            {isProviderCreationBlocked ? <LockKeyhole className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
             Novo profissional
           </Button>
-          <Button disabled={isServiceLimitExceeded} onClick={() => setServiceForm({ ...emptyServiceForm, providerId: providers[0]?.id ?? "" })} variant="secondary">
-            <BriefcaseMedical className="mr-2 h-4 w-4" />
+          <Button onClick={() => {
+            if (activeServiceCount >= maxActiveServices) {
+              requestUpgrade({ feature: `Mais de ${maxActiveServices} serviços ativos`, requiredPlan: currentPlan === "free" ? "pro" : "premium" });
+              return;
+            }
+            setServiceForm({ ...emptyServiceForm, providerId: providers[0]?.id ?? "" });
+          }} variant="secondary">
+            {activeServiceCount >= maxActiveServices ? <LockKeyhole className="mr-2 h-4 w-4" /> : <BriefcaseMedical className="mr-2 h-4 w-4" />}
             Novo serviço
           </Button>
         </div>

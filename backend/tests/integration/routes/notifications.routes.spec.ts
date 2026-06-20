@@ -271,5 +271,10 @@ describe("Notifications routes", () => {
     const sentNotification = await repository.findOneByOrFail({ id: notification.id });
     expect(sentNotification.status).toBe("sent");
     expect(sentNotification.externalMessageId).toBe("msg_123");
+    const sendRequest = vi.mocked(global.fetch).mock.calls.at(-1);
+    expect(sendRequest?.[0]).toBe("http://evolution.local/message/sendText/organization-cln_main_001");
+    expect(JSON.parse(String(sendRequest?.[1]?.body))).toEqual(expect.objectContaining({
+      number: "5511999999999",
+    }));
   });
 });
